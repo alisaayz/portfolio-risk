@@ -49,8 +49,8 @@ Quantity inputs are valued using provider Close, not dividend-adjusted historica
 
 ## Provenance and reproduction
 
-- Dataset: `c963ca0add1f4b279911d2b4cbc66dc5208fef37873306e5651159ae7cbf0fcc`.
-- Report: `8f6e93a31792d8745b537bc4635a6cde031f5f8b5e93919713789fc00cd2c82a`.
+- Dataset: `80b5d80b266b0255f7c8de0310569de02f63a5ee0ff2a54e707ddfa2cd114166`.
+- Report: `45fbbde78e430222f65667cec2ec6acc2cc02a23545a7fbc8eb25069744b8358`.
 - Detailed metrics, recipe hashes, and replay series are saved locally; downloaded histories and personal inputs remain outside Git.
 
 ```bash

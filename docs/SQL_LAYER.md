@@ -4,9 +4,9 @@ Updated November 4, 2026. Built from verified local snapshots without new market
 
 ## Observed result
 
-- Dataset: `c963ca0add1f4b279911d2b4cbc66dc5208fef37873306e5651159ae7cbf0fcc`; DuckDB 2.0.0.
-- Retained price observations across source captures: **10,314**.
-- Accepted observations in the selected three-instrument dataset: **5,157**.
+- Dataset: `80b5d80b266b0255f7c8de0310569de02f63a5ee0ff2a54e707ddfa2cd114166`; DuckDB 2.0.0.
+- Retained price observations across source captures: **37,818**.
+- Accepted observations in the selected **16-instrument** dataset: **27,504**.
 - Accepted FRED index-context observations: **1,719**.
 - Yahoo index observations retained in quarantine: **1,719**.
 - Active quality issues: **3**, with original source values and evidence references retained.
@@ -16,7 +16,20 @@ Updated November 4, 2026. Built from verified local snapshots without new market
 | --- | ---: | ---: | ---: |
 | AAPL | 1,719 | 1,718 | 1,699 |
 | BND | 1,719 | 1,718 | 1,699 |
+| EEM | 1,719 | 1,718 | 1,699 |
+| EFA | 1,719 | 1,718 | 1,699 |
+| GLD | 1,719 | 1,718 | 1,699 |
+| HYG | 1,719 | 1,718 | 1,699 |
+| IEF | 1,719 | 1,718 | 1,699 |
+| IWM | 1,719 | 1,718 | 1,699 |
+| JNJ | 1,719 | 1,718 | 1,699 |
+| JPM | 1,719 | 1,718 | 1,699 |
+| LQD | 1,719 | 1,718 | 1,699 |
+| MSFT | 1,719 | 1,718 | 1,699 |
+| QQQ | 1,719 | 1,718 | 1,699 |
 | SPY | 1,719 | 1,718 | 1,699 |
+| TLT | 1,719 | 1,718 | 1,699 |
+| XOM | 1,719 | 1,718 | 1,699 |
 
 The first session has no previous close and therefore no daily return. A trailing volatility estimate requires 20 valid one-session returns. The SQL uses `sqrt(252 * mean(return²))`, consistent with the project's squared-return convention; it is a historical input, not a trained forecast or portfolio risk report.
 
@@ -30,7 +43,7 @@ The first session has no previous close and therefore no daily return. A trailin
 | corporate_actions | One instrument/session/action type/capture |
 | benchmark_observations | One series/date/capture, retaining FRED's null holiday rows |
 | dataset_versions and dataset_runs | An explicit recipe and its source captures |
-| source_rules | Versioned DS-001 rules for that dataset |
+| source_rules | Versioned DS-002 rules for that dataset |
 | expected_sessions | Instrument/session calendar alignment for a dataset |
 | data_quality_issues | One discrepancy rule/date/dataset with source values, tolerance, and disposition |
 | active_dataset | The explicitly selected dataset; no automatic latest-date selection |
@@ -40,7 +53,7 @@ flowchart LR
     A[Saved snapshots and manifests] --> B[Hash and audit validation]
     B --> C[Transactional DuckDB load]
     C --> D[Versioned source tables]
-    D --> E[DS-001 accepted views]
+    D --> E[DS-002 accepted views]
     D --> F[Quarantined evidence and issue ledger]
     E --> G[Calendar-aligned SQL risk inputs]
     D --> H[Versioned Parquet cache]
@@ -53,12 +66,12 @@ flowchart LR
 - Inserts and active-dataset selection use one database transaction. A database error rolls back that load.
 - Parquet publication is a separate, recoverable cache step after database commit. Files are staged and published as a complete directory; existing files are hash-checked and compared with SQL rows on rerun. This is not a distributed transaction across the database and filesystem.
 - Accepted risk prices, accepted FRED context, and quarantined Yahoo index observations have separate views. Context is not automatically approved as a predictive feature. The three discrepancies remain unresolved.
-- The current scope is three instruments and explicit saved captures. General incremental provider ingestion, universe expansion, portfolio calculations, and model training remain subsequent work.
+- The active scope is 16 instruments under DS-002. Earlier dataset versions remain retained. General incremental updates, modeling features/targets, model training, and the interactive application remain subsequent work. The descriptive portfolio baseline is already implemented.
 
 ## Reproduction and inspection
 
 ```bash
-.venv/bin/python -m scripts.build_warehouse --snapshot data/audit/20261104T170702705356Z --historical-snapshot data/audit/20261104T170309697872Z --external-snapshot data/validation/20261104T171500906975Z
+.venv/bin/python -m scripts.build_warehouse --snapshot data/audit/20261104T184106998030Z --external-snapshot data/validation/20261104T190642106948Z --policy config/expanded_source_policy.json --historical-snapshot data/audit/20261104T170702705356Z --historical-snapshot data/audit/20261104T170309697872Z
 # Run the same command again to verify duplicate-free loading and cached exports.
 .venv/bin/python -m unittest discover -s tests -v
 ```

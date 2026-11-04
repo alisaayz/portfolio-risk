@@ -26,7 +26,7 @@ The [date eligibility report](EVALUATION_SPLITS.md) records training, validation
 
 ## Acceptance and limitations
 
-The expanded capture is **structurally audited research evidence**. It is not yet the active SQL dataset. Source policy DS-001 still admits only the original three instruments, whose published portfolio baseline remains reproducible. Additional independent quote/action checks and tested loader/policy changes are required before promoting the expanded sample to analytical use. Existing cross-source checks do not automatically transfer to new symbols or captures.
+The expanded capture is now **accepted for prototype SQL use under DS-002**. Eighty selected closes and four issuer references pass; the loader enforces exact universe/reference bindings and retains the three index discrepancies in quarantine. This is limited evidence, not certification of full histories or every ETF distribution. DS-001 and the original dataset remain retained. See [source validation](UNIVERSE_VALIDATION.md) and the [promotion walkthrough](05_EXPANDED_SQL_WALKTHROUGH.md).
 
 Current-survivor selection omits delisted, merged, and failed instruments and closed funds. Broad ETFs, stocks, and bond funds have overlapping exposures; ticker count is not a count of independent observations. There is no claim to predict unseen securities or the entire investable market. USD quotation does not remove underlying currency risk. Current adjusted histories are revised proxies rather than point-in-time archives, and the first year supplies much of the feature warmup.
 
@@ -40,4 +40,4 @@ Freeze this selection before inspecting model scores. Record exclusions and sour
 .venv/bin/python -m scripts.evaluation_splits --snapshot data/audit/<expanded-run-id>
 ```
 
-New acquisitions receive distinct run identities. Offline replay uses the universe saved in that manifest and does not accept a replacement `--universe`. Expanded reports are separate from the original three-instrument audit and portfolio report. Downloaded histories remain outside Git.
+New acquisitions receive distinct run identities. Offline replay uses the universe saved in that manifest and does not accept a replacement `--universe`. Expanded audit/validation reports are separate from the original audit. The portfolio baseline is refreshed with a distinct report identity; earlier local artifacts remain retained. Downloaded histories remain outside Git.

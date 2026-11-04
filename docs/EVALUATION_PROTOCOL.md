@@ -55,8 +55,8 @@ At the November 3 snapshot cutoff, each instrument has ten completed primary tes
 | Layer | Checks and purpose | State |
 | --- | --- | --- |
 | Source integrity | Hashes, exchange sessions, duplicates, currencies, OHLC, actions, and missing values | Implemented; expanded sample passes structural checks |
-| Source acceptance | Selected independent quote/action checks, source policy, and discrepancy quarantine | Implemented for original three instruments; expansion pending |
-| Storage and recovery | Repeated loads, transaction rollback, explicit versions, export corruption | Implemented for original warehouse |
+| Source acceptance | Selected independent quote/action checks, source policy, and discrepancy quarantine | Implemented for sixteen instruments with limited quote/action evidence; comparator quarantined |
+| Storage and recovery | Repeated loads, transaction rollback, explicit versions, export corruption | Implemented for expanded warehouse; every SQL return and complete risk window reconciled |
 | Date membership | Warmup, fold purging, horizon completeness, year-end exclusions, stable primary grid | Implemented and regression-tested |
 | Feature/target correctness | SQL versus NumPy and selected manual calculations; future-data perturbation and split-boundary examples | Planned with feature pipeline |
 | Forecast baselines | Known constant/variable-return fixtures, positive outputs, common evaluation origins | Planned with forecasting implementation |

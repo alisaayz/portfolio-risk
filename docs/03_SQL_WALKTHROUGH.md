@@ -4,13 +4,13 @@ Implemented November 4, 2026. Read the [generated SQL milestone report](SQL_LAYE
 
 ## What changed
 
-The project now converts saved, audited files into a queryable database with explicit source and dataset versions. The earlier and selected price captures remain separate. An active-dataset pointer determines which capture feeds analytical views; the pipeline does not choose a version based on whichever file happens to be newest.
+The project now converts saved, audited files into a queryable database with explicit source and dataset versions. The original captures and expanded selected capture remain separate; DS-002 now accepts sixteen instruments. The [expanded walkthrough](05_EXPANDED_SQL_WALKTHROUGH.md) documents promotion and its additional checks. An active-dataset pointer determines which capture feeds analytical views; the pipeline does not choose a version based on whichever file happens to be newest.
 
 ```mermaid
 flowchart TD
-    A[Two saved price captures] --> B[Raw price history: 10,314 rows]
+    A[Three saved price captures] --> B[Raw price history: 37,818 rows]
     B --> C[Explicit selected dataset]
-    C --> D[Accepted prices: 5,157 rows]
+    C --> D[Accepted prices: 27,504 rows across 16 instruments]
     D --> E[Calendar-aligned daily returns]
     E --> F[Complete trailing 20-return windows]
     G[FRED and Yahoo index captures] --> H[Source-policy rules]
@@ -77,4 +77,4 @@ DuckDB 2.0 requires results to be consumed before some other connection operatio
 
 The Python application workflow runs the regression suite on pushes and pull requests using self-contained fixtures. It installs the pinned dependencies and needs neither downloaded histories nor account secrets. Its result must be verified on GitHub before claiming the remote checks passed. It does not publish a Python package.
 
-The subsequent [portfolio baseline](BASELINE_PORTFOLIO_REPORT.md) now uses these SQL returns and adds independently reconciled sample covariance, holding risk contributions, and drawdown. Its [walkthrough](04_PORTFOLIO_BASELINE_WALKTHROUGH.md) explains the different volatility estimator. Dedicated stress scenarios and trained forecasts remain planned. Next: expand the reference universe and construct versioned features, forward targets, and chronological splits.
+The subsequent [portfolio baseline](BASELINE_PORTFOLIO_REPORT.md) now uses these SQL returns and adds independently reconciled sample covariance, holding risk contributions, and drawdown. Its [walkthrough](04_PORTFOLIO_BASELINE_WALKTHROUGH.md) explains the different volatility estimator. Dedicated stress scenarios and trained forecasts remain planned. Next: construct versioned modeling features and forward targets under the implemented EV-001 date contract. Add future-value perturbation and independent numerical checks before model training.

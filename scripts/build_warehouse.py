@@ -16,7 +16,8 @@ import tempfile
 import duckdb
 import pandas as pd
 
-from scripts.audit_market_data import ROOT, CALENDARS, expected_sessions, inspect_snapshot, sha256
+from scripts.audit_market_data import ROOT, CALENDARS, expected_sessions, inspect_snapshot, load_universe, sha256
+from scripts.corporate_action_checks import REFERENCE_PATH, reference_configuration
 from scripts.cross_validate_sources import load_prices, validate
 
 SQL = ROOT / "sql"
@@ -28,21 +29,58 @@ def canonical_json(value) -> str:
     return json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False)
 
 
+def validated_policy_calendars(primary_manifest: dict, policy: dict) -> dict:
+    policy_id = policy.get("policy_id")
+    if policy_id == "DS-001":
+        calendars = dict(CALENDARS)
+        required_keys = {"policy_id", "rules"}
+    elif policy_id == "DS-002":
+        universe = load_universe(ROOT / "config/reference_universe.json")
+        digest = hashlib.sha256(json.dumps(universe, sort_keys=True).encode()).hexdigest()
+        if primary_manifest.get("universe") != universe or primary_manifest.get("universe_sha256") != digest:
+            raise ValueError("DS-002 requires the exact preserved RU-001 universe")
+        if policy.get("universe_id") != universe["universe_id"] or policy.get("universe_sha256") != digest:
+            raise ValueError("Source policy universe binding differs")
+        if policy.get("issuer_reference_set_id") != "CA-001" or policy.get("issuer_reference_sha256") != sha256(REFERENCE_PATH):
+            raise ValueError("Source policy issuer reference binding differs")
+        calendars = {r["symbol"]: r["calendar"] for r in universe["instruments"]}
+        required_keys = {"policy_id", "rules", "universe_id", "universe_sha256", "issuer_reference_set_id", "issuer_reference_sha256"}
+    else:
+        raise ValueError("Unsupported source policy")
+    required = {("yahoo_prices", symbol, "risk_prices") for symbol in calendars}
+    required |= {("fred", "SP500", "context"), ("yahoo_index", "^GSPC", "quarantine")}
+    rules = policy.get("rules", [])
+    actual = {(r["source_id"], r["entity_id"], r["purpose"]) for r in rules}
+    if set(policy) != required_keys or actual != required or len(rules) != len(required) or any(set(r) != {"source_id", "entity_id", "purpose"} for r in rules):
+        raise ValueError("Unsupported source policy rules; no additions, omissions, or quarantine changes")
+    observed = {symbol: record["calendar"] for symbol,record in primary_manifest.get("instruments",{}).items()}
+    if observed != calendars:
+        raise ValueError("Primary capture instruments/calendars differ from accepted scope")
+    return calendars
+
+
+def check_acceptance(comparison: dict, calendars: dict, policy_id: str) -> None:
+    quotes = comparison["website_checks"]
+    if set(quotes) != set(calendars) or not all(r.get("passed") and r.get("compared_dates") == 5 and r.get("required_dates") == 5 for r in quotes.values()):
+        raise ValueError("Stock/ETF quote acceptance checks did not pass for every instrument")
+    if policy_id == "DS-002":
+        actions = comparison.get("issuer_action_checks", [])
+        expected_ids = {r["id"] for r in reference_configuration()["references"]}
+        if len(actions) != len(expected_ids) or {r["reference_id"] for r in actions} != expected_ids or not all(r.get("passed") for r in actions):
+            raise ValueError("Selected issuer action acceptance checks did not pass")
+    benchmark = comparison["fred_benchmark_check"]
+    if benchmark.get("error") or benchmark.get("missing_dates") or not benchmark.get("required_dates") or benchmark.get("compared_dates") != benchmark["required_dates"]:
+        raise ValueError("Benchmark evidence has missing or unparseable required observations")
+
+
 def prepare_bundle(primary: Path, external: Path, historical: list[Path], policy_path: Path) -> dict:
     primary_manifest = json.loads((primary / "manifest.json").read_text())
     external_manifest = json.loads((external / "manifest.json").read_text())
     policy = json.loads(policy_path.read_text())
-    required_rules = {("yahoo_prices", symbol, "risk_prices") for symbol in CALENDARS}
-    required_rules |= {("fred", "SP500", "context"), ("yahoo_index", "^GSPC", "quarantine")}
-    actual_rules = {(r["source_id"], r["entity_id"], r["purpose"]) for r in policy["rules"]}
-    if policy["policy_id"] != "DS-001" or actual_rules != required_rules or len(policy["rules"]) != 5:
-        raise ValueError("Unsupported source policy; implement and test new semantics before changing DS-001")
+    calendars = validated_policy_calendars(primary_manifest, policy)
     comparison = validate(external, primary, external_manifest)
-    if not all(r["passed"] for r in comparison["website_checks"].values()):
-        raise ValueError("Stock/ETF quote acceptance checks did not pass")
+    check_acceptance(comparison, calendars, policy["policy_id"])
     benchmark_check = comparison["fred_benchmark_check"]
-    if benchmark_check.get("error") or benchmark_check.get("missing_dates"):
-        raise ValueError("Benchmark evidence has missing or unparseable required observations")
 
     captures = {path.name: path for path in [primary, *historical]}
     if len(captures) != len([primary, *historical]):
@@ -54,6 +92,7 @@ def prepare_bundle(primary: Path, external: Path, historical: list[Path], policy
               "views_sha256": sha256(SQL / "views.sql"), "loader_sha256": sha256(Path(__file__)),
               "audit_sha256": sha256(ROOT / "scripts/audit_market_data.py"),
               "validator_sha256": sha256(ROOT / "scripts/cross_validate_sources.py"),
+              "issuer_check_code_sha256": sha256(ROOT / "scripts/corporate_action_checks.py"),
               "duckdb_version": duckdb.__version__}
     dataset_id = hashlib.sha256(canonical_json(recipe).encode()).hexdigest()
     frames = {table: [] for table in TABLES}
@@ -73,7 +112,10 @@ def prepare_bundle(primary: Path, external: Path, historical: list[Path], policy
             raise ValueError(f"Capture {capture.name} requires data-quality review")
         run_id = stock_run(capture)
         add_run(run_id, "yahoo_prices", capture, manifest)
-        for symbol in CALENDARS:
+        capture_calendars = {symbol: record["calendar"] for symbol,record in manifest["instruments"].items()}
+        if not capture_calendars or any(calendars.get(symbol) != calendar for symbol,calendar in capture_calendars.items()):
+            raise ValueError("Retained capture contains unsupported instruments or calendar identities")
+        for symbol in capture_calendars:
             frame = load_prices(capture / f"{symbol}.csv")
             for date, row in frame.iterrows():
                 frames["prices_daily"].append({"run_id": run_id, "instrument_id": symbol,
@@ -84,7 +126,7 @@ def prepare_bundle(primary: Path, external: Path, historical: list[Path], policy
                     if row[field] > 0:
                         frames["corporate_actions"].append({"run_id": run_id, "instrument_id": symbol,
                             "session_date": date.date(), "action_type": kind, "value": float(row[field])})
-    for symbol, calendar in CALENDARS.items():
+    for symbol, calendar in calendars.items():
         frames["instruments"].append({"instrument_id": symbol, "currency": "USD", "calendar_id": calendar})
         dates = expected_sessions(primary_manifest["start_inclusive"], primary_manifest["end_exclusive"], calendar)
         frames["expected_sessions"] += [{"dataset_id": dataset_id, "instrument_id": symbol,
@@ -116,11 +158,15 @@ def prepare_bundle(primary: Path, external: Path, historical: list[Path], policy
             "observed_value": float(yahoo_values.loc[day]), "reference_value": float(fred_values.loc[day]),
             "absolute_difference": difference, "tolerance": benchmark_check["tolerance"],
             "status": "quarantined", "evidence_ref": f"data/validation/{external.name}/comparison.json",
-            "resolution_note": "DS-001: comparator excluded; root cause remains unresolved"})
+            "resolution_note": policy["policy_id"] + ": comparator excluded; root cause remains unresolved"})
     frames["dataset_versions"] = [{"dataset_id": dataset_id, "primary_run_id": primary_run,
                                      "policy_id": policy["policy_id"], "recipe_json": canonical_json(recipe)}]
     frames["source_rules"] = [{"dataset_id": dataset_id, **rule} for rule in policy["rules"]]
-    return {"dataset_id": dataset_id, "frames": frames, "recipe": recipe}
+    return {"dataset_id": dataset_id, "frames": frames, "recipe": recipe,
+            "inputs": {"snapshot": str(primary.relative_to(ROOT)) if primary.is_relative_to(ROOT) else "<price-snapshot>",
+                       "external_snapshot": str(external.relative_to(ROOT)) if external.is_relative_to(ROOT) else "<external-snapshot>",
+                       "historical_snapshots": [str(p.relative_to(ROOT)) if p.is_relative_to(ROOT) else "<historical-snapshot>" for p in historical],
+                       "policy": str(policy_path.relative_to(ROOT)) if policy_path.is_relative_to(ROOT) else "<source-policy>"}}
 
 
 def load_bundle(connection, bundle: dict) -> None:
@@ -132,6 +178,10 @@ def load_bundle(connection, bundle: dict) -> None:
             previous = connection.execute("SELECT manifest_sha256 FROM ingestion_runs WHERE run_id = ?", [run["run_id"]]).fetchall()
             if previous and previous[0][0] != run["manifest_sha256"]:
                 raise ValueError("An existing capture ID has a different manifest; retained inputs are immutable")
+        for instrument in bundle["frames"]["instruments"]:
+            previous = connection.execute("SELECT currency,calendar_id FROM instruments WHERE instrument_id = ?", [instrument["instrument_id"]]).fetchall()
+            if previous and previous[0] != (instrument["currency"], instrument["calendar_id"]):
+                raise ValueError("An existing instrument has a different currency or calendar identity")
         order = ["ingestion_runs", "instruments", "prices_daily", "corporate_actions", "benchmark_observations",
                  "dataset_versions", "dataset_runs", "source_rules", "expected_sessions", "data_quality_issues"]
         for table in order:
@@ -197,12 +247,17 @@ def summary(connection, bundle, exports) -> dict:
     diagnostics = connection.execute((SQL / "diagnostics.sql").read_text().split(";", 1)[0]).fetchall()
     return {"dataset_id": bundle["dataset_id"], "duckdb": duckdb.__version__, "table_counts": counts,
             "active_view_counts": views, "historical_inputs": [dict(zip(["instrument", "sessions", "daily_returns", "complete_20_return_windows"], row)) for row in diagnostics],
-            "parquet_tables": exports["tables"]}
+            "parquet_tables": exports["tables"], "policy_id": bundle["recipe"]["policy"]["policy_id"],
+            "instrument_count": len(diagnostics), "inputs": bundle["inputs"]}
 
 
 def write_report(result: dict) -> None:
     counts, views = result["table_counts"], result["active_view_counts"]
     rows = "\n".join(f"| {r['instrument']} | {r['sessions']:,} | {r['daily_returns']:,} | {r['complete_20_return_windows']:,} |" for r in result["historical_inputs"])
+    inputs = result["inputs"]
+    reproduction = ".venv/bin/python -m scripts.build_warehouse --snapshot " + inputs["snapshot"] + " --external-snapshot " + inputs["external_snapshot"] + " --policy " + inputs["policy"]
+    for capture in inputs["historical_snapshots"]:
+        reproduction += " --historical-snapshot " + capture
     text = f"""# SQL ingestion milestone
 
 Updated November 4, 2026. Built from verified local snapshots without new market-data downloads.
@@ -211,7 +266,7 @@ Updated November 4, 2026. Built from verified local snapshots without new market
 
 - Dataset: `{result['dataset_id']}`; DuckDB {result['duckdb']}.
 - Retained price observations across source captures: **{counts['prices_daily']:,}**.
-- Accepted observations in the selected three-instrument dataset: **{views['accepted_prices_daily']:,}**.
+- Accepted observations in the selected **{result['instrument_count']}-instrument** dataset: **{views['accepted_prices_daily']:,}**.
 - Accepted FRED index-context observations: **{views['benchmark_context_daily']:,}**.
 - Yahoo index observations retained in quarantine: **{views['quarantined_benchmark_daily']:,}**.
 - Active quality issues: **{views['active_quality_issues']}**, with original source values and evidence references retained.
@@ -233,7 +288,7 @@ The first session has no previous close and therefore no daily return. A trailin
 | corporate_actions | One instrument/session/action type/capture |
 | benchmark_observations | One series/date/capture, retaining FRED's null holiday rows |
 | dataset_versions and dataset_runs | An explicit recipe and its source captures |
-| source_rules | Versioned DS-001 rules for that dataset |
+| source_rules | Versioned {result['policy_id']} rules for that dataset |
 | expected_sessions | Instrument/session calendar alignment for a dataset |
 | data_quality_issues | One discrepancy rule/date/dataset with source values, tolerance, and disposition |
 | active_dataset | The explicitly selected dataset; no automatic latest-date selection |
@@ -243,7 +298,7 @@ flowchart LR
     A[Saved snapshots and manifests] --> B[Hash and audit validation]
     B --> C[Transactional DuckDB load]
     C --> D[Versioned source tables]
-    D --> E[DS-001 accepted views]
+    D --> E[{result['policy_id']} accepted views]
     D --> F[Quarantined evidence and issue ledger]
     E --> G[Calendar-aligned SQL risk inputs]
     D --> H[Versioned Parquet cache]
@@ -256,12 +311,12 @@ flowchart LR
 - Inserts and active-dataset selection use one database transaction. A database error rolls back that load.
 - Parquet publication is a separate, recoverable cache step after database commit. Files are staged and published as a complete directory; existing files are hash-checked and compared with SQL rows on rerun. This is not a distributed transaction across the database and filesystem.
 - Accepted risk prices, accepted FRED context, and quarantined Yahoo index observations have separate views. Context is not automatically approved as a predictive feature. The three discrepancies remain unresolved.
-- The current scope is three instruments and explicit saved captures. General incremental provider ingestion, universe expansion, portfolio calculations, and model training remain subsequent work.
+- The active scope is {result['instrument_count']} instruments under {result['policy_id']}. Earlier dataset versions remain retained. General incremental updates, modeling features/targets, model training, and the interactive application remain subsequent work. The descriptive portfolio baseline is already implemented.
 
 ## Reproduction and inspection
 
 ```bash
-.venv/bin/python -m scripts.build_warehouse --snapshot data/audit/20261104T170702705356Z --historical-snapshot data/audit/20261104T170309697872Z --external-snapshot data/validation/20261104T171500906975Z
+{reproduction}
 # Run the same command again to verify duplicate-free loading and cached exports.
 .venv/bin/python -m unittest discover -s tests -v
 ```
@@ -279,10 +334,11 @@ def main() -> int:
     parser.add_argument("--external-snapshot", required=True, type=Path)
     parser.add_argument("--historical-snapshot", action="append", type=Path, default=[])
     parser.add_argument("--database", type=Path, default=ROOT / "data/warehouse/portfolio-risk.duckdb")
+    parser.add_argument("--policy", type=Path, default=ROOT / "config/source_policy.json")
     parser.add_argument("--parquet-root", type=Path, default=ROOT / "data/normalized")
     args = parser.parse_args()
     bundle = prepare_bundle(args.snapshot.resolve(), args.external_snapshot.resolve(),
-                            [p.resolve() for p in args.historical_snapshot], ROOT / "config/source_policy.json")
+                            [p.resolve() for p in args.historical_snapshot], args.policy.resolve())
     args.database.parent.mkdir(parents=True, exist_ok=True)
     with duckdb.connect(str(args.database)) as connection:
         load_bundle(connection, bundle)

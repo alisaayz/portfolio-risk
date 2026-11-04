@@ -1,7 +1,9 @@
-# Data-source decision: initial prototype
+# Versioned data-source decisions
 
-**Decision:** DS-001 · **Date:** November 4, 2026
-**Status:** Accepted for the initial prototype and enforced by the implemented SQL views.
+**Current decision:** DS-002 · **Date:** November 4, 2026
+**Status:** Sixteen-instrument prototype acceptance implemented and selected in SQL. The original DS-001 decision and configuration remain retained.
+
+## Original DS-001 decision
 
 ## Decision and scope
 
@@ -35,3 +37,13 @@ The cross-source validator continues to return exit status 2 for these mismatche
 The SQL layer must retain observations by source and ingestion run, select canonical data through an explicit versioned policy, and store quality issues separately from prices. Its issue ledger must include observation date, instrument/series, compared fields, tolerance, evidence references, status, and resolution notes. Quarantined observations must remain queryable for review while being excluded from accepted analytical inputs.
 
 The implemented `accepted_prices_daily` and `benchmark_context_daily` views apply versioned source rules to an explicitly selected dataset. `quarantined_benchmark_daily` and `active_quality_issues` preserve excluded evidence. The loader rejects unsupported policy semantics. The portfolio baseline reads only accepted stock/ETF prices and returns. Benchmark predictive features remain unimplemented; context access does not grant feature approval. See the [SQL milestone report](SQL_LAYER.md).
+
+## DS-002: expanded prototype acceptance
+
+[DS-002 configuration](../config/expanded_source_policy.json) admits exactly the sixteen RU-001 instruments for historical risk development. Its content hashes bind the research universe and CA-001 issuer-reference registry. The [expanded validation](UNIVERSE_VALIDATION.md) records 80 matching selected closes and four passing issuer references. Those results add limited consistency evidence; they do not independently certify every historical price, all distributions, or point-in-time availability.
+
+FRED remains context-only. Yahoo ^GSPC remains comparison-only and quarantined with the same three unresolved index differences. No value, tolerance, or discrepancy status is altered to permit expanded stock/ETF acceptance. The complete cross-source validator still returns exit status 2.
+
+The tested loader rejects missing, duplicate, or unknown rules; altered universe/reference bindings; incomplete or failed quote/action checks; changed instrument/calendar identities; and missing benchmark evidence. Earlier price captures and dataset versions remain intact. A pre-promotion local database checkpoint preserves the earlier active selection. The [SQL report](SQL_LAYER.md) identifies the selected expanded dataset and reproducible loading command.
+
+This acceptance authorizes prototype ingestion and historical risk calculations. It does not open reserved 2026 model scores, approve benchmark/macro predictive features, or establish commercial production suitability. Model-input construction and leakage-safe evaluation must follow EV-001.

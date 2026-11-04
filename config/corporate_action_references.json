@@ -1,0 +1,62 @@
+{
+  "reference_set_id": "CA-001",
+  "schema_version": 1,
+  "references": [
+    {
+      "id": "AAPL_SPLIT_2020",
+      "symbol": "AAPL",
+      "provider_date": "2020-08-31",
+      "field": "Stock Splits",
+      "expected_provider_value": 4.0,
+      "tolerance": 1e-06,
+      "scope": "Split ratio and first split-adjusted trading date",
+      "source_url": "https://www.apple.com/newsroom/2020/07/apple-reports-third-quarter-results/",
+      "required_text": [
+        "four-for-one stock split",
+        "August 31, 2020"
+      ]
+    },
+    {
+      "id": "AAPL_DIVIDEND_BASIS_2020",
+      "symbol": "AAPL",
+      "provider_date": "2020-08-07",
+      "field": "Dividends",
+      "expected_provider_value": 0.205,
+      "tolerance": 1e-06,
+      "scope": "Amount basis only: issuer 0.82 divided by four; provider ex-date is not independently verified by this announcement",
+      "source_url": "https://www.apple.com/newsroom/2020/07/apple-reports-third-quarter-results/",
+      "required_text": [
+        "$0.82 per share",
+        "four-for-one stock split"
+      ]
+    },
+    {
+      "id": "MSFT_DIVIDEND_2025",
+      "symbol": "MSFT",
+      "provider_date": "2025-11-20",
+      "field": "Dividends",
+      "expected_provider_value": 0.91,
+      "tolerance": 1e-06,
+      "scope": "Cash dividend amount and ex-dividend date",
+      "source_url": "https://news.microsoft.com/source/2025/09/15/microsoft-announces-quarterly-dividend-increase-6/",
+      "required_text": [
+        "$0.91 per share",
+        "ex-dividend date will be Nov. 20, 2025"
+      ]
+    },
+    {
+      "id": "JNJ_DIVIDEND_2025",
+      "symbol": "JNJ",
+      "provider_date": "2025-05-27",
+      "field": "Dividends",
+      "expected_provider_value": 1.3,
+      "tolerance": 1e-06,
+      "scope": "Cash dividend amount and ex-dividend date",
+      "source_url": "https://www.investor.jnj.com/investor-news/news-details/2025/Johnson--Johnson-Announces-63rd-Consecutive-Year-of-Dividend-Increase-Raises-Quarterly-Dividend-by-4-8/default.aspx",
+      "required_text": [
+        "$1.30 per share",
+        "ex-dividend date is May 27, 2025"
+      ]
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # Personal Portfolio Risk Platform
 
-**Status:** Portfolio baseline, 16-instrument structural audit, and chronological split checks implemented; expanded SQL acceptance and forecasting planned.
+**Status:** 16-instrument source acceptance, SQL risk inputs, portfolio baseline, and evaluation date checks implemented; modeling pipeline and application planned.
 **Last updated:** November 4, 2026.
 
 ## 1. Executive summary
@@ -11,21 +11,17 @@ The central research question is whether a trained model can forecast volatility
 
 ## 2. Work completed
 
-The current implementation includes an isolated Python environment, pinned dependencies, a market-data acquisition and audit script, versioned local snapshots, and a generated quality report. The audit retrieved **5,157 daily observations** across AAPL, SPY, and BND, covering January 2, 2020 through November 3, 2026. Each instrument contained all **1,719 expected trading sessions**, with no duplicate dates, nonpositive prices, or inconsistent OHLC rows detected.
+The implementation includes an isolated Python environment, pinned dependencies, reproducible market-data acquisition, structural audits, cross-source comparisons, versioned SQL/Parquet storage, and an explainable historical portfolio report. The accepted research capture contains **27,504 daily observations across 16 instruments**, covering January 2, 2020–November 3, 2026. Each instrument has all **1,719 expected sessions**, with no structural failures or adjustment-threshold review flags. Provider action records include 645 dividends and one split.
 
-Corporate-action diagnostics cover **134 dividend events and one split**. A selected Apple split and dividend amount were checked against an issuer announcement. Fifteen selected closes match a separate finance website. A full-window comparison of FRED SP500 with Yahoo ^GSPC identified **three unresolved benchmark discrepancies** after accounting for published precision. Original source values are retained; benchmark acceptance is on hold.
+**Eighty selected closing-price pairs match** a separate finance website. Four narrowly scoped issuer checks cover Apple's split and dividend amount basis and selected Microsoft and Johnson & Johnson dividends. These checks do not certify every price or action. FRED SP500 versus Yahoo ^GSPC retains **three unresolved benchmark discrepancies**; original observations are preserved, FRED remains context-only, and the Yahoo comparator stays quarantined.
 
-The SQL warehouse retains **10,314 price rows across two captures** while selecting **5,157 observations** for analytical use. Five Parquet tables preserve normalized data and source rules. The repeated build leaves counts, dataset ID, and export hashes unchanged. All SQL daily returns and complete trailing-volatility windows match an independent NumPy calculation.
+Under versioned policy **DS-002**, the warehouse retains **37,818 price rows across three captures** and selects **27,504 observations** for analytical use. Seven source runs, two dataset versions, and five Parquet exports are retained. Repeated loading preserves the dataset, counts, and export hashes. All **27,488 daily returns** and **27,184 complete 20-return volatility windows** reconcile with independent NumPy calculations.
 
-The historical risk engine accepts validated weights or latest-close quantities, aligns common history, and independently reconciles SQL aggregation and covariance against NumPy. Two explicitly labeled demonstrations use real market history. Over the 252 returns ending November 3, 2026, annualized sample volatility is **11.29%** for the equity-heavy demonstration and **7.24%** for the higher-bond demonstration. Full-history maximum drawdowns are **−26.94%** and **−19.46%**, respectively, over January 2, 2020–November 3, 2026. These are daily-rebalanced hypothetical allocations, without costs or taxes.
+The historical portfolio engine accepts validated weights or latest-close quantities, aligns common history, and independently reconciles SQL and Python calculations. Two explicitly labeled AAPL/SPY/BND demonstrations have annualized sample volatility of **11.29%** and **7.24%** over the 252 returns ending November 3, 2026. Their maximum drawdowns are **−26.94%** and **−19.46%** over the full 2020–2026 replay. These assume daily rebalancing without costs or taxes. Small adjusted-price differences across captures change unrounded metrics slightly; displayed results are unchanged and report versions remain distinct.
 
-An expanded research capture contains **27,504 rows across 16 instruments**, spanning the same 1,719 sessions, with no structural failures or adjustment-threshold review flags. The [selection report](docs/REFERENCE_UNIVERSE.md) explains exposures, survivorship limits, and source-acceptance requirements. This capture is not yet the active SQL dataset; the verified portfolio report still uses the original three-instrument version.
+The [evaluation protocol](docs/EVALUATION_PROTOCOL.md) reserves **2026 for final historical model testing**, with main validation in 2025 and earlier development folds. A date-only pipeline enforces warmup, target boundaries, incomplete-outcome exclusions, and non-overlapping primary origins. It computes no model scores. The [Qlib walkthrough](docs/01_QLIB_WALKTHROUGH.md) documents the workflow reference; Qlib has not been executed.
 
-The [evaluation protocol](docs/EVALUATION_PROTOCOL.md) reserves **2026 for final historical model testing**, uses 2025 for main validation, and adds development folds for 2023 and 2024. A date-only pipeline enforces 252-return warmup, 20-session target boundaries, incomplete-outcome exclusions, and non-overlapping primary test origins. It computes no model scores.
-
-Forty-six regression tests cover data integrity, source alignment, transactional loading, export integrity, portfolio calculations, universe configuration, and chronological leakage boundaries. The [Python application workflow](.github/workflows/python-app.yml) runs fixture-based checks on pushes and pull requests. The three benchmark discrepancies remain unresolved and quarantined under the source policy. No model-performance claim is made.
-
-The research scope, SQL schema, forecast target, evaluation design, and delivery checklist are also documented. A [Qlib source walkthrough](docs/01_QLIB_WALKTHROUGH.md) explains the adaptations required for volatility forecasting. No risk model has been trained.
+**Sixty-two regression tests pass locally**, covering data integrity, source acceptance, policy scope, rollback, exports, portfolio calculations, numerical reconciliation, and chronological boundaries. The [Python application workflow](.github/workflows/python-app.yml) runs fixture-based checks on pushes and pull requests. Modeling features/targets, model training, and the interactive application remain subsequent milestones; no forecast-performance claim is made.
 
 ## 3. Project composition and methodology
 
@@ -37,10 +33,10 @@ The research scope, SQL schema, forecast target, evaluation design, and delivery
 
 | Component | Method | Current state |
 | --- | --- | --- |
-| Acquisition | Yahoo Finance history through yfinance, with explicit adjustment settings and corporate actions | Structurally audited for 16; SQL acceptance remains three instruments |
+| Acquisition | Yahoo Finance history through yfinance, with explicit adjustment settings and corporate actions | Accepted for prototype work on 16 instruments under DS-002 |
 | Evidence | Timestamped CSV snapshots, structured metadata, request settings, package versions, and SHA-256 hashes | Implemented; downloaded prices remain local |
-| Quality control | Exchange-session coverage, duplicates, missing/invalid values, OHLC consistency, volume, and adjustment diagnostics | Implemented; see the [audit report](docs/DATA_AUDIT.md) |
-| Verification | Regression tests, issuer cross-check, separate website spot checks, FRED benchmark reconciliation, and offline replay | Implemented; three benchmark exceptions remain open |
+| Quality control | Exchange-session coverage, duplicates, missing/invalid values, OHLC consistency, volume, and adjustment diagnostics | Implemented; see the [expanded audit](docs/UNIVERSE_AUDIT.md) |
+| Verification | Regression tests, issuer cross-check, separate website spot checks, FRED benchmark reconciliation, and offline replay | 80 quote pairs and four issuer checks pass; three benchmark exceptions remain quarantined |
 | SQL foundation | Transactional loading, explicit dataset versions, normalized Parquet, and policy-controlled views | Implemented; see the [SQL report](docs/SQL_LAYER.md) |
 | Historical inputs | Calendar-aligned daily returns and complete trailing 20-return volatility windows | Returns used in baseline; trailing volatility reserved for forecasting |
 | Portfolio baseline | Sample covariance, annualized volatility, full-history drawdown, correlations, and Euler holding contributions | Implemented; see the [demonstration report](docs/BASELINE_PORTFOLIO_REPORT.md) |
@@ -50,7 +46,7 @@ The research scope, SQL schema, forecast target, evaluation design, and delivery
 
 ### Data quality findings
 
-![Observed and missing expected trading sessions by instrument](docs/assets/data-audit-summary.svg)
+![Complete expected coverage across sixteen instruments](docs/assets/universe-coverage.svg)
 
 The audit compares observed dates with configured exchange-session calendars, retains missing observations, and does not repair prices or fill gaps. It records dividend and split events and checks changes in the adjusted-close/close ratio. Threshold breaches produce review flags rather than automatic corrections.
 
@@ -90,10 +86,11 @@ This comparison generates `docs/CROSS_SOURCE_VALIDATION.md` and returns exit sta
 ### Build and inspect the SQL warehouse
 
 ```bash
-.venv/bin/python -m scripts.build_warehouse --snapshot data/audit/<selected-run-id> --historical-snapshot data/audit/<earlier-run-id> --external-snapshot data/validation/<external-run-id>
+.venv/bin/python -m scripts.build_warehouse --snapshot data/audit/<selected-run-id> --historical-snapshot data/audit/<earlier-run-id> --external-snapshot data/validation/<external-run-id> --policy config/expanded_source_policy.json
+.venv/bin/python -m scripts.verify_warehouse
 ```
 
-The earlier capture is optional. The command verifies saved inputs, loads DuckDB, selects the explicit dataset, exports Parquet, and generates `docs/SQL_LAYER.md`. Repeat the same command to check idempotence. Dataset identity includes source manifests, policy, transformation code, SQL definitions, and the DuckDB version. Queries are in [sql/diagnostics.sql](sql/diagnostics.sql); the [SQL walkthrough](docs/03_SQL_WALKTHROUGH.md) explains their purpose.
+The earlier capture is optional and may contain a supported subset of the primary universe. DS-002 requires exact universe/reference bindings, all sixteen quote checks, and the selected issuer checks. DS-001 remains available for its original three-instrument scope. The command verifies saved inputs, loads DuckDB, selects the explicit dataset, exports Parquet, and generates `docs/SQL_LAYER.md`. Repeat the same command to check idempotence. Dataset identity includes source manifests, policy, transformation code, SQL definitions, and the DuckDB version. Queries are in [sql/diagnostics.sql](sql/diagnostics.sql); the [SQL walkthrough](docs/03_SQL_WALKTHROUGH.md) explains their purpose.
 
 The Python application workflow installs the pinned environment and runs the regression suite on pushes and pull requests. It uses test fixtures rather than private/local market-data files. This project is not distributed as a PyPI package.
 
@@ -117,7 +114,9 @@ Reports record the dataset, configuration, input hash, and calculation-code hash
 
 ### Research universe and evaluation design
 
-The [reference configuration](config/reference_universe.json) contains five individual stocks, five equity ETFs, five bond ETFs, and one gold trust. Selection targets varied exposures, not 2026 model performance. All returned observations pass structural checks; independent quote/action review and tested acceptance-policy/loader changes are required before expanded SQL promotion. The existing three-instrument dataset and portfolio report remain preserved.
+The [reference configuration](config/reference_universe.json) contains five individual stocks, five equity ETFs, five bond ETFs, and one gold trust. Selection targets varied exposures, not 2026 model performance. All observations pass structural checks, 80 quote pairs match, and four selected issuer checks pass. DS-002 now promotes the expanded capture to accepted SQL inputs. Earlier three-instrument captures and the original dataset remain retained. The [promotion walkthrough](docs/05_EXPANDED_SQL_WALKTHROUGH.md) explains source gates, a maintenance-page failure, cross-capture differences, and independent reconciliation.
+
+![Evidence gates and accepted SQL data with the index comparator quarantined](docs/assets/source-acceptance.svg)
 
 ![Chronological development and reserved 2026 model evaluation](docs/assets/evaluation-timeline.svg)
 
@@ -141,7 +140,8 @@ The initial application will support daily, USD-denominated stocks and ETFs in l
 
 ### Documentation and next milestone
 
-- [Reference universe](docs/REFERENCE_UNIVERSE.md) and [expanded structural audit](docs/UNIVERSE_AUDIT.md): selection, evidence, and acceptance limits.
+- [Reference universe](docs/REFERENCE_UNIVERSE.md), [expanded audit](docs/UNIVERSE_AUDIT.md), and [source validation](docs/UNIVERSE_VALIDATION.md): selection, evidence, and acceptance limits.
+- [Expanded SQL walkthrough](docs/05_EXPANDED_SQL_WALKTHROUGH.md): policy gates, archived failures, numerical checks, and capture differences.
 - [Evaluation protocol](docs/EVALUATION_PROTOCOL.md) and [date eligibility](docs/EVALUATION_SPLITS.md): testing contract, implemented boundaries, and planned model checks.
 - [Data audit](docs/DATA_AUDIT.md): observed findings, provenance, methods, and limitations.
 - [Cross-source validation](docs/CROSS_SOURCE_VALIDATION.md): website quote checks and unresolved FRED/Yahoo benchmark differences.
@@ -151,9 +151,9 @@ The initial application will support daily, USD-denominated stocks and ETFs in l
 - [Action checklist](docs/ACTION_PLAN.md): tasks and completion criteria.
 - [Project plan](docs/PROJECT_PLAN.md): the broader technical specifications.
 
-The [source policy](docs/DATA_SOURCE_POLICY.md) accepts the audited stock/ETF sample for prototype work, selects FRED as the preferred price-index context source, and quarantines Yahoo ^GSPC. The underlying three discrepancies remain unresolved.
+The [source policy](docs/DATA_SOURCE_POLICY.md) accepts RU-001 under DS-002 for prototype work, selects FRED as the preferred price-index context source, and quarantines Yahoo ^GSPC. The underlying three discrepancies remain unresolved.
 
-The SQL views now enforce this source policy. Next: independently review expanded quote/action evidence and extend the tested SQL acceptance policy/loader to the 16-instrument sample. Then implement and reconcile SQL features and forward targets under EV-001 before training or opening 2026 model scores.
+The SQL views now enforce this source policy. Next: build separate SQL modeling features and future targets under EV-001, independently reconcile their values and dates, and test that future observations cannot alter earlier inputs. Model training follows those checks; final 2026 model scores remain reserved.
 
 ### References
 

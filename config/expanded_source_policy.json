@@ -1,0 +1,99 @@
+{
+  "policy_id": "DS-002",
+  "universe_id": "RU-001",
+  "universe_sha256": "9f4fb3e869492806fb3a452e7e501540e4e58410091d925d7d2198fac581265e",
+  "issuer_reference_set_id": "CA-001",
+  "issuer_reference_sha256": "dacc5cefa6f3b4aa9ee31864fb1a64d371949ee762016f74fe1c108a49ef37a7",
+  "rules": [
+    {
+      "source_id": "yahoo_prices",
+      "entity_id": "AAPL",
+      "purpose": "risk_prices"
+    },
+    {
+      "source_id": "yahoo_prices",
+      "entity_id": "MSFT",
+      "purpose": "risk_prices"
+    },
+    {
+      "source_id": "yahoo_prices",
+      "entity_id": "JPM",
+      "purpose": "risk_prices"
+    },
+    {
+      "source_id": "yahoo_prices",
+      "entity_id": "JNJ",
+      "purpose": "risk_prices"
+    },
+    {
+      "source_id": "yahoo_prices",
+      "entity_id": "XOM",
+      "purpose": "risk_prices"
+    },
+    {
+      "source_id": "yahoo_prices",
+      "entity_id": "SPY",
+      "purpose": "risk_prices"
+    },
+    {
+      "source_id": "yahoo_prices",
+      "entity_id": "QQQ",
+      "purpose": "risk_prices"
+    },
+    {
+      "source_id": "yahoo_prices",
+      "entity_id": "IWM",
+      "purpose": "risk_prices"
+    },
+    {
+      "source_id": "yahoo_prices",
+      "entity_id": "EFA",
+      "purpose": "risk_prices"
+    },
+    {
+      "source_id": "yahoo_prices",
+      "entity_id": "EEM",
+      "purpose": "risk_prices"
+    },
+    {
+      "source_id": "yahoo_prices",
+      "entity_id": "BND",
+      "purpose": "risk_prices"
+    },
+    {
+      "source_id": "yahoo_prices",
+      "entity_id": "IEF",
+      "purpose": "risk_prices"
+    },
+    {
+      "source_id": "yahoo_prices",
+      "entity_id": "TLT",
+      "purpose": "risk_prices"
+    },
+    {
+      "source_id": "yahoo_prices",
+      "entity_id": "LQD",
+      "purpose": "risk_prices"
+    },
+    {
+      "source_id": "yahoo_prices",
+      "entity_id": "HYG",
+      "purpose": "risk_prices"
+    },
+    {
+      "source_id": "yahoo_prices",
+      "entity_id": "GLD",
+      "purpose": "risk_prices"
+    },
+    {
+      "source_id": "fred",
+      "entity_id": "SP500",
+      "purpose": "context"
+    },
+    {
+      "source_id": "yahoo_index",
+      "entity_id": "^GSPC",
+      "purpose": "quarantine"
+    }
+  ]
+}

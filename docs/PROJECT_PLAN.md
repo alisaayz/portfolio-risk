@@ -6,7 +6,7 @@ Working plan established November 3, 2026; implementation status updated Novembe
 
 The user wants to understand investments they already own and explore potential portfolios. Begin with long-only, unleveraged, USD-denominated stocks and ETFs and daily data. A declared portfolio snapshot, holdings date, weight convention, and reporting currency accompany every report.
 
-RU-001 selects 16 reference instruments with varied exposures and histories from January 2020 through November 2026. All pass structural checks; expanded independent verification and SQL promotion remain pending. See [REFERENCE_UNIVERSE.md](REFERENCE_UNIVERSE.md). This is a research universe, not a recommended investment allocation. Later expansion to additional instruments should preserve the same data contracts.
+RU-001 selects 16 reference instruments with varied exposures and histories from January 2020 through November 2026. All pass structural checks; selected independent checks and DS-002 SQL promotion are implemented. See [REFERENCE_UNIVERSE.md](REFERENCE_UNIVERSE.md). This is a research universe, not a recommended investment allocation. Later expansion to additional instruments should preserve the same data contracts.
 
 Use Qlib to learn the structure of a reproducible quantitative workflow. Study its LightGBM example and its separation of datasets, models, and records. Implement our risk-specific SQL layer and objectives explicitly; decide whether to integrate Qlib itself after testing compatibility and data access.
 
@@ -147,7 +147,7 @@ The planned SQL layer must retain source values and quality issues separately. R
 
 ## Implemented SQL milestone — November 4, 2026
 
-The warehouse retains two price captures (10,314 rows) and selects 5,157 canonical observations through an explicit dataset pointer. SQL enforces DS-001, retains three active discrepancy records, and calculates calendar-aligned returns and complete historical volatility windows. Five normalized Parquet tables are versioned and hash-checked. Repeated real-data loading preserves counts, dataset identity, and exports; all SQL returns and complete volatility windows reconcile with NumPy. Portfolio baseline calculations are implemented as described below. The larger universe is structurally audited; SQL promotion and forecasting remain subsequent work. See [SQL_LAYER.md](SQL_LAYER.md).
+The warehouse retains two price captures (10,314 rows) and selects 5,157 canonical observations through an explicit dataset pointer. SQL enforces DS-001, retains three active discrepancy records, and calculates calendar-aligned returns and complete historical volatility windows. Five normalized Parquet tables are versioned and hash-checked. Repeated real-data loading preserves counts, dataset identity, and exports; all SQL returns and complete volatility windows reconcile with NumPy. Portfolio baseline calculations are implemented as described below. The larger universe is now accepted under DS-002 as described below; forecasting remains subsequent work. See [SQL_LAYER.md](SQL_LAYER.md).
 
 ## Implemented portfolio baseline — November 4, 2026
 
@@ -159,6 +159,14 @@ SQL and NumPy returns and covariance reconcile; weighted-series volatility, Eule
 
 ## Implemented universe audit and date contract — November 4, 2026
 
-RU-001 preserves 27,504 rows across 16 instruments, with complete expected coverage and no structural failures or adjustment-threshold review flags. It is separate from the current accepted SQL dataset; additional independent evidence and tested source-policy/loader changes are required for promotion.
+RU-001 preserves 27,504 rows across 16 instruments, with complete expected coverage and no structural failures or adjustment-threshold review flags. This capture has since been promoted under DS-002 following additional evidence and tested source-policy/loader changes, as described below.
 
 EV-001 reserves 2026 model scores, adds earlier development years, and implements date-only membership with a 252-return warmup and exact 20-session target boundaries. Each instrument currently has 986 initial-training, 230 main-validation, and 191 completed daily test origins; ten completed primary test windows are non-overlapping within that instrument. Twenty recent origins lack complete outcomes. These are eligibility counts, not forecast results or independent sample counts. Forty-six regression tests pass. Features, actual target values, and all model scores remain unimplemented. See [EVALUATION_SPLITS.md](EVALUATION_SPLITS.md).
+
+## Implemented expanded acceptance and SQL promotion — November 4, 2026
+
+DS-002 accepts all sixteen RU-001 instruments after 80 matching quote pairs and four selected issuer checks. The failed maintenance-page response remains archived; a public investor-relations announcement supplied the missing J&J evidence in a new capture. The three index discrepancies remain unresolved and quarantined.
+
+The warehouse selects 27,504 rows, retaining 37,818 across three price captures, seven source runs, and two dataset versions. Repeated builds preserve counts, identity, and all five export hashes. Every one of 27,488 returns and 27,184 complete historical volatility windows reconciles with NumPy. Sixty-two software tests pass locally.
+
+Small adjusted-close differences between captures are preserved rather than patched. The descriptive baseline was refreshed under the expanded dataset; displayed volatility/drawdown results remain unchanged, while unrounded values and report identity differ. Next: separate modeling features/targets, future-value perturbation, and independent target/date reconciliation under EV-001. No model forecasts or final-test scores have been calculated. See [05_EXPANDED_SQL_WALKTHROUGH.md](05_EXPANDED_SQL_WALKTHROUGH.md).

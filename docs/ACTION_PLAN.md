@@ -32,10 +32,10 @@ The system must connect real market data to an explainable risk report. A foreca
 
 **Outputs:** [data audit](DATA_AUDIT.md), [cross-source validation](CROSS_SOURCE_VALIDATION.md), [implementation walkthrough](02_DATA_AUDIT_WALKTHROUGH.md), scripts, and ignored local snapshots. The stock/ETF sample passes structural checks and limited quote spot checks. Benchmark source agreement is not complete; see the exception report.
 
-### 3. Build the Python ingestion and SQL foundation — three-instrument SQL milestone implemented
+### 3. Build the Python ingestion and SQL foundation — 16-instrument SQL milestone implemented
 
 - [x] Select and structurally audit 16 reference instruments, preserving January 2020–November 2026 capture dates and current-survivor selection limits in [RU-001](REFERENCE_UNIVERSE.md).
-- [ ] Independently review expanded quotes/actions, extend tested source rules and loading, and promote the expanded sample to SQL. The active accepted dataset still contains three instruments.
+- [x] Check 80 selected closes and four issuer references; implement/test DS-002; promote 27,504 observations across sixteen instruments while retaining earlier versions. All 27,488 SQL returns and 27,184 complete volatility windows reconcile independently.
 - [x] Implement explicit acquisition settings, visible errors, saved snapshots, and offline replay; general incremental provider updates remain future work.
 - [x] Create versioned source/dataset tables, normalize to Parquet, and load DuckDB transactionally.
 - [x] Write policy-controlled price/context views, a quality-issue ledger, calendar-aligned returns, and trailing-risk inputs.
@@ -99,8 +99,8 @@ The system must connect real market data to an explainable risk report. A foreca
 1. Review the data-audit walkthrough and the three open benchmark source exceptions.
 2. Read the SQL walkthrough and inspect accepted prices, context, and quarantined issues with the example queries.
 3. Review the baseline report, especially capital weights versus risk contributions and the different estimation/replay windows.
-4. Review the 16-instrument structural audit and EV-001; independently verify additional quote/action evidence, then extend tested SQL acceptance and loading.
+4. Review DS-002 acceptance evidence, the maintenance-page failure, adjusted-price differences, and full SQL reconciliation in the expanded walkthrough.
 5. Build and independently reconcile SQL features and forward targets using the implemented date contract. Add future-value perturbation tests before training.
 6. Train and evaluate development folds; freeze the final recipe before opening any 2026 model scores.
 
-**Current state:** data acquisition, audit, cross-source comparison, versioned SQL/Parquet storage, historical inputs, and the baseline portfolio report are implemented. The original three-instrument sample contains 5,157 accepted rows. Three benchmark discrepancies remain quarantined. Forty-six regression tests cover the current system. The expanded capture contains 27,504 structurally passing rows across 16 instruments; promotion to SQL remains pending independent acceptance checks and tested loader changes. Date-only evaluation membership is implemented with a reserved 2026 model test; feature/target construction and model scores remain planned. Two labeled demonstration portfolios use real data; no personal holdings have been supplied. Qlib execution, model training, dedicated stress scenarios, and the application remain outstanding.
+**Current state:** data acquisition, audit, cross-source comparison, versioned SQL/Parquet storage, historical inputs, and the baseline portfolio report are implemented. The original three-instrument dataset remains retained with 5,157 selected rows; the active dataset now uses the expanded capture. Three benchmark discrepancies remain quarantined. Sixty-two regression tests cover the current system. DS-002 selects 27,504 accepted rows across sixteen instruments; 37,818 retained price rows preserve earlier captures. All returns and complete historical volatility windows reconcile with NumPy. Date-only evaluation membership is implemented with a reserved 2026 model test; feature/target construction and model scores remain planned. Two labeled demonstration portfolios use real data; no personal holdings have been supplied. Qlib execution, model training, dedicated stress scenarios, and the application remain outstanding.

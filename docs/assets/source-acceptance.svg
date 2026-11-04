@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="720" viewBox="0 0 1040 720" role="img" aria-labelledby="title description">
+  <title id="title">Evidence gates for DS-002 prototype acceptance</title>
+  <desc id="description">Sixteen instruments with 27,504 structurally passing rows, eighty matching quote pairs, and four selected issuer checks enter the version-bound DS-002 policy. The active SQL view accepts all sixteen instruments. Yahoo's S&amp;P 500 comparator remains quarantined with three unresolved issues. These checks are limited prototype evidence, not complete certification.</desc>
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#52647a"/></marker></defs>
+  <style>text{font-family:Arial,Helvetica,sans-serif;fill:#172b46}.title{font-size:26px;font-weight:700}.heading{font-size:19px;font-weight:700}.body{font-size:16px}.small{font-size:14px;fill:#52647a}.done{fill:#e7f3ed;stroke:#85b69b;stroke-width:1.5}.line{fill:none;stroke:#52647a;stroke-width:2;marker-end:url(#arrow)}</style>
+  <rect width="1040" height="720" rx="18" fill="#f4f7fb"/>
+  <text x="40" y="48" class="title">From source evidence to accepted SQL data</text>
+  <text x="40" y="77" class="body">Observed prototype checks · January 2, 2020–November 3, 2026 history</text>
+  <rect x="40" y="100" width="960" height="80" rx="10" class="done"/>
+  <text x="520" y="133" text-anchor="middle" class="heading">Structural audit: 16 instruments, 27,504 rows</text>
+  <text x="520" y="161" text-anchor="middle" class="body">Complete expected sessions; no structural failures or adjustment-threshold flags</text>
+  <path class="line" d="M520 180 V195 H272 V213"/><path class="line" d="M520 195 H768 V213"/>
+  <rect x="40" y="215" width="465" height="110" rx="10" class="done"/>
+  <text x="272" y="248" text-anchor="middle" class="heading">80 matching quote pairs</text>
+  <text x="272" y="277" text-anchor="middle" class="body">Five completed closes per instrument</text>
+  <text x="272" y="303" text-anchor="middle" class="small">Separate website; upstream independence unknown</text>
+  <rect x="535" y="215" width="465" height="110" rx="10" class="done"/>
+  <text x="768" y="248" text-anchor="middle" class="heading">Four selected issuer checks</text>
+  <text x="768" y="277" text-anchor="middle" class="body">Apple split/basis; Microsoft and J&amp;J dividends</text>
+  <text x="768" y="303" text-anchor="middle" class="small">Limited events; no full ETF-distribution reconstruction</text>
+  <path class="line" d="M272 325 V350 H520 V378"/><path class="line" d="M768 325 V350 H520"/>
+  <rect x="210" y="380" width="620" height="86" rx="10" fill="#dbe9f6" stroke="#99b9df"/>
+  <text x="520" y="414" text-anchor="middle" class="heading">DS-002: exact universe and evidence bindings</text>
+  <text x="520" y="443" text-anchor="middle" class="body">Reject omitted checks, changed identities, and quarantine changes</text>
+  <path class="line" d="M520 466 V490 H340 V513"/><path class="line" d="M520 490 H825 V513"/>
+  <rect x="40" y="515" width="600" height="104" rx="10" class="done"/>
+  <text x="340" y="551" text-anchor="middle" class="heading">Accepted risk views: 16 instruments</text>
+  <text x="340" y="580" text-anchor="middle" class="body">27,488 returns and 27,184 complete volatility windows</text>
+  <text x="340" y="604" text-anchor="middle" class="small">All reconciled independently with NumPy</text>
+  <rect x="670" y="515" width="330" height="104" rx="10" fill="#f7e8d7" stroke="#d6af7d"/>
+  <text x="835" y="551" text-anchor="middle" class="heading">Yahoo index quarantined</text>
+  <text x="835" y="580" text-anchor="middle" class="body">Three unresolved differences</text>
+  <text x="835" y="604" text-anchor="middle" class="small">FRED remains context only</text>
+  <text x="40" y="661" class="small">Earlier captures and datasets are retained. No source observation is silently patched.</text>
+  <text x="40" y="688" class="small">Prototype acceptance does not certify every price/action or establish point-in-time historical availability.</text>
+</svg>

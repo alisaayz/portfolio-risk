@@ -18,12 +18,32 @@ import requests
 import yfinance as yf
 
 from scripts.audit_market_data import HISTORY_SETTINGS, ROOT, dump_json, expected_sessions, sha256
+from scripts.corporate_action_checks import REFERENCE_PATH, reference_configuration, validate_actions
 
 WEBSITES = {
     "AAPL": "https://stockanalysis.com/stocks/aapl/history/",
     "SPY": "https://stockanalysis.com/etf/spy/history/",
     "BND": "https://stockanalysis.com/etf/bnd/history/",
 }
+
+
+def websites_for_manifest(base: dict) -> dict:
+    if "universe" not in base:
+        return dict(WEBSITES)
+    records = base["universe"]["instruments"]
+    websites = {}
+    for record in records:
+        kind = record["kind"]
+        if kind not in {"stock", "equity_etf", "bond_etf", "gold_trust"}:
+            raise ValueError("Unsupported quote-page classification")
+        segment = "stocks" if kind == "stock" else "etf"
+        symbol = record["symbol"]
+        if not symbol.isalnum() or not symbol.isupper() or symbol in websites:
+            raise ValueError("Invalid or duplicate quote-page symbol")
+        websites[symbol] = f"https://stockanalysis.com/{segment}/{symbol.lower()}/history/"
+    if set(websites) != set(base["instruments"]):
+        raise ValueError("Quote acceptance must cover every configured instrument")
+    return websites
 
 
 def load_prices(path: Path) -> pd.DataFrame:
@@ -80,10 +100,16 @@ def acquire(run: Path, base_run: Path) -> dict:
                 "packages": {p: version(p) for p in ["pandas", "requests", "yfinance", "exchange-calendars"]}, "sources": {}}
     session = requests.Session()
     session.headers["User-Agent"] = "PortfolioRiskResearchAudit/0.1"
+    websites = websites_for_manifest(base)
+    manifest["website_urls"] = websites
+    if "universe" in base:
+        manifest["issuer_reference_sha256"] = sha256(REFERENCE_PATH)
     tasks = [("FRED_SP500", "https://fred.stlouisfed.org/graph/fredgraph.csv", "FRED_SP500.csv",
               {"id": "SP500", "cosd": base["start_inclusive"],
                "coed": str((pd.Timestamp(base["end_exclusive"]) - pd.Timedelta(days=1)).date())})]
-    tasks += [(symbol, url, f"{symbol}.html", None) for symbol, url in WEBSITES.items()]
+    tasks += [(symbol, url, f"{symbol}.html", None) for symbol, url in websites.items()]
+    if "universe" in base:
+        tasks += [(r["id"], r["source_url"], r["id"]+".html", None) for r in reference_configuration()["references"]]
     for name, url, filename, params in tasks:
         record = {"status": "failed", "url": url}
         try:
@@ -124,8 +150,11 @@ def validate(run: Path, base_run: Path, manifest: dict) -> dict:
     for name, record in manifest["sources"].items():
         if record["status"] == "downloaded" and sha256(run / record["file"]) != record["sha256"]:
             raise ValueError(f"Reference snapshot changed: {name}")
+    websites = websites_for_manifest(base)
+    if manifest.get("website_urls", WEBSITES) != websites:
+        raise ValueError("Captured quote URLs differ from the configured universe")
     results = {}
-    for symbol in WEBSITES:
+    for symbol in websites:
         result = {"passed": False}
         try:
             if manifest["sources"][symbol]["status"] != "downloaded":
@@ -141,7 +170,7 @@ def validate(run: Path, base_run: Path, manifest: dict) -> dict:
             website_close = pd.to_numeric(table["Close"].astype(str).str.replace(",", ""), errors="coerce")
             required = provider.index[-5:]
             result = compare_values(provider["Close"], website_close, required, 0.01)
-            result.update(comparison="Daily Close in USD, latest five completed sessions in the baseline", source_url=WEBSITES[symbol])
+            result.update(comparison="Daily Close in USD, latest five completed sessions in the baseline", source_url=websites[symbol])
         except Exception as exc:
             result["error"] = f"{type(exc).__name__}: {exc}"
         results[symbol] = result
@@ -169,13 +198,16 @@ def validate(run: Path, base_run: Path, manifest: dict) -> dict:
         original = load_prices(run / "YAHOO_GSPC.csv")["Close"]
         recheck = load_prices(path)["Close"]
         targeted = compare_values(original, recheck, recheck.index, 0.0)
+    actions = validate_actions(run, base_run, manifest, load_prices) if "universe" in base else []
     return {"run_id": run.name, "base_run_id": base_run.name,
             "audit_script_sha256": sha256(Path(__file__)), "website_checks": results,
-            "fred_benchmark_check": benchmark, "targeted_yahoo_recheck": targeted,
-            "all_checks_pass": all(r["passed"] for r in [*results.values(), benchmark])}
+            "fred_benchmark_check": benchmark, "targeted_yahoo_recheck": targeted, "issuer_action_checks": actions,
+            "all_checks_pass": all(r["passed"] for r in [*results.values(), benchmark, *actions])}
 
 
 def report(result: dict, manifest: dict) -> None:
+    if len(result["website_checks"]) > 3:
+        return report_expanded(result, manifest)
     table = []
     for name, check in [*result["website_checks"].items(), ("S&P 500 benchmark", result["fred_benchmark_check"])]:
         largest = check.get("max_absolute_difference")
@@ -251,6 +283,67 @@ Direct Yahoo Finance history pages returned HTTP 429 during the initial web chec
 Sources: [FRED series and notes](https://fred.stlouisfed.org/series/SP500), [AAPL history](https://stockanalysis.com/stocks/aapl/history/), [SPY history](https://stockanalysis.com/etf/spy/history/), [BND history](https://stockanalysis.com/etf/bnd/history/).
 """
     (ROOT / "docs/CROSS_SOURCE_VALIDATION.md").write_text(text)
+
+
+def report_expanded(result: dict, manifest: dict) -> None:
+    quote_rows = []
+    for symbol, check in result["website_checks"].items():
+        quote_rows.append(f"| {symbol} | {check.get('compared_dates',0)} / {check.get('required_dates','—')} | {len(check.get('mismatch_dates',[]))} | {'Pass' if check['passed'] else 'Fail / unavailable'} |")
+    actions = result["issuer_action_checks"]
+    action_rows = "\n".join(f"| {a['reference_id']} | {'Pass' if a['passed'] else 'Fail / unavailable'} | {a['scope']} | [Issuer source]({a['source_url']}) |" for a in actions)
+    benchmark = result["fred_benchmark_check"]
+    mismatch_rows = "\n".join(f"| {day} | {value:.2f} | Unresolved; comparator quarantined |" for day,value in benchmark.get('mismatch_absolute_differences',{}).items())
+    total = sum(check.get('compared_dates',0) for check in result['website_checks'].values())
+    passed = all(check['passed'] for check in result['website_checks'].values()) and bool(actions) and all(a['passed'] for a in actions)
+    errors = [f"- {name}: {check['error']}" for name,check in [*result['website_checks'].items(),('benchmark',benchmark)] if check.get('error')]
+    text = f"""# Expanded source validation
+
+Updated November 4, 2026. Quote/action acceptance checks: **{'Pass' if passed else 'Not passed'}**. Benchmark comparison: **{'Pass' if benchmark['passed'] else 'Not passed; original values retained'}**. No model forecasts or scores are evaluated.
+
+## Scope and observed checks
+
+- Price capture: `{result['base_run_id']}`.
+- External capture: `{result['run_id']}`.
+- Stock Analysis is a separate website; its upstream vendor independence is not established. Daily USD Close is compared on the last five completed sessions in the price capture, excluding intraday and later dates.
+- Total quote pairs compared: **{total}** across **{len(result['website_checks'])} instruments**. Published cents and a $0.01 tolerance are used, with missing dates failing. Spot checks do not certify the full price histories.
+
+| Instrument | Compared / required | Mismatches beyond tolerance | Result |
+| --- | ---: | ---: | --- |
+{chr(10).join(quote_rows)}
+
+## Selected corporate actions
+
+The [CA-001 reference registry](../config/corporate_action_references.json) records manually reviewed issuer facts and the specific fields supported. Archived issuer text is checked for the reviewed evidence and compared with provider action values. This is a narrow replay check, not a general semantic extractor or verification of all 645 dividends. ETF distributions are not independently reconstructed.
+
+| Reference | Result | Supported scope | Evidence |
+| --- | --- | --- | --- |
+{action_rows}
+
+Apple's dividend check addresses the split-adjusted amount basis; its provider ex-date is a lookup key and is not verified by that announcement. The Microsoft and Johnson & Johnson references explicitly state their selected ex-dividend dates and amounts.
+
+## Benchmark evidence remains separate
+
+FRED SP500 is compared only with Yahoo ^GSPC, not ETF dollar prices. Compared sessions: **{benchmark.get('compared_dates',0)}**. Tolerance: 0.02 index points at two-decimal precision. FRED is context; Yahoo's comparator remains quarantined. Agreement of individual-instrument quotes does not resolve these index differences.
+
+| Date | Absolute difference, index points | Disposition |
+| --- | ---: | --- |
+{mismatch_rows}
+
+{chr(10).join(errors)}
+
+The validator returns exit status 2 while benchmark discrepancies remain. Prototype acceptance may proceed only through a documented policy that excludes the discrepant comparator and retains its original observations and issue records. It must not convert the full cross-source comparison into a pass.
+
+## Provenance and reproduction
+
+HTTP status, retrieval time, URLs, downloaded response hashes, package versions, reference-registry hash, and base-manifest binding are preserved in the local capture. All source files are hash-checked before replay. Local HTML/CSV files remain outside Git; public results are aggregate checks and source links.
+
+```bash
+.venv/bin/python -m scripts.cross_validate_sources --snapshot data/audit/{result['base_run_id']} --external-snapshot data/validation/{result['run_id']}
+```
+
+See the [source policy](DATA_SOURCE_POLICY.md), [reference universe](REFERENCE_UNIVERSE.md), and [SQL milestone](SQL_LAYER.md) for acceptance and loading status. Prices are revised histories, not point-in-time archives; quote checks do not establish redistribution rights, production availability, or future model accuracy.
+"""
+    (ROOT / 'docs/UNIVERSE_VALIDATION.md').write_text(text)
 
 
 def main() -> int:
