@@ -29,7 +29,9 @@ The [forecast benchmark experiment](docs/BASELINE_FORECAST_REPORT.md) compares t
 
 The [trained-model experiment](docs/MODEL_DEVELOPMENT_REPORT.md) fits three fixed histogram gradient-boosting candidates on earlier outcomes for each 2023–2025 validation year. The selected seven-leaf model has 2025 primary volatility MAE of **5.56 percentage points**, versus **5.91** for selected EWMA and **6.30** for trailing variance, with lower QLIKE in that year. It performs worse than both selected benchmarks on 2023 MAE; this is mixed development evidence. All nine candidate/fold models reproduce their predictions on repeat fitting and after serialization. A separate verifier reconciles **81,536 per-origin errors** and **42 aggregate comparisons** without loading model files or calling the training evaluator. No final refitting or 2026 prediction, numeric outcome, or score is produced.
 
-**One hundred and six regression tests pass locally**, covering data integrity, source acceptance, policy scope, rollback, exports, portfolio calculations, numerical reconciliation, and chronological boundaries. The [Python application workflow](.github/workflows/python-app.yml) runs fixture-based checks on pushes and pull requests. Final model testing and the interactive application remain subsequent milestones; development results do not establish final-test or live performance. A [future adjustment roadmap](docs/PORTFOLIO_ADJUSTMENT_ROADMAP.md) records requested reweighting, replacement criteria, and optional candidate suggestions; none is implemented.
+The [development robustness review](docs/DEVELOPMENT_ROBUSTNESS.md) keeps every fitted model fixed while shifting the twenty-session grid by 0, 5, 10, and 15 sessions. In 2025 the selected model beats selected EWMA on MAE in **three of four phases**, and trailing variance in **all four**. The EWMA ranking reverses at the five-session offset. Offset zero exactly reproduces the original primary comparison; these dependent diagnostics do not change selection or the final-test grid. Leave-one-instrument-out aggregation is also recorded without refitting.
+
+**One hundred and twelve regression tests pass locally**, covering data integrity, source acceptance, policy scope, rollback, exports, portfolio calculations, numerical reconciliation, and chronological boundaries. The [Python application workflow](.github/workflows/python-app.yml) runs fixture-based checks on pushes and pull requests. Final model testing and the interactive application remain subsequent milestones; development results do not establish final-test or live performance. A [future adjustment roadmap](docs/PORTFOLIO_ADJUSTMENT_ROADMAP.md) records requested reweighting, replacement criteria, and optional candidate suggestions; none is implemented.
 
 ## 3. Project composition and methodology
 
@@ -183,6 +185,12 @@ The [report](docs/MODEL_DEVELOPMENT_REPORT.md) contains all candidate scores, se
 ```
 
 All candidate/fold model files, predictions, parameters, failures, hashes, and package versions remain in local experiment records. Tracking is file based; MLflow is not installed. Repeated successful runs must preserve experiment identity and every saved output hash. Raw market observations and models remain outside Git.
+
+### Development robustness
+
+![Fixed development model errors under four forecast-grid offsets](docs/assets/development-grid-sensitivity.svg)
+
+[RB-001](config/development_robustness.json) tests sensitivity to forecast dates and instrument aggregation. Models and selected parameters are unchanged; overlapping grid phases are diagnostic rather than independent trials. Full results, all candidates, and reproduction commands are in the [robustness report](docs/DEVELOPMENT_ROBUSTNESS.md).
 
 ### Proposed news extension
 

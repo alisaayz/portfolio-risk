@@ -61,7 +61,7 @@ At the November 3 snapshot cutoff, each instrument has ten completed primary tes
 | Feature/target correctness | SQL versus NumPy, complete session endpoints, future-price perturbation, and split/year-boundary examples | Implemented for twelve price features and pre-2026 targets; final-test values withheld |
 | Forecast baselines | Known recurrence/metric fixtures, nonnegative forecasts with explicit QLIKE flooring, and common origins | Implemented; trailing twenty sessions and three EWMA candidates evaluated on development years |
 | Model evaluation | Rolling development years, per-instrument/group errors, fixed final test, reproducible seeds | Fixed-form benchmarks and purged trained-model development folds evaluated; final test reserved |
-| Robustness | Predeclared development slices and sensitivity | Exposure-group and EWMA-decay development results implemented; regime/feature-window sensitivity remains planned |
+| Robustness | Predeclared development slices and sensitivity | Exposure-group, realized-regime, EWMA-decay, fixed-grid-phase and omission-aggregation diagnostics implemented; feature-window sensitivity remains planned |
 | Portfolio forecasts | Evaluate portfolio predictions separately, including correlation estimation | Planned; descriptive portfolio baseline already reconciled |
 | Operation | Failed requests, stale data, interrupted jobs, and forward-recorded predictions | Partially implemented for acquisition; operational application planned |
 
@@ -93,3 +93,7 @@ EWMA decay selection uses equal-instrument primary 2025 volatility MAE, with asc
 [ML-001](../config/model_training.json) declares three pooled histogram gradient-boosting candidates before their first real-data fit. All use positive Poisson log-link outputs, the twelve-column feature whitelist, training-only equal-instrument weights, no fitted preprocessing, and explicitly disabled random internal early stopping. Each model stays fixed within its validation year; targets crossing the year's start are excluded from training.
 
 Selection uses 2025 primary volatility MAE, ties ascending method ID. All candidates, years, daily/primary scores, per-instrument/group metrics, and outcome-based regime diagnostics are preserved. The selected seven-leaf model improves 2025 MAE and QLIKE but has worse 2023 MAE than both selected historical benchmarks. Development selection is not final-test proof. All nine fitted candidate/fold combinations reproduce predictions exactly in the same environment and after persistence. The independent verifier reconciles 81,536 per-origin errors and 42 aggregate scores. Final refitting and all numeric 2026 evaluation remain reserved. See [the report](MODEL_DEVELOPMENT_REPORT.md).
+
+## RB-001 sensitivity review
+
+Four declared grid offsets (0/5/10/15 sessions) reuse saved development forecasts without refitting or changing selection. Offset zero exactly matches primary predictions/targets/errors. Models share identical outcomes within each phase; phases overlap one another. Omission diagnostics remove one instrument only from metric aggregation, not model training. The selected model/EWMA ranking changes across phases; see [the review](DEVELOPMENT_ROBUSTNESS.md). No 2026 values are opened.

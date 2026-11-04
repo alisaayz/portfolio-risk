@@ -1,0 +1,11 @@
+{
+  "robustness_protocol_id": "RB-001",
+  "schema_version": 1,
+  "development_years": [2023, 2024, 2025],
+  "grid_offsets_sessions": [0, 5, 10, 15],
+  "stride_sessions": 20,
+  "models_refitted": false,
+  "candidate_selection_changed": false,
+  "leave_one_instrument_out": "aggregation_only_not_refitting",
+  "final_test_opened": false
+}
