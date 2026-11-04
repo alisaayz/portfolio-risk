@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "universe_id": "RU-001",
+  "selected_on": "2026-11-04",
+  "selection_basis": "Purposeful exposure coverage and pre-2020 existence, not 2026 forecast performance; current survivors, not a point-in-time or representative market universe.",
+  "currency": "USD",
+  "instruments": [
+    {
+      "symbol": "AAPL",
+      "calendar": "XNAS",
+      "kind": "stock",
+      "research_role": "Technology: Apple"
+    },
+    {
+      "symbol": "MSFT",
+      "calendar": "XNAS",
+      "kind": "stock",
+      "research_role": "Technology: Microsoft"
+    },
+    {
+      "symbol": "JPM",
+      "calendar": "XNYS",
+      "kind": "stock",
+      "research_role": "Banking: JPMorgan Chase"
+    },
+    {
+      "symbol": "JNJ",
+      "calendar": "XNYS",
+      "kind": "stock",
+      "research_role": "Healthcare: Johnson & Johnson"
+    },
+    {
+      "symbol": "XOM",
+      "calendar": "XNYS",
+      "kind": "stock",
+      "research_role": "Energy: Exxon Mobil"
+    },
+    {
+      "symbol": "SPY",
+      "calendar": "XNYS",
+      "kind": "equity_etf",
+      "research_role": "U.S. large-cap equities"
+    },
+    {
+      "symbol": "QQQ",
+      "calendar": "XNAS",
+      "kind": "equity_etf",
+      "research_role": "Nasdaq-100 equities"
+    },
+    {
+      "symbol": "IWM",
+      "calendar": "XNYS",
+      "kind": "equity_etf",
+      "research_role": "U.S. small-cap equities"
+    },
+    {
+      "symbol": "EFA",
+      "calendar": "XNYS",
+      "kind": "equity_etf",
+      "research_role": "Developed-market equities outside U.S./Canada"
+    },
+    {
+      "symbol": "EEM",
+      "calendar": "XNYS",
+      "kind": "equity_etf",
+      "research_role": "Emerging-market equities"
+    },
+    {
+      "symbol": "BND",
+      "calendar": "XNAS",
+      "kind": "bond_etf",
+      "research_role": "Broad U.S. investment-grade bonds"
+    },
+    {
+      "symbol": "IEF",
+      "calendar": "XNYS",
+      "kind": "bond_etf",
+      "research_role": "7\u201310-year U.S. Treasuries"
+    },
+    {
+      "symbol": "TLT",
+      "calendar": "XNYS",
+      "kind": "bond_etf",
+      "research_role": "20+ year U.S. Treasuries"
+    },
+    {
+      "symbol": "LQD",
+      "calendar": "XNYS",
+      "kind": "bond_etf",
+      "research_role": "USD investment-grade corporate bonds"
+    },
+    {
+      "symbol": "HYG",
+      "calendar": "XNYS",
+      "kind": "bond_etf",
+      "research_role": "USD high-yield corporate bonds"
+    },
+    {
+      "symbol": "GLD",
+      "calendar": "XNYS",
+      "kind": "gold_trust",
+      "research_role": "Gold bullion less expenses"
+    }
+  ]
+}

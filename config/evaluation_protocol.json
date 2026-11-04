@@ -1,0 +1,17 @@
+{
+  "protocol_id": "EV-001",
+  "schema_version": 1,
+  "target_horizon_sessions": 20,
+  "feature_warmup_returns": 252,
+  "train_start": "2020-01-01",
+  "validation_start": "2025-01-01",
+  "test_start": "2026-01-01",
+  "test_end_exclusive": "2027-01-01",
+  "development_validation_years": [2023, 2024, 2025],
+  "final_fit": "refit_selected_recipe_on_eligible_pre_2026_labels",
+  "test_retraining": "none",
+  "primary_metric": "equal_instrument_mean_annualized_volatility_mae",
+  "secondary_metric": "equal_instrument_mean_variance_qlike",
+  "primary_origin_stride_sessions": 20,
+  "final_test_scores_opened": false
+}

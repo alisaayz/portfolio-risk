@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="490" viewBox="0 0 1040 490" role="img" aria-labelledby="title description">
+  <title id="title">EV-001 chronological evaluation protocol</title>
+  <desc id="description">Initial training uses 2020 to 2024 after warmup; 2025 is validation and 2026 is the reserved model test. Earlier validation folds use 2023 and 2024. Targets crossing evaluation boundaries are excluded. Final refitting may use eligible pre-2026 labels. Date membership is implemented; forecasts and scores are planned.</desc>
+  <style>text{font-family:Arial,Helvetica,sans-serif;fill:#172b46}.title{font-size:26px;font-weight:700}.heading{font-size:19px;font-weight:700}.body{font-size:16px}.small{font-size:14px;fill:#52647a}</style>
+  <rect width="1040" height="490" rx="18" fill="#f4f7fb"/>
+  <text x="40" y="47" class="title">Develop on earlier years. Reserve 2026 model scores.</text>
+  <text x="40" y="77" class="body">EV-001 · 20-session volatility target · frozen final-test model</text>
+  <rect x="40" y="108" width="435" height="106" rx="10" fill="#dbe9f6"/>
+  <text x="60" y="142" class="heading">2020–2024: initial training</text>
+  <text x="60" y="171" class="body">252-return warmup; eligible labels only</text>
+  <text x="60" y="196" class="small">Features use information through each origin</text>
+  <rect x="488" y="108" width="237" height="106" rx="10" fill="#e7f3ed"/>
+  <text x="505" y="142" class="heading">2025: validation</text>
+  <text x="505" y="171" class="body">Select the recipe</text>
+  <text x="505" y="196" class="small">No 2026 outcomes</text>
+  <rect x="738" y="108" width="262" height="106" rx="10" fill="#f7e8d7"/>
+  <text x="755" y="142" class="heading">2026: reserved test</text>
+  <text x="755" y="171" class="body">Compare frozen methods</text>
+  <text x="755" y="196" class="small">Scores not yet computed</text>
+  <text x="40" y="254" class="heading">Development evidence</text>
+  <text x="40" y="282" class="body">Validate on 2023, 2024, and 2025; train each fold using eligible earlier labels.</text>
+  <text x="40" y="309" class="body">After selection, refit with pre-2026 labels whose outcomes end before 2026.</text>
+  <rect x="40" y="333" width="960" height="76" rx="10" fill="#fff" stroke="#ccd7e4"/>
+  <text x="58" y="362" class="heading">Boundary rule: exclude any earlier label reaching the next period.</text>
+  <text x="58" y="390" class="body">Keep incomplete outcomes explicit; primary test windows do not overlap within an instrument.</text>
+  <text x="40" y="444" class="small">Implemented: date-membership checks · Planned: feature pipeline, forecasting, and model scores</text>
+  <text x="40" y="469" class="small">Retrospective historical holdout; prior descriptive inspection of 2026 is disclosed.</text>
+</svg>

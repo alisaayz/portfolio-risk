@@ -15,6 +15,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import re
 import sys
 
 import exchange_calendars as xcals
@@ -139,7 +140,29 @@ def audit_frame(frame: pd.DataFrame, expected: pd.DatetimeIndex) -> dict:
     return result
 
 
-def download_snapshot(run: Path, start: str, end: str) -> dict:
+def load_universe(path: Path) -> dict:
+    universe = json.loads(path.read_text())
+    if universe.get("schema_version") != 1 or universe.get("currency") != "USD":
+        raise ValueError("Require a version-1 USD research universe")
+    if not re.fullmatch(r"[A-Z0-9_-]+", universe.get("universe_id", "")):
+        raise ValueError("Require a simple universe identity")
+    records = universe.get("instruments", [])
+    if not records:
+        raise ValueError("Universe must contain instruments")
+    symbols = set()
+    for record in records:
+        symbol = record.get("symbol", "")
+        if not re.fullmatch(r"[A-Z][A-Z0-9.-]{0,15}", symbol) or symbol in symbols:
+            raise ValueError("Require unique, safe instrument symbols")
+        symbols.add(symbol)
+        if record.get("calendar") not in {"XNAS", "XNYS"}:
+            raise ValueError("Unsupported daily-session reference calendar")
+        if not record.get("research_role") or not record.get("kind"):
+            raise ValueError("Record instrument classification and selection purpose")
+    return universe
+
+
+def download_snapshot(run: Path, start: str, end: str, universe: dict | None = None) -> dict:
     run.mkdir(parents=True, exist_ok=False)
     yf.set_tz_cache_location(str(ROOT / "data/cache/yfinance"))
     yf.config.debug.hide_exceptions = False
@@ -149,7 +172,11 @@ def download_snapshot(run: Path, start: str, end: str) -> dict:
                 "python": platform.python_version(), "script_sha256": sha256(Path(__file__)),
                 "packages": {name: version(name) for name in ["yfinance", "pandas", "exchange-calendars", "matplotlib", "pip"]},
                 "request_settings": HISTORY_SETTINGS, "instruments": {}}
-    for symbol, calendar in CALENDARS.items():
+    calendars = CALENDARS if universe is None else {r["symbol"]: r["calendar"] for r in universe["instruments"]}
+    if universe is not None:
+        manifest["universe"] = universe
+        manifest["universe_sha256"] = hashlib.sha256(json.dumps(universe, sort_keys=True).encode()).hexdigest()
+    for symbol, calendar in calendars.items():
         record = {"calendar": calendar, "status": "failed"}
         try:
             ticker = yf.Ticker(symbol)
@@ -180,6 +207,15 @@ def download_snapshot(run: Path, start: str, end: str) -> dict:
 
 
 def inspect_snapshot(run: Path, manifest: dict) -> dict:
+    if "universe" in manifest:
+        universe = manifest["universe"]
+        digest = hashlib.sha256(json.dumps(universe, sort_keys=True).encode()).hexdigest()
+        if digest != manifest.get("universe_sha256"):
+            raise ValueError("Preserved universe hash mismatch")
+        configured = {r["symbol"]: r["calendar"] for r in universe["instruments"]}
+        recorded = {symbol: record["calendar"] for symbol, record in manifest["instruments"].items()}
+        if configured != recorded or len(configured) != len(universe["instruments"]):
+            raise ValueError("Snapshot instruments/calendars disagree with preserved universe")
     for package, recorded_version in manifest["packages"].items():
         if package != "pip" and version(package) != recorded_version:
             raise ValueError(f"Environment differs for {package}; install the recorded requirements before replay")
@@ -220,7 +256,7 @@ def write_figure(audit: dict, destination: Path) -> None:
     observed = [audit["results"][s].get("unique_sessions", 0) for s in symbols]
     missing = [len(audit["results"][s].get("missing_sessions", [])) for s in symbols]
     expected = [audit["results"][s].get("expected_sessions", 0) for s in symbols]
-    fig, ax = plt.subplots(figsize=(9, 3.8), layout="constrained")
+    fig, ax = plt.subplots(figsize=(9, max(3.8, .43*len(symbols)+1.5)), layout="constrained")
     fig.set_facecolor("#f4f7fb")
     ax.set_facecolor("#f4f7fb")
     ax.barh(symbols, observed, color="#284f7d", label="Observed sessions")
@@ -268,6 +304,7 @@ def write_report(audit: dict, manifest: dict, destination: Path, figure: Path) -
                          f"The announcement also specifies a pre-split dividend of $0.82; the provider reports ${cash['dividend']:.3f} on August 7, consistent with $0.82 divided by four. "
                          "This cross-check covers the split date/ratio and dividend amount basis, not an independently verified ex-dividend date or all ETF distributions. "
                          "[Apple issuer announcement](https://www.apple.com/newsroom/2020/07/apple-reports-third-quarter-results/).")
+    universe_argument = " --universe config/reference_universe.json" if "universe" in manifest else ""
     text = f"""# Market-data audit
 
 ## Executive finding
@@ -276,7 +313,7 @@ def write_report(audit: dict, manifest: dict, destination: Path, figure: Path) -
 
 This report is generated from saved provider-library output. It records data availability and internal consistency, not an independent certification of price accuracy. No model has been trained.
 
-External source agreement is assessed separately in [cross-source validation](CROSS_SOURCE_VALIDATION.md). A structural pass here does not close discrepancies in that report or authorize automatic correction of source values.
+External source agreement for the original AAPL/SPY/BND sample is assessed separately in [cross-source validation](CROSS_SOURCE_VALIDATION.md). Those spot checks do not validate additional instruments or fresh captures. A structural pass here does not grant SQL acceptance, close source discrepancies, or authorize automatic correction of source values.
 
 ## Run and source
 
@@ -313,18 +350,18 @@ Adjusted-return moves above 20% are flagged for investigation. The script does n
 ## Limitations and next decision
 
 - A single source can be internally consistent and still contain errors. Independent checks around selected corporate actions remain necessary before treating adjustments as verified.
-- `XNAS` and `XNYS` are configured daily-session references. SPY uses XNYS as a U.S. equity-calendar reference rather than a venue-specific NYSE Arca calendar. Exchange-calendar definitions can change and are versioned with this run.
+- `XNAS` and `XNYS` are configured daily-session references. NYSE Arca-listed instruments use XNYS as a U.S. daily-session reference rather than a venue-specific calendar. Exchange-calendar definitions can change and are versioned with this run.
 - Saved CSVs preserve yfinance's output, not the original HTTP response. The library may process observations before returning them even with the explicit settings above.
 - Today's adjusted histories can be revised and do not establish what was known at every historical forecast date. A fresh download need not match an earlier snapshot; offline replay verifies and reuses saved evidence.
 - This audit does not establish production availability, redistribution rights, full instrument-universe suitability, or model accuracy. Downloaded prices remain local; the public report contains summary counts and methods.
-- Next: resolve any failures/review flags, independently inspect selected actions, then freeze the first usable dataset and build the SQL ingestion layer.
+- Next: resolve failures/review flags and independently inspect selected quotes/actions before expanding SQL acceptance rules. The original three-instrument SQL layer remains a separate verified milestone.
 
 ## Reproduction
 
 ```bash
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
-.venv/bin/python scripts/audit_market_data.py --start {manifest['start_inclusive']} --end {manifest['end_exclusive']}
+.venv/bin/python scripts/audit_market_data.py --start {manifest['start_inclusive']} --end {manifest['end_exclusive']}{universe_argument}
 # Re-audit the original local snapshot without downloading again:
 .venv/bin/python scripts/audit_market_data.py --snapshot data/audit/{manifest['run_id']}
 ```
@@ -340,25 +377,32 @@ def main() -> int:
     parser.add_argument("--start", default="2020-01-01")
     parser.add_argument("--end", help="Exclusive end date; required for a new download")
     parser.add_argument("--snapshot", type=Path, help="Existing run folder for verified offline replay")
+    parser.add_argument("--universe", type=Path, help="Explicit research universe; original three-instrument default is unchanged")
     args = parser.parse_args()
+    if args.snapshot and args.universe:
+        parser.error("offline replay uses the universe preserved in the manifest")
     if args.snapshot:
         run = args.snapshot.resolve()
         manifest = json.loads((run / "manifest.json").read_text())
     else:
         if not args.end:
             parser.error("provide --end YYYY-MM-DD; dates are never inferred from the machine clock")
-        for calendar in set(CALENDARS.values()):
+        universe = load_universe(args.universe) if args.universe else None
+        calendars = CALENDARS if universe is None else {r["symbol"]: r["calendar"] for r in universe["instruments"]}
+        for calendar in set(calendars.values()):
             expected_sessions(args.start, args.end, calendar)
         run = ROOT / "data/audit" / datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
-        manifest = download_snapshot(run, args.start, args.end)
+        manifest = download_snapshot(run, args.start, args.end, universe)
     audit = inspect_snapshot(run, manifest)
     dump_json(run / "audit.json", audit)
-    figure = ROOT / "docs/assets/data-audit-summary.svg"
+    expanded = "universe" in manifest
+    figure = ROOT / ("docs/assets/universe-coverage.svg" if expanded else "docs/assets/data-audit-summary.svg")
+    report = ROOT / ("docs/UNIVERSE_AUDIT.md" if expanded else "docs/DATA_AUDIT.md")
     write_figure(audit, figure)
-    write_report(audit, manifest, ROOT / "docs/DATA_AUDIT.md", figure)
+    write_report(audit, manifest, report, figure)
     print(json.dumps({"run_id": run.name, "structural_checks_pass": audit["structural_checks_pass"],
                       "review_flags": audit["review_flags"],
-                      "report": "docs/DATA_AUDIT.md"}, indent=2))
+                      "report": str(report.relative_to(ROOT))}, indent=2))
     return 0 if audit["structural_checks_pass"] else 2
 
 

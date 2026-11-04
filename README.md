@@ -1,6 +1,6 @@
 # Personal Portfolio Risk Platform
 
-**Status:** Versioned data pipeline and historical portfolio risk report implemented; forecasting and application planned.
+**Status:** Portfolio baseline, 16-instrument structural audit, and chronological split checks implemented; expanded SQL acceptance and forecasting planned.
 **Last updated:** November 4, 2026.
 
 ## 1. Executive summary
@@ -19,7 +19,11 @@ The SQL warehouse retains **10,314 price rows across two captures** while select
 
 The historical risk engine accepts validated weights or latest-close quantities, aligns common history, and independently reconciles SQL aggregation and covariance against NumPy. Two explicitly labeled demonstrations use real market history. Over the 252 returns ending November 3, 2026, annualized sample volatility is **11.29%** for the equity-heavy demonstration and **7.24%** for the higher-bond demonstration. Full-history maximum drawdowns are **−26.94%** and **−19.46%**, respectively, over January 2, 2020–November 3, 2026. These are daily-rebalanced hypothetical allocations, without costs or taxes.
 
-Thirty regression tests cover audit failures, source alignment, transactional loading, export integrity, portfolio validation, as-of filtering, risk decomposition, and drawdown. The [Python application workflow](.github/workflows/python-app.yml) runs fixture-based checks on pushes and pull requests. The three benchmark discrepancies remain unresolved and quarantined under the source policy. No model-performance claim is made.
+An expanded research capture contains **27,504 rows across 16 instruments**, spanning the same 1,719 sessions, with no structural failures or adjustment-threshold review flags. The [selection report](docs/REFERENCE_UNIVERSE.md) explains exposures, survivorship limits, and source-acceptance requirements. This capture is not yet the active SQL dataset; the verified portfolio report still uses the original three-instrument version.
+
+The [evaluation protocol](docs/EVALUATION_PROTOCOL.md) reserves **2026 for final historical model testing**, uses 2025 for main validation, and adds development folds for 2023 and 2024. A date-only pipeline enforces 252-return warmup, 20-session target boundaries, incomplete-outcome exclusions, and non-overlapping primary test origins. It computes no model scores.
+
+Forty-six regression tests cover data integrity, source alignment, transactional loading, export integrity, portfolio calculations, universe configuration, and chronological leakage boundaries. The [Python application workflow](.github/workflows/python-app.yml) runs fixture-based checks on pushes and pull requests. The three benchmark discrepancies remain unresolved and quarantined under the source policy. No model-performance claim is made.
 
 The research scope, SQL schema, forecast target, evaluation design, and delivery checklist are also documented. A [Qlib source walkthrough](docs/01_QLIB_WALKTHROUGH.md) explains the adaptations required for volatility forecasting. No risk model has been trained.
 
@@ -33,13 +37,14 @@ The research scope, SQL schema, forecast target, evaluation design, and delivery
 
 | Component | Method | Current state |
 | --- | --- | --- |
-| Acquisition | Yahoo Finance history through yfinance, with explicit adjustment settings and corporate actions | Implemented for three instruments |
+| Acquisition | Yahoo Finance history through yfinance, with explicit adjustment settings and corporate actions | Structurally audited for 16; SQL acceptance remains three instruments |
 | Evidence | Timestamped CSV snapshots, structured metadata, request settings, package versions, and SHA-256 hashes | Implemented; downloaded prices remain local |
 | Quality control | Exchange-session coverage, duplicates, missing/invalid values, OHLC consistency, volume, and adjustment diagnostics | Implemented; see the [audit report](docs/DATA_AUDIT.md) |
 | Verification | Regression tests, issuer cross-check, separate website spot checks, FRED benchmark reconciliation, and offline replay | Implemented; three benchmark exceptions remain open |
 | SQL foundation | Transactional loading, explicit dataset versions, normalized Parquet, and policy-controlled views | Implemented; see the [SQL report](docs/SQL_LAYER.md) |
 | Historical inputs | Calendar-aligned daily returns and complete trailing 20-return volatility windows | Returns used in baseline; trailing volatility reserved for forecasting |
 | Portfolio baseline | Sample covariance, annualized volatility, full-history drawdown, correlations, and Euler holding contributions | Implemented; see the [demonstration report](docs/BASELINE_PORTFOLIO_REPORT.md) |
+| Evaluation membership | Versioned chronological folds, horizon-end exclusions, warmup, and a reserved 2026 primary grid | Implemented; [eligibility counts](docs/EVALUATION_SPLITS.md) |
 | Modeling | Next-20-session variance forecasts compared with historical baselines | Planned |
 | Application | Dated holdings, portfolio comparisons, historical scenarios, and visible assumptions | Planned |
 
@@ -110,16 +115,34 @@ After building the warehouse, reproduce the public demonstration with:
 
 Reports record the dataset, configuration, input hash, and calculation-code hashes. Downloaded histories and detailed replay outputs remain local. Personal inputs should be saved in `private/`; configurations labeled `is_demo: false` produce only private outputs and cannot use `--publish-demo`. Quantity valuation uses provider Close and supports only the latest common close. The [baseline walkthrough](docs/04_PORTFOLIO_BASELINE_WALKTHROUGH.md) explains validation, formulas, and limitations.
 
+### Research universe and evaluation design
+
+The [reference configuration](config/reference_universe.json) contains five individual stocks, five equity ETFs, five bond ETFs, and one gold trust. Selection targets varied exposures, not 2026 model performance. All returned observations pass structural checks; independent quote/action review and tested acceptance-policy/loader changes are required before expanded SQL promotion. The existing three-instrument dataset and portfolio report remain preserved.
+
+![Chronological development and reserved 2026 model evaluation](docs/assets/evaluation-timeline.svg)
+
+[EV-001](config/evaluation_protocol.json) declares initial training on eligible 2020–2024 origins, main validation in 2025, and final testing in 2026. After recipe selection, final refitting can use eligible pre-2026 labels. The 252-return warmup means the first eligible training origin is December 31, 2020. Outcomes reaching a later partition are excluded; the newest 20 origins lack completed labels. As of November 3, each instrument has only ten completed non-overlapping primary test windows. Correlated instruments do not multiply the number of independent market episodes.
+
+The implemented split manifest uses dates only. Features, target values, model runs, and scores remain subsequent work. Descriptive inspection of 2026 has already occurred, so final results will be labeled retrospective historical tests. The [testing plan](docs/EVALUATION_PROTOCOL.md) distinguishes implemented checks from planned feature perturbation, walk-forward model evaluation, robustness slices, and forward-recorded predictions.
+
+```bash
+.venv/bin/python -m scripts.audit_market_data --universe config/reference_universe.json --start 2020-01-01 --end 2026-11-04
+.venv/bin/python -m scripts.audit_market_data --snapshot data/audit/<expanded-run-id>
+.venv/bin/python -m scripts.evaluation_splits --snapshot data/audit/<expanded-run-id>
+```
+
 ### Planned forecasting and application methodology
 
 Each modeling row will represent an instrument at a forecast date, with inputs available by that day's close. The target will be realized variance over the following 20 trading sessions, annualized using a 252-session convention. Displayed volatility will be the square root of variance.
 
-Training, validation, and final testing will use successive periods. Training labels whose future windows reach the next evaluation period will be excluded. A trained model will be compared with trailing and exponentially weighted variance forecasts using annualized-volatility mean absolute error and variance QLIKE. The final test will remain untouched until model selection is complete.
+Training, validation, and final testing follow the declared 2020–2024 / 2025 / 2026 chronological contract, with earlier development folds. Training labels whose future windows reach the next evaluation period will be excluded. A trained model will be compared with trailing and exponentially weighted variance forecasts using annualized-volatility mean absolute error and variance QLIKE. Final model scores remain unopened until the complete modeling recipe is frozen.
 
 The initial application will support daily, USD-denominated stocks and ETFs in long-only, unleveraged portfolios. Fixed-weight historical scenarios will explicitly assume daily rebalancing; they will represent hypothetical exposures rather than actual past investment performance. Portfolio forecasting will require a separate correlation estimate and separate evaluation. ETF look-through holdings, taxes, derivatives, and automated trading are outside the initial scope.
 
 ### Documentation and next milestone
 
+- [Reference universe](docs/REFERENCE_UNIVERSE.md) and [expanded structural audit](docs/UNIVERSE_AUDIT.md): selection, evidence, and acceptance limits.
+- [Evaluation protocol](docs/EVALUATION_PROTOCOL.md) and [date eligibility](docs/EVALUATION_SPLITS.md): testing contract, implemented boundaries, and planned model checks.
 - [Data audit](docs/DATA_AUDIT.md): observed findings, provenance, methods, and limitations.
 - [Cross-source validation](docs/CROSS_SOURCE_VALIDATION.md): website quote checks and unresolved FRED/Yahoo benchmark differences.
 - [SQL milestone report](docs/SQL_LAYER.md) and [walkthrough](docs/03_SQL_WALKTHROUGH.md): database composition, observed counts, and SQL interpretation.
@@ -130,7 +153,7 @@ The initial application will support daily, USD-denominated stocks and ETFs in l
 
 The [source policy](docs/DATA_SOURCE_POLICY.md) accepts the audited stock/ETF sample for prototype work, selects FRED as the preferred price-index context source, and quarantines Yahoo ^GSPC. The underlying three discrepancies remain unresolved.
 
-The SQL views now enforce this source policy. Next: expand and audit the reference universe to approximately 12–20 instruments, then implement versioned SQL features, forward targets, and chronological evaluation splits before training a model.
+The SQL views now enforce this source policy. Next: independently review expanded quote/action evidence and extend the tested SQL acceptance policy/loader to the 16-instrument sample. Then implement and reconcile SQL features and forward targets under EV-001 before training or opening 2026 model scores.
 
 ### References
 

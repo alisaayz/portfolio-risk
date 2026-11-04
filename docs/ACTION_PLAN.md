@@ -34,7 +34,8 @@ The system must connect real market data to an explainable risk report. A foreca
 
 ### 3. Build the Python ingestion and SQL foundation — three-instrument SQL milestone implemented
 
-- [ ] Select 12–20 reference instruments and freeze initial history dates based on the audit. Record selection limits, including survivorship bias from today's instruments.
+- [x] Select and structurally audit 16 reference instruments, preserving January 2020–November 2026 capture dates and current-survivor selection limits in [RU-001](REFERENCE_UNIVERSE.md).
+- [ ] Independently review expanded quotes/actions, extend tested source rules and loading, and promote the expanded sample to SQL. The active accepted dataset still contains three instruments.
 - [x] Implement explicit acquisition settings, visible errors, saved snapshots, and offline replay; general incremental provider updates remain future work.
 - [x] Create versioned source/dataset tables, normalize to Parquet, and load DuckDB transactionally.
 - [x] Write policy-controlled price/context views, a quality-issue ledger, calendar-aligned returns, and trailing-risk inputs.
@@ -57,7 +58,8 @@ The system must connect real market data to an explainable risk report. A foreca
 
 - [ ] Implement SQL features using only information available at the forecast origin: trailing variance, returns, downside variation, and drawdown.
 - [ ] Calculate the next-20-session realized-variance target from the specification in the project plan. Preserve future targets separately from available-at-origin features.
-- [ ] Freeze train, validation, and untouched test dates after the coverage audit. Remove training examples whose future target windows reach the next period.
+- [x] Record EV-001: 2020–2024 initial training, 2025 main validation, reserved 2026 historical model test, and earlier development folds. Implement and test date-only membership, warmup, and label-boundary exclusions.
+- [ ] Apply the date contract to actual features/targets, freeze modeling inputs and recipe, and enforce separation before opening test scores.
 - [ ] Check feature/target alignment manually for selected instrument-date rows, including a split boundary.
 
 **Output:** a versioned modeling dataset, feature dictionary, and split manifest. **Done when:** each feature and target can be traced to its source sessions and no future values enter the inputs.
@@ -97,7 +99,8 @@ The system must connect real market data to an explainable risk report. A foreca
 1. Review the data-audit walkthrough and the three open benchmark source exceptions.
 2. Read the SQL walkthrough and inspect accepted prices, context, and quarantined issues with the example queries.
 3. Review the baseline report, especially capital weights versus risk contributions and the different estimation/replay windows.
-4. Select and audit approximately 12–20 reference instruments, recording selection and survivorship limits.
-5. Build SQL features, forward targets, and chronological splits before model training.
+4. Review the 16-instrument structural audit and EV-001; independently verify additional quote/action evidence, then extend tested SQL acceptance and loading.
+5. Build and independently reconcile SQL features and forward targets using the implemented date contract. Add future-value perturbation tests before training.
+6. Train and evaluate development folds; freeze the final recipe before opening any 2026 model scores.
 
-**Current state:** data acquisition, audit, cross-source comparison, versioned SQL/Parquet storage, historical inputs, and the baseline portfolio report are implemented. The original three-instrument sample contains 5,157 accepted rows. Three benchmark discrepancies remain quarantined. Thirty regression tests cover the current system. Two labeled demonstration portfolios use real data; no personal holdings have been supplied. Universe expansion, Qlib execution, model training, dedicated stress scenarios, and the application remain outstanding.
+**Current state:** data acquisition, audit, cross-source comparison, versioned SQL/Parquet storage, historical inputs, and the baseline portfolio report are implemented. The original three-instrument sample contains 5,157 accepted rows. Three benchmark discrepancies remain quarantined. Forty-six regression tests cover the current system. The expanded capture contains 27,504 structurally passing rows across 16 instruments; promotion to SQL remains pending independent acceptance checks and tested loader changes. Date-only evaluation membership is implemented with a reserved 2026 model test; feature/target construction and model scores remain planned. Two labeled demonstration portfolios use real data; no personal holdings have been supplied. Qlib execution, model training, dedicated stress scenarios, and the application remain outstanding.

@@ -6,7 +6,7 @@ Working plan established November 3, 2026; implementation status updated Novembe
 
 The user wants to understand investments they already own and explore potential portfolios. Begin with long-only, unleveraged, USD-denominated stocks and ETFs and daily data. A declared portfolio snapshot, holdings date, weight convention, and reporting currency accompany every report.
 
-The initial reference universe should contain approximately 12–20 instruments with sufficient histories and varied exposures. Final symbols and history dates depend on the data audit. This is a research universe, not a recommended investment allocation. Later expansion to additional instruments should preserve the same data contracts.
+RU-001 selects 16 reference instruments with varied exposures and histories from January 2020 through November 2026. All pass structural checks; expanded independent verification and SQL promotion remain pending. See [REFERENCE_UNIVERSE.md](REFERENCE_UNIVERSE.md). This is a research universe, not a recommended investment allocation. Later expansion to additional instruments should preserve the same data contracts.
 
 Use Qlib to learn the structure of a reproducible quantitative workflow. Study its LightGBM example and its separation of datasets, models, and records. Implement our risk-specific SQL layer and objectives explicitly; decide whether to integrate Qlib itself after testing compatibility and data access.
 
@@ -46,10 +46,10 @@ A first portfolio forecast can combine predicted instrument volatilities with a 
 
 ### Evaluation
 
-- Use chronological development and untouched final test periods; freeze their dates after auditing coverage.
+- Follow [EV-001](EVALUATION_PROTOCOL.md): 2020–2024 initial training, 2025 main validation, and reserved 2026 historical model test. Earlier folds validate on 2023 and 2024; final refitting may use eligible pre-2026 labels after recipe selection. No model scores have been computed.
 - Remove training examples whose forward target windows cross into validation or test periods. Apply the same rule within rolling evaluation folds.
 - Begin with non-overlapping 20-day forecast origins for the main comparison to reduce dependence between targets. Any daily overlapping evaluation must be identified as dependent and not treated as independent samples.
-- Primary metric: mean absolute error of annualized volatility. Secondary metric: QLIKE on strictly positive variance forecasts and realized variance.
+- Primary metric: equal-instrument mean of annualized-volatility MAE. Secondary: equal-instrument mean of variance QLIKE. Positive-forecast evaluation conventions and floor reporting are fixed in EV-001.
 - Break down results by instrument, market period, and volatility level. Show where the model is worse than the baselines.
 - Fix primary metrics, baselines, and test periods before tuning; log model and dataset versions.
 - Evaluate fixed-weight scenario portfolios using daily simple portfolio returns computed from the declared weights. Describe daily rebalancing explicitly. A buy-and-hold simulation instead requires evolving weights and must be labeled separately.
@@ -147,7 +147,7 @@ The planned SQL layer must retain source values and quality issues separately. R
 
 ## Implemented SQL milestone — November 4, 2026
 
-The warehouse retains two price captures (10,314 rows) and selects 5,157 canonical observations through an explicit dataset pointer. SQL enforces DS-001, retains three active discrepancy records, and calculates calendar-aligned returns and complete historical volatility windows. Five normalized Parquet tables are versioned and hash-checked. Repeated real-data loading preserves counts, dataset identity, and exports; all SQL returns and complete volatility windows reconcile with NumPy. Portfolio baseline calculations are now implemented as described below; universe expansion and forecasting remain subsequent work. See [SQL_LAYER.md](SQL_LAYER.md).
+The warehouse retains two price captures (10,314 rows) and selects 5,157 canonical observations through an explicit dataset pointer. SQL enforces DS-001, retains three active discrepancy records, and calculates calendar-aligned returns and complete historical volatility windows. Five normalized Parquet tables are versioned and hash-checked. Repeated real-data loading preserves counts, dataset identity, and exports; all SQL returns and complete volatility windows reconcile with NumPy. Portfolio baseline calculations are implemented as described below. The larger universe is structurally audited; SQL promotion and forecasting remain subsequent work. See [SQL_LAYER.md](SQL_LAYER.md).
 
 ## Implemented portfolio baseline — November 4, 2026
 
@@ -156,3 +156,9 @@ Dated JSON inputs accept validated positive weights summing to one or quantities
 Sample covariance uses the last 252 common returns, N−1, and a 252-session annualization convention. Portfolio volatility, correlations, and Euler holding contributions use that window; maximum drawdown uses the full common 2020–2026 replay. Both scenarios assume fixed weights rebalanced daily without costs or taxes. Sample covariance differs from the squared-return forward target defined above.
 
 SQL and NumPy returns and covariance reconcile; weighted-series volatility, Euler sums, and a separate scalar drawdown replay also reconcile. Thirty regression tests cover the complete implementation. See the [measured report](BASELINE_PORTFOLIO_REPORT.md) and [walkthrough](04_PORTFOLIO_BASELINE_WALKTHROUGH.md). Portfolio snapshot persistence in SQL, dedicated stress analysis, forecasting, and the interface remain planned; this milestone uses validated JSON inputs.
+
+## Implemented universe audit and date contract — November 4, 2026
+
+RU-001 preserves 27,504 rows across 16 instruments, with complete expected coverage and no structural failures or adjustment-threshold review flags. It is separate from the current accepted SQL dataset; additional independent evidence and tested source-policy/loader changes are required for promotion.
+
+EV-001 reserves 2026 model scores, adds earlier development years, and implements date-only membership with a 252-return warmup and exact 20-session target boundaries. Each instrument currently has 986 initial-training, 230 main-validation, and 191 completed daily test origins; ten completed primary test windows are non-overlapping within that instrument. Twenty recent origins lack complete outcomes. These are eligibility counts, not forecast results or independent sample counts. Forty-six regression tests pass. Features, actual target values, and all model scores remain unimplemented. See [EVALUATION_SPLITS.md](EVALUATION_SPLITS.md).
