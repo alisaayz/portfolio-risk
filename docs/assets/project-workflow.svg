@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1040" height="820" viewBox="0 0 1040 820" role="img" aria-labelledby="title description">
   <title id="title">Personal Portfolio Risk Platform: proposed workflow</title>
-  <desc id="description">Planned architecture. Market prices and corporate actions flow into Python ingestion and quality checks, then DuckDB SQL and Parquet storage. Historical risk analysis and model evaluation feed portfolio comparison and stress scenarios, followed by a local application. Implementation is pending.</desc>
+  <desc id="description">The initial market-data acquisition and audit are implemented, with source discrepancies retained for review. SQL storage, historical risk analysis, modeling, portfolio scenarios, and a local application remain planned.</desc>
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#52647a"/></marker>
     <style>
@@ -11,18 +11,19 @@
       .body { font-size: 15px; fill: #354a63; }
       .line { fill: none; stroke: #52647a; stroke-width: 2; marker-end: url(#arrow); }
       .box { fill: #fff; stroke: #ccd7e4; stroke-width: 1.5; }
+      .done { fill: #e7f3ed; stroke: #85b69b; }
     </style>
   </defs>
   <rect width="1040" height="820" rx="18" fill="#f4f7fb"/>
   <text class="title" x="44" y="51">Personal Portfolio Risk Platform</text>
-  <text class="subtitle" x="44" y="79">Proposed architecture · Research and design · Implementation pending</text>
-  <rect class="box" x="210" y="106" width="620" height="76" rx="12"/>
+  <text class="subtitle" x="44" y="79">Green: initial data audit implemented · Other components: planned</text>
+  <rect class="box done" x="210" y="106" width="620" height="76" rx="12"/>
   <text class="heading" x="520" y="136" text-anchor="middle">Historical market data</text>
   <text class="body" x="520" y="161" text-anchor="middle">Daily prices, adjusted prices, dividends, and splits</text>
   <path class="line" d="M520 182 V207"/>
-  <rect class="box" x="210" y="209" width="620" height="76" rx="12"/>
-  <text class="heading" x="520" y="239" text-anchor="middle">Python ingestion and quality checks</text>
-  <text class="body" x="520" y="264" text-anchor="middle">Snapshots, provenance, coverage, and adjustment audit</text>
+  <rect class="box done" x="210" y="209" width="620" height="76" rx="12"/>
+  <text class="heading" x="520" y="239" text-anchor="middle">Python acquisition and validation</text>
+  <text class="body" x="520" y="264" text-anchor="middle">Snapshots, quality checks, and cross-source reconciliation</text>
   <path class="line" d="M520 285 V310"/>
   <rect class="box" x="210" y="312" width="620" height="76" rx="12"/>
   <text class="heading" x="520" y="342" text-anchor="middle">DuckDB SQL and Parquet</text>
