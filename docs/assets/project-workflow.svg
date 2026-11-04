@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="820" viewBox="0 0 1040 820" role="img" aria-labelledby="title description">
+  <title id="title">Personal Portfolio Risk Platform: proposed workflow</title>
+  <desc id="description">Planned architecture. Market prices and corporate actions flow into Python ingestion and quality checks, then DuckDB SQL and Parquet storage. Historical risk analysis and model evaluation feed portfolio comparison and stress scenarios, followed by a local application. Implementation is pending.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#52647a"/></marker>
+    <style>
+      text { font-family: Arial, Helvetica, sans-serif; }
+      .title { font-size: 26px; font-weight: 700; fill: #172b46; }
+      .subtitle { font-size: 15px; fill: #52647a; }
+      .heading { font-size: 18px; font-weight: 700; fill: #172b46; }
+      .body { font-size: 15px; fill: #354a63; }
+      .line { fill: none; stroke: #52647a; stroke-width: 2; marker-end: url(#arrow); }
+      .box { fill: #fff; stroke: #ccd7e4; stroke-width: 1.5; }
+    </style>
+  </defs>
+  <rect width="1040" height="820" rx="18" fill="#f4f7fb"/>
+  <text class="title" x="44" y="51">Personal Portfolio Risk Platform</text>
+  <text class="subtitle" x="44" y="79">Proposed architecture · Research and design · Implementation pending</text>
+  <rect class="box" x="210" y="106" width="620" height="76" rx="12"/>
+  <text class="heading" x="520" y="136" text-anchor="middle">Historical market data</text>
+  <text class="body" x="520" y="161" text-anchor="middle">Daily prices, adjusted prices, dividends, and splits</text>
+  <path class="line" d="M520 182 V207"/>
+  <rect class="box" x="210" y="209" width="620" height="76" rx="12"/>
+  <text class="heading" x="520" y="239" text-anchor="middle">Python ingestion and quality checks</text>
+  <text class="body" x="520" y="264" text-anchor="middle">Snapshots, provenance, coverage, and adjustment audit</text>
+  <path class="line" d="M520 285 V310"/>
+  <rect class="box" x="210" y="312" width="620" height="76" rx="12"/>
+  <text class="heading" x="520" y="342" text-anchor="middle">DuckDB SQL and Parquet</text>
+  <text class="body" x="520" y="367" text-anchor="middle">Versioned prices, returns, and historical features</text>
+  <path class="line" d="M520 388 V411 H278 V436"/>
+  <path class="line" d="M520 388 V411 H762 V436"/>
+  <rect class="box" x="54" y="438" width="448" height="104" rx="12"/>
+  <text class="heading" x="278" y="468" text-anchor="middle">Historical risk analysis</text>
+  <text class="body" x="278" y="493" text-anchor="middle">Volatility, drawdown, and correlations</text>
+  <text class="body" x="278" y="517" text-anchor="middle">Holding-level risk contributions</text>
+  <rect x="538" y="438" width="448" height="104" rx="12" fill="#e9f2ff" stroke="#99b9df" stroke-width="1.5"/>
+  <text class="heading" x="762" y="468" text-anchor="middle">Forecasting and evaluation</text>
+  <text class="body" x="762" y="493" text-anchor="middle">20-session risk model versus baselines</text>
+  <text class="body" x="762" y="517" text-anchor="middle">Time-based testing and experiment records</text>
+  <path class="line" d="M278 542 V567 H520 V592"/>
+  <path class="line" d="M762 542 V567 H520 V592"/>
+  <rect class="box" x="210" y="594" width="620" height="76" rx="12"/>
+  <text class="heading" x="520" y="624" text-anchor="middle">Portfolio comparison and stress scenarios</text>
+  <text class="body" x="520" y="649" text-anchor="middle">Dated holdings, alternative weights, and explicit assumptions</text>
+  <path class="line" d="M520 670 V695"/>
+  <rect x="210" y="697" width="620" height="76" rx="12" fill="#172b46"/>
+  <text x="520" y="727" text-anchor="middle" font-size="18" font-weight="700" fill="#fff">Local application and reports</text>
+  <text x="520" y="752" text-anchor="middle" font-size="15" fill="#dce7f5">Risk explanations, comparisons, data timestamps, and limitations</text>
+</svg>
