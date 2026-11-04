@@ -1,0 +1,18 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.env
+.env.*
+!.env.example
+data/
+mlruns/
+mlartifacts/
+*.duckdb
+*.duckdb.wal
+private/
+.DS_Store
+
+# Local project instructions
+/AGENTS.md
