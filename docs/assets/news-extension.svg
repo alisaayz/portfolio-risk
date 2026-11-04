@@ -18,7 +18,7 @@
   <text x="772" y="287" text-anchor="middle" class="body">Availability times, duplicates, company relevance</text>
   <text x="772" y="312" text-anchor="middle" class="small">Missing coverage remains distinct from no news</text>
   <rect x="40" y="250" width="455" height="104" rx="10" class="done"/>
-  <text x="267" y="283" text-anchor="middle" class="heading">Price-only modeling and benchmarks</text>
+  <text x="267" y="283" text-anchor="middle" class="heading">Price-only model development</text>
   <text x="267" y="312" text-anchor="middle" class="body">12 features; development benchmarks measured</text>
   <text x="267" y="337" text-anchor="middle" class="small">Numerical and future-price leakage checks pass</text>
   <path class="line" d="M772 329 V353"/>

@@ -68,6 +68,6 @@ Local content-addressed artifacts contain all candidate forecasts, evaluation or
 
 ## 7. Next experiment
 
-Train one pooled positive-variance model using the explicit feature whitelist and chronological development folds. Fit any preprocessing on the corresponding training partition, compare predictions on these same primary and secondary origin grids, and record every attempted recipe. Evaluate the trained model against both trailing variance and the development-selected EWMA. Freeze the full procedure before deriving final 2026 outcomes or opening final-test scores.
+The next experiment is now implemented in [the trained-model report](MODEL_DEVELOPMENT_REPORT.md): three pooled positive-variance candidates use the explicit feature whitelist and chronological development folds. Fit any preprocessing on the corresponding training partition, compare predictions on these same primary and secondary origin grids, and record every attempted recipe. Evaluate the trained model against both trailing variance and the development-selected EWMA. Freeze the full procedure before deriving final 2026 outcomes or opening final-test scores.
 
 References: [pandas exponentially weighted calculations](https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.ewm.html), [Forecasting: Principles and Practice on chronological forecast evaluation](https://otexts.com/fpp3/tscv.html), and the project's [EV-001 protocol](EVALUATION_PROTOCOL.md). The reported numerical results come from the saved project experiment, not those reference pages.

@@ -1,0 +1,28 @@
+{
+  "training_protocol_id": "ML-001",
+  "schema_version": 1,
+  "development_years": [2023, 2024, 2025],
+  "estimator": "sklearn.ensemble.HistGradientBoostingRegressor",
+  "loss": "poisson",
+  "learning_rate": 0.05,
+  "max_iter": 150,
+  "min_samples_leaf": 100,
+  "l2_regularization": 1.0,
+  "max_bins": 255,
+  "early_stopping": false,
+  "random_state": 42,
+  "thread_limit": 1,
+  "candidates": [
+    {"method": "hgb_7", "max_leaf_nodes": 7},
+    {"method": "hgb_15", "max_leaf_nodes": 15},
+    {"method": "hgb_31", "max_leaf_nodes": 31}
+  ],
+  "training_weights": "equal_total_weight_per_instrument_mean_row_weight_one",
+  "preprocessing": "none_explicit_numeric_feature_whitelist",
+  "selection_year": 2025,
+  "selection_metric": "equal_instrument_primary_volatility_mae",
+  "selection_tiebreak": "ascending_method_id",
+  "diagnostic_regime": "above_training_instrument_median_target_volatility",
+  "final_refit_performed": false,
+  "final_test_opened": false
+}

@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1040" height="740" viewBox="0 0 1040 740" role="img" aria-labelledby="title description">
   <title id="title">Separate historical inputs and future development targets</title>
-  <desc id="description">Accepted price history enters independent backward-looking SQL features and forward targets restricted to pre-2026 observations. Twelve features and development targets are numerically reconciled, joined with chronological membership, and stored in a separate versioned modeling dataset. Final 2026 numeric targets and scores remain uncomputed. Model fitting is the next phase.</desc>
+  <desc id="description">Accepted price history enters independent backward-looking SQL features and forward targets restricted to pre-2026 observations. Twelve features and development targets are numerically reconciled, joined with chronological membership, and stored in a separate versioned modeling dataset. Final 2026 numeric targets and scores remain uncomputed. Chronological model development is implemented separately; final testing remains reserved.</desc>
   <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#52647a"/></marker></defs>
   <style>text{font-family:Arial,Helvetica,sans-serif;fill:#172b46}.title{font-size:26px;font-weight:700}.heading{font-size:19px;font-weight:700}.body{font-size:16px}.small{font-size:14px;fill:#52647a}.done{fill:#e7f3ed;stroke:#85b69b}.line{fill:none;stroke:#52647a;stroke-width:2;marker-end:url(#arrow)}</style>
   <rect width="1040" height="740" rx="18" fill="#f4f7fb"/>
   <text x="40" y="48" class="title">Keep the forecast inputs separate from the future outcome.</text>
-  <text x="40" y="78" class="body">Implemented SQL and numerical checks · Machine-learning training remains planned</text>
+  <text x="40" y="78" class="body">Implemented SQL and numerical checks · Trained-model development evaluated separately</text>
   <rect x="210" y="105" width="620" height="82" rx="10" class="done"/>
   <text x="520" y="138" text-anchor="middle" class="heading">Accepted market history: read-only source</text>
   <text x="520" y="165" text-anchor="middle" class="body">16 instruments · 27,504 expected-session price observations</text>
@@ -28,6 +28,6 @@
   <text x="520" y="595" text-anchor="middle" class="body">15,776 initial-training examples · 3,680 main-validation examples</text>
   <text x="520" y="617" text-anchor="middle" class="small">Feature, target, membership, and joined development tables; four Parquet exports</text>
   <text x="40" y="674" class="small">2026 feature/date rows are retained; all numeric final-test outcomes and model scores remain uncomputed.</text>
-  <text x="40" y="703" class="small">Historical benchmarks evaluated on 2023–2025; next: train and compare one model.</text>
+  <text x="40" y="703" class="small">Historical benchmarks and three trained candidates evaluated on 2023–2025 only.</text>
   <text x="40" y="727" class="small">Revised price histories remain a limitation; causal transformations do not prove point-in-time source availability.</text>
 </svg>
