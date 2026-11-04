@@ -1,90 +1,107 @@
 # Personal Portfolio Risk Platform
 
-**Status:** Research and design. **Last updated:** November 3, 2026.
+**Status:** Data audit implemented; three benchmark source discrepancies remain open.
+**Last updated:** November 4, 2026.
 
 ## 1. Executive summary
 
-The Personal Portfolio Risk Platform is a planned financial analytics application for evaluating existing investments and comparing hypothetical portfolios. It will combine historical market data, SQL analysis, and machine learning to explain volatility, identify major sources of portfolio risk, and examine exposure to historical market stress.
+The Personal Portfolio Risk Platform is a financial analytics project for evaluating existing investments and comparing hypothetical portfolios. Its intended application will explain portfolio volatility, identify major sources of risk, and examine exposure to historical market stress.
 
-The central research question is whether a trained model can forecast volatility over the next 20 trading days more accurately than historical estimates. The intended outcome is a reproducible application supported by transparent assumptions and measurable evidence. No forecasting results are available at the current stage.
+The central research question is whether a trained model can forecast volatility over the next 20 trading days more accurately than historical estimates. The first implementation establishes the data foundation: a reproducible Python workflow that downloads real market history, checks its quality, and preserves evidence. Portfolio calculations, SQL storage, model training, and the application are subsequent milestones.
 
 ## 2. Work completed
 
-Work to date comprises the project scope, data requirements, proposed database structure, forecasting target, evaluation approach, and delivery checklist. A source review of Microsoft's Qlib LightGBM workflow identified changes required to adapt a return-prediction example to volatility forecasting. These decisions are documented in the [technical walkthrough](docs/01_QLIB_WALKTHROUGH.md).
+The current implementation includes an isolated Python environment, pinned dependencies, a market-data acquisition and audit script, versioned local snapshots, and a generated quality report. The audit retrieved **5,157 daily observations** across AAPL, SPY, and BND, covering January 2, 2020 through November 3, 2026. Each instrument contained all **1,719 expected trading sessions**, with no duplicate dates, nonpositive prices, or inconsistent OHLC rows detected.
 
-Implementation has not begun. Market data has not been downloaded, the proposed software dependencies have not been installed, and no models have been trained or evaluated. This summary will be updated as verified deliverables and results become available.
+Corporate-action diagnostics cover **134 dividend events and one split**. A selected Apple split and dividend amount were checked against an issuer announcement. Fifteen selected closes match a separate finance website. A full-window comparison of FRED SP500 with Yahoo ^GSPC identified **three unresolved benchmark discrepancies** after accounting for published precision. Original source values are retained; benchmark acceptance is on hold.
+
+Twelve regression tests validate audit failures and source alignment. Both audits can be replayed from saved evidence without new downloads. The stock/ETF sample supports further prototype work, while the benchmark requires a documented source decision. No claim of complete independent price certification or model performance is made.
+
+The research scope, SQL schema, forecast target, evaluation design, and delivery checklist are also documented. A [Qlib source walkthrough](docs/01_QLIB_WALKTHROUGH.md) explains the adaptations required for volatility forecasting. No risk model has been trained.
 
 ## 3. Project composition and methodology
 
-### Research question
+### Architecture and implementation status
 
-Can a trained model forecast the next 20 trading days of volatility more accurately than standard historical estimates, and does it improve the information available for portfolio review?
+![Architecture showing the implemented market-data sample and Python audit, with SQL storage, risk calculations, modeling, scenarios, and application still planned](docs/assets/project-workflow.svg)
 
-### Intended experience
+*Green components are implemented for the initial sample. Remaining components describe the planned platform.*
 
-1. Enter a dated portfolio of stocks and ETFs, using weights or quantities and a portfolio value.
-2. Inspect historical volatility, drawdown, correlations, and instrument-level risk contributions.
-3. Compare historical risk estimates with an evaluated machine-learning forecast.
-4. Examine selected historical stress periods and alternative portfolio scenarios.
-5. See the data timestamp, assumptions, model version, and evaluation evidence behind the results.
-
-Historical scenario results for today's weights describe a hypothetical exposure, not the user's actual past investment performance. ETF look-through holdings, taxes, leverage, and derivatives require additional data and are later extensions.
-
-### Proposed architecture
-
-![Proposed workflow: real market data flows through Python ingestion, quality checks, and DuckDB SQL storage. Historical risk analysis and model evaluation feed portfolio scenarios and a local application. All components are planned.](docs/assets/project-workflow.svg)
-
-*Figure 1. Proposed architecture. The diagram describes intended components, not implemented capabilities or measured results.*
-
-| Component | Method | Intended output |
+| Component | Method | Current state |
 | --- | --- | --- |
-| Data acquisition | Retrieve daily prices and corporate actions; record request settings and retrieval times | Traceable, versioned source data |
-| Quality control | Inspect coverage, duplicate records, missing sessions, and price adjustments | Data audit and documented exclusions |
-| SQL analysis | Store normalized observations and calculate returns and historical features in DuckDB | Reproducible analytical dataset |
-| Historical risk | Calculate volatility, drawdown, correlations, and holding risk contributions | Baseline portfolio report |
-| Model development | Predict subsequent 20-session realized variance from information available at each forecast date | Instrument-level risk forecasts |
-| Evaluation | Compare a trained model with trailing and exponentially weighted estimates on later periods | Forecast errors and documented limitations |
-| Portfolio scenarios | Combine instrument forecasts with an explicit correlation estimate; replay historical stress periods | Existing-versus-alternative portfolio comparisons |
-| Application | Display portfolio inputs, results, assumptions, data timestamps, and job status | Usable analytical workflow |
+| Acquisition | Yahoo Finance history through yfinance, with explicit adjustment settings and corporate actions | Implemented for three instruments |
+| Evidence | Timestamped CSV snapshots, structured metadata, request settings, package versions, and SHA-256 hashes | Implemented; downloaded prices remain local |
+| Quality control | Exchange-session coverage, duplicates, missing/invalid values, OHLC consistency, volume, and adjustment diagnostics | Implemented; see the [audit report](docs/DATA_AUDIT.md) |
+| Verification | Regression tests, issuer cross-check, separate website spot checks, FRED benchmark reconciliation, and offline replay | Implemented; three benchmark exceptions remain open |
+| SQL foundation | Versioned DuckDB tables and Parquet normalization | Planned |
+| Historical risk | Returns, volatility, drawdown, correlations, and holding risk contributions | Planned |
+| Modeling | Next-20-session variance forecasts compared with historical baselines | Planned |
+| Application | Dated holdings, portfolio comparisons, historical scenarios, and visible assumptions | Planned |
 
-### Forecasting and evaluation
+### Data quality findings
 
-Each learning example will represent one instrument on one forecast date. Inputs will include past returns, trailing variance, downside variation, and drawdown. The target will be realized variance over the following 20 trading sessions, using verified adjusted prices and a 252-session annualization convention. Forecasts will be displayed as volatility after taking the square root of variance.
+![Observed and missing expected trading sessions by instrument](docs/assets/data-audit-summary.svg)
 
-Training, validation, and final testing will use successive time periods. Training observations whose future target windows reach the next evaluation period will be excluded. Model selection will use development data; final testing will follow after the procedure is fixed. Primary comparisons will use non-overlapping 20-session forecast origins.
+The audit compares observed dates with configured exchange-session calendars, retains missing observations, and does not repair prices or fill gaps. It records dividend and split events and checks changes in the adjusted-close/close ratio. Threshold breaches produce review flags rather than automatic corrections.
 
-The primary metric will be mean absolute error in annualized volatility. A secondary measure, QLIKE, will assess positive variance forecasts. Results will include periods and instruments where a simple baseline performs better than the trained model. Portfolio forecast quality will be evaluated separately because a correlation estimate is also required.
+A material finding is that the provider's Close field must not be assumed to be split-unadjusted. Around Apple's August 2020 split, applying the split ratio again would introduce an artificial return exceeding 300%. The [audit report](docs/DATA_AUDIT.md) documents this diagnostic, its issuer reference, and the limits of the verification.
 
-### First milestone
+The [cross-source report](docs/CROSS_SOURCE_VALIDATION.md) separates individual-instrument spot checks from same-index benchmark reconciliation. Yahoo ^GSPC remains excluded from model features and benchmark calculations until its source exceptions are resolved or formally dispositioned. No observed value is silently replaced.
 
-A reproducible, audited market-data pipeline, a SQL database, a baseline risk report, and a documented evaluation design. Start with the [action checklist](docs/ACTION_PLAN.md); use the [project plan](docs/PROJECT_PLAN.md) for technical specifications.
+yfinance is an unofficial interface to Yahoo Finance. The downloaded snapshots preserve library output rather than original HTTP payloads. Current adjusted histories can be revised and do not establish what was known at each historical forecast date. Downloaded prices, credentials, personal holdings, caches, and model artifacts remain outside version control.
 
-The first source review is complete: [Qlib walkthrough and adaptation decisions](docs/01_QLIB_WALKTHROUGH.md). Next is a small real-data audit before scaling the pipeline.
+### Run the implemented milestone
 
-### Planned technology
+Tested with **Python 3.13.7**. Direct dependencies are listed in [requirements.in](requirements.in); exact installed versions are recorded in [requirements.txt](requirements.txt).
 
-- Python for ingestion, financial calculations, modeling, and orchestration.
-- DuckDB for a local analytical database and explicit SQL transformations.
-- Parquet for normalized snapshots and intermediate datasets, with original provider responses retained separately.
-- scikit-learn and a gradient-boosted tree implementation for modeling, selected after the baseline.
-- MLflow for recording model parameters, datasets, metrics, and artifacts.
-- A local Python application for the first usable interface; choose the UI framework after the risk engine works.
-- Microsoft Qlib as a reference for reproducible data, training, inference, and evaluation workflows.
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python scripts/audit_market_data.py --start 2020-01-01 --end 2026-11-04
+.venv/bin/python -m unittest discover -s tests -v
+```
 
-These are planning choices, not installed dependencies or completed capabilities.
+The end date is exclusive. Each download creates a new local snapshot. To reproduce the audit from existing evidence without a new request:
 
-### Implementation status on November 3, 2026
+```bash
+.venv/bin/python scripts/audit_market_data.py --snapshot data/audit/<run-id>
+```
 
-- Project scope, research target, source shortlist, and first milestone documented.
-- Actionable delivery checklist and Qlib source walkthrough completed; Qlib itself has not been installed or executed.
-- Local Python 3.13 and Git are available; a compatible, pinned ML environment and price-data feasibility still need to be established.
-- No market data downloaded, models trained, or pipeline code implemented yet.
+The script generates `docs/DATA_AUDIT.md`, a coverage figure, and detailed local audit JSON. A structural failure produces a nonzero exit status. Unit tests use small synthetic fixtures to test failures; reported project findings come from downloaded market data.
+
+To acquire external references and check a saved baseline:
+
+```bash
+.venv/bin/python -m scripts.cross_validate_sources --snapshot data/audit/<run-id>
+```
+
+This comparison generates `docs/CROSS_SOURCE_VALIDATION.md` and returns exit status 2 while unresolved comparisons remain. That is a data-quality finding, not a failed regression test. Offline replay instructions are in the report.
+
+### Planned forecasting and portfolio methodology
+
+Each modeling row will represent an instrument at a forecast date, with inputs available by that day's close. The target will be realized variance over the following 20 trading sessions, annualized using a 252-session convention. Displayed volatility will be the square root of variance.
+
+Training, validation, and final testing will use successive periods. Training labels whose future windows reach the next evaluation period will be excluded. A trained model will be compared with trailing and exponentially weighted variance forecasts using annualized-volatility mean absolute error and variance QLIKE. The final test will remain untouched until model selection is complete.
+
+The initial application will support daily, USD-denominated stocks and ETFs in long-only, unleveraged portfolios. Fixed-weight historical scenarios will explicitly assume daily rebalancing; they will represent hypothetical exposures rather than actual past investment performance. Portfolio forecasting will require a separate correlation estimate and separate evaluation. ETF look-through holdings, taxes, derivatives, and automated trading are outside the initial scope.
+
+### Documentation and next milestone
+
+- [Data audit](docs/DATA_AUDIT.md): observed findings, provenance, methods, and limitations.
+- [Cross-source validation](docs/CROSS_SOURCE_VALIDATION.md): website quote checks and unresolved FRED/Yahoo benchmark differences.
+- [Data-audit walkthrough](docs/02_DATA_AUDIT_WALKTHROUGH.md): how to read and explain the implementation.
+- [Action checklist](docs/ACTION_PLAN.md): tasks and completion criteria.
+- [Project plan](docs/PROJECT_PLAN.md): the broader technical specifications.
+
+The [source policy](docs/DATA_SOURCE_POLICY.md) accepts the audited stock/ETF sample for prototype work, selects FRED as the preferred price-index context source, and quarantines Yahoo ^GSPC. The underlying three discrepancies remain unresolved.
+
+Next: implement the versioned SQL ingestion layer and issue ledger, including enforcement of this source policy. Portfolio risk calculations follow those data controls.
 
 ### References
 
-- [Qlib workflow](https://qlib.readthedocs.io/en/latest/component/workflow.html)
-- [Qlib repository and data availability notice](https://github.com/microsoft/qlib)
-- [FRED API](https://fred.stlouisfed.org/docs/api/fred/)
-- [FRED real-time periods and ALFRED](https://fred.stlouisfed.org/docs/api/fred/realtime_period.html)
-- [yfinance data access and usage notes](https://github.com/ranaroussi/yfinance)
+- [yfinance source and usage notes](https://github.com/ranaroussi/yfinance)
+- [Exchange calendars](https://github.com/gerrymanoim/exchange_calendars)
+- [Apple issuer announcement](https://www.apple.com/newsroom/2020/07/apple-reports-third-quarter-results/)
+- [Microsoft Qlib workflow](https://qlib.readthedocs.io/en/latest/component/workflow.html)
+- [FRED API and historical vintages](https://fred.stlouisfed.org/docs/api/fred/realtime_period.html)
 - [MLflow experiment tracking](https://mlflow.org/docs/latest/ml/tracking/)
