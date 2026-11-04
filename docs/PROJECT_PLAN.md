@@ -86,6 +86,7 @@ Do not place API keys in the repository or request that the user paste them into
 | features_daily | Versioned, as-of model features | instrument_id, session_date, feature_version, dataset_version |
 | forecasts | Origin, horizon, prediction, model run | instrument_id, origin_date, horizon, model_run_id |
 | evaluation_results | Metrics, periods, slices, and evaluation run | evaluation_run_id, slice_id, metric |
+| data_quality_issues | Source/date/field discrepancies, rules, tolerances, evidence, and resolution status | issue_id |
 
 Historical ingestion snapshots are retained; canonical price views select an explicit dataset version. Rerunning the same input should not create duplicate canonical observations.
 
@@ -135,3 +136,11 @@ Forecast-driven portfolio optimization, neural networks, real-time streaming, an
 ## Project working agreement
 
 Use reviewable checkpoints and explain the reasoning behind code and modeling choices so the user can discuss and defend the work in interviews. Keep a decision log as implementation starts. Preserve the financial research engine as the saved next-project candidate in the parent AGENTS.md.
+
+## Implemented data audit — November 4, 2026
+
+The three-instrument sample contains 5,157 daily observations with no missing expected sessions, duplicate dates, or nonpositive prices detected. Acquisition settings and local snapshot hashes are recorded. Twelve regression tests cover audit failures and cross-source alignment.
+
+Five selected completed-session closes for each instrument match a separate website at published price precision. FRED SP500 versus Yahoo ^GSPC retains three unresolved historical discrepancies after precision normalization. FRED is a same-index benchmark check, not validation of individual stock or ETF quotes. See [the external validation report](CROSS_SOURCE_VALIDATION.md).
+
+The planned SQL layer must retain source values and quality issues separately. Record source identity, observation date, field, tolerance, evidence references, and resolution status; do not silently overwrite discrepant data. A later source-selection decision can select a canonical benchmark without deleting contrary evidence. Source policy [DS-001](DATA_SOURCE_POLICY.md) selects FRED for index context and quarantines Yahoo ^GSPC. Future model features and benchmark calculations must exclude that comparator until its underlying issues are reconciled or an independently justified acceptance rule is documented.

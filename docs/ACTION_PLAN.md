@@ -1,6 +1,6 @@
 # Action checklist
 
-Updated November 3, 2026. This is the execution checklist; [PROJECT_PLAN.md](PROJECT_PLAN.md) holds the technical specifications. Work in order, with a demonstration every two weeks. Budget roughly 12–20 hours per week and five to six weeks for the first complete version, adjusting after the data audit.
+Updated November 4, 2026. This is the execution checklist; [PROJECT_PLAN.md](PROJECT_PLAN.md) holds the technical specifications. Work in order, with a demonstration every two weeks. Budget roughly 12–20 hours per week and five to six weeks for the first complete version, adjusting after the data audit.
 
 ## The problem we are solving
 
@@ -19,16 +19,18 @@ The system must connect real market data to an explainable risk report. A foreca
 
 **Output:** [01_QLIB_WALKTHROUGH.md](01_QLIB_WALKTHROUGH.md). This is a source-code review, not an executed training run.
 
-### 2. Audit a small real-data sample — next implementation task
+### 2. Audit a small real-data sample — implemented; benchmark exceptions remain open
 
-- [ ] Establish an isolated Python environment; check available compatible package versions before pinning dependencies.
-- [ ] Probe AAPL, SPY, and BND as three data-test instruments, not investment recommendations. Request daily history for 2020-01-01 through 2026-11-02 inclusive, subject to provider coverage.
-- [ ] Request original prices, adjusted close, dividends, and splits explicitly. Record the provider's actual response and adjustment settings; do not assume that every field exists.
-- [ ] Retain the response or provider-library output, request settings, retrieval time, and content hash. Distinguish original provider payloads from library-transformed results.
-- [ ] Inspect date coverage, missing fields/sessions, duplicate dates, nonpositive prices, and adjustments around actual corporate actions. Separate exchange closures from missing expected sessions.
-- [ ] Record access conditions and whether the sample can support our intended returns calculation. On failure, save the failure and assess another source; do not substitute invented prices.
+- [x] Establish an isolated Python 3.13.7 environment and record exact dependencies.
+- [x] Download daily AAPL, SPY, and BND history from 2020-01-01 through 2026-11-03, with explicit adjustment, missing-row, and corporate-action settings.
+- [x] Preserve provider-library output, structured metadata, retrieval times, request settings, code hashes, and file hashes in versioned local snapshots.
+- [x] Check expected exchange sessions, duplicate dates, invalid prices, volume, OHLC consistency, and action adjustments.
+- [x] Cross-check a selected Apple split and dividend amount against an issuer announcement.
+- [x] Compare five completed-session closes per instrument with Stock Analysis and reconcile the S&P 500 benchmark against FRED.
+- [x] Run 12 regression tests and reproduce findings from saved evidence without new downloads.
+- [x] Formally disposition the three benchmark discrepancies under [DS-001](DATA_SOURCE_POLICY.md): retain original values, prefer FRED for index context, and quarantine Yahoo ^GSPC. The underlying causes remain unresolved.
 
-**Output:** a reproducible probe plus `docs/DATA_AUDIT.md` containing observed results. **Done when:** we can identify the source and price meaning of every sample, repeat the request, and explain any gaps. This step decides whether the provider is suitable before scaling up.
+**Outputs:** [data audit](DATA_AUDIT.md), [cross-source validation](CROSS_SOURCE_VALIDATION.md), [implementation walkthrough](02_DATA_AUDIT_WALKTHROUGH.md), scripts, and ignored local snapshots. The stock/ETF sample passes structural checks and limited quote spot checks. Benchmark source agreement is not complete; see the exception report.
 
 ### 3. Build the Python ingestion and SQL foundation
 
@@ -92,8 +94,8 @@ The system must connect real market data to an explainable risk report. A foreca
 
 ## Immediate work queue
 
-1. Read the first walkthrough: identify the model's inputs, its target, and the reason for a separate test period.
-2. Run the three-instrument data audit in step 2 and inspect actual rows together.
-3. Select the provider and initial universe from evidence, then implement the larger pipeline.
+1. Review the data-audit walkthrough and the three open benchmark source exceptions.
+2. Implement source policy DS-001 in canonical SQL views and the quality-issue ledger; the decision is documented, but SQL enforcement remains pending.
+3. Build the versioned SQL ingestion layer and data-quality issue ledger; then expand the universe and produce baseline portfolio risk calculations.
 
-**Current state:** step 1's source review and adaptation notes are complete. Qlib has not been installed or executed. No market prices have been downloaded and no model has been trained. Step 2 has not started.
+**Current state:** the source walkthrough, Python environment, real-data acquisition, structural audit, cross-source comparison, and 12 regression tests are implemented. The original three-instrument sample contains 5,157 rows. Three benchmark discrepancies remain open. Qlib, SQL storage, portfolio risk calculations, and model training are not implemented.
