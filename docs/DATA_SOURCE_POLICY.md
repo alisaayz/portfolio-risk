@@ -1,7 +1,7 @@
 # Data-source decision: initial prototype
 
 **Decision:** DS-001 · **Date:** November 4, 2026
-**Status:** Accepted for prototype planning; enforcement in SQL is a subsequent task.
+**Status:** Accepted for the initial prototype and enforced by the implemented SQL views.
 
 ## Decision and scope
 
@@ -30,8 +30,8 @@ The separate Yahoo request around August 11 reproduced its original values. This
 
 The cross-source validator continues to return exit status 2 for these mismatches. This decision does not convert a failed comparison into a pass. Reopen a quarantined source only after documenting a supported explanation, a provider correction, or a revised acceptance rule justified independently of the desired result.
 
-## Implementation requirements for the next milestone
+## SQL implementation
 
 The SQL layer must retain observations by source and ingestion run, select canonical data through an explicit versioned policy, and store quality issues separately from prices. Its issue ledger must include observation date, instrument/series, compared fields, tolerance, evidence references, status, and resolution notes. Quarantined observations must remain queryable for review while being excluded from accepted analytical inputs.
 
-No canonical SQL views, benchmark calculations, or model features are implemented yet. The current enforcement is the validator's nonzero status and the explicit prohibition on using Yahoo ^GSPC for those future inputs.
+The implemented `accepted_prices_daily` and `benchmark_context_daily` views apply versioned source rules to an explicitly selected dataset. `quarantined_benchmark_daily` and `active_quality_issues` preserve excluded evidence. The loader rejects unsupported policy semantics. Benchmark predictive features and portfolio calculations remain unimplemented; context access does not grant feature approval. See the [SQL milestone report](SQL_LAYER.md).

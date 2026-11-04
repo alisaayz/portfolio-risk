@@ -32,13 +32,13 @@ The system must connect real market data to an explainable risk report. A foreca
 
 **Outputs:** [data audit](DATA_AUDIT.md), [cross-source validation](CROSS_SOURCE_VALIDATION.md), [implementation walkthrough](02_DATA_AUDIT_WALKTHROUGH.md), scripts, and ignored local snapshots. The stock/ETF sample passes structural checks and limited quote spot checks. Benchmark source agreement is not complete; see the exception report.
 
-### 3. Build the Python ingestion and SQL foundation
+### 3. Build the Python ingestion and SQL foundation — three-instrument SQL milestone implemented
 
 - [ ] Select 12–20 reference instruments and freeze initial history dates based on the audit. Record selection limits, including survivorship bias from today's instruments.
-- [ ] Implement one adapter with explicit date/settings inputs, visible errors, and cached snapshots.
-- [ ] Create ingestion-run, instrument, price, and corporate-action tables; normalize to Parquet and load DuckDB.
-- [ ] Write SQL coverage and quality queries and a canonical price view that selects a declared dataset version.
-- [ ] Rerun the same ingestion and verify that canonical observations do not duplicate.
+- [x] Implement explicit acquisition settings, visible errors, saved snapshots, and offline replay; general incremental provider updates remain future work.
+- [x] Create versioned source/dataset tables, normalize to Parquet, and load DuckDB transactionally.
+- [x] Write policy-controlled price/context views, a quality-issue ledger, calendar-aligned returns, and trailing-risk inputs.
+- [x] Rerun the same load and verify unchanged counts, dataset ID, and five Parquet hashes; reconcile SQL calculations independently.
 
 **Output:** one command produces an audited, versioned price dataset and quality report. **Done when:** failures are visible and reruns preserve reproducible results.
 
@@ -95,7 +95,7 @@ The system must connect real market data to an explainable risk report. A foreca
 ## Immediate work queue
 
 1. Review the data-audit walkthrough and the three open benchmark source exceptions.
-2. Implement source policy DS-001 in canonical SQL views and the quality-issue ledger; the decision is documented, but SQL enforcement remains pending.
-3. Build the versioned SQL ingestion layer and data-quality issue ledger; then expand the universe and produce baseline portfolio risk calculations.
+2. Read the SQL walkthrough and inspect accepted prices, context, and quarantined issues with the example queries.
+3. Calculate a baseline portfolio report with declared holdings assumptions; expand the reference universe after that calculation is verified.
 
-**Current state:** the source walkthrough, Python environment, real-data acquisition, structural audit, cross-source comparison, and 12 regression tests are implemented. The original three-instrument sample contains 5,157 rows. Three benchmark discrepancies remain open. Qlib, SQL storage, portfolio risk calculations, and model training are not implemented.
+**Current state:** the source walkthrough, Python environment, real-data acquisition, structural audit, cross-source comparison, and 12 regression tests are implemented. The original three-instrument sample contains 5,157 rows. Three benchmark discrepancies remain open. SQL storage, explicit dataset selection, source-policy enforcement, and historical SQL inputs are implemented for three instruments. Twenty regression tests cover the current system. Qlib, portfolio risk calculations, and model training are not implemented.

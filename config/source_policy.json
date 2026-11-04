@@ -1,0 +1,10 @@
+{
+  "policy_id": "DS-001",
+  "rules": [
+    {"source_id": "yahoo_prices", "entity_id": "AAPL", "purpose": "risk_prices"},
+    {"source_id": "yahoo_prices", "entity_id": "SPY", "purpose": "risk_prices"},
+    {"source_id": "yahoo_prices", "entity_id": "BND", "purpose": "risk_prices"},
+    {"source_id": "fred", "entity_id": "SP500", "purpose": "context"},
+    {"source_id": "yahoo_index", "entity_id": "^GSPC", "purpose": "quarantine"}
+  ]
+}

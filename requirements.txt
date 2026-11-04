@@ -5,6 +5,7 @@ charset-normalizer==3.5.2
 contourpy==1.4.0
 curl_cffi==0.17.0
 cycler==0.12.1
+duckdb==2.0.0
 exchange_calendars==4.13.2
 fonttools==4.68.0
 idna==3.20

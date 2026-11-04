@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1040" height="820" viewBox="0 0 1040 820" role="img" aria-labelledby="title description">
   <title id="title">Personal Portfolio Risk Platform: proposed workflow</title>
-  <desc id="description">The initial market-data acquisition and audit are implemented, with source discrepancies retained for review. SQL storage, historical risk analysis, modeling, portfolio scenarios, and a local application remain planned.</desc>
+  <desc id="description">The initial market-data acquisition and audit are implemented, with source discrepancies retained for review. Versioned SQL storage and historical return/volatility inputs are also implemented. Portfolio risk calculations, modeling, scenarios, and the application remain planned.</desc>
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#52647a"/></marker>
     <style>
@@ -16,7 +16,7 @@
   </defs>
   <rect width="1040" height="820" rx="18" fill="#f4f7fb"/>
   <text class="title" x="44" y="51">Personal Portfolio Risk Platform</text>
-  <text class="subtitle" x="44" y="79">Green: initial data audit implemented · Other components: planned</text>
+  <text class="subtitle" x="44" y="79">Green: data, SQL, and historical inputs implemented · Other components: planned</text>
   <rect class="box done" x="210" y="106" width="620" height="76" rx="12"/>
   <text class="heading" x="520" y="136" text-anchor="middle">Historical market data</text>
   <text class="body" x="520" y="161" text-anchor="middle">Daily prices, adjusted prices, dividends, and splits</text>
@@ -25,15 +25,15 @@
   <text class="heading" x="520" y="239" text-anchor="middle">Python acquisition and validation</text>
   <text class="body" x="520" y="264" text-anchor="middle">Snapshots, quality checks, and cross-source reconciliation</text>
   <path class="line" d="M520 285 V310"/>
-  <rect class="box" x="210" y="312" width="620" height="76" rx="12"/>
+  <rect class="box done" x="210" y="312" width="620" height="76" rx="12"/>
   <text class="heading" x="520" y="342" text-anchor="middle">DuckDB SQL and Parquet</text>
   <text class="body" x="520" y="367" text-anchor="middle">Versioned prices, returns, and historical features</text>
   <path class="line" d="M520 388 V411 H278 V436"/>
   <path class="line" d="M520 388 V411 H762 V436"/>
-  <rect class="box" x="54" y="438" width="448" height="104" rx="12"/>
-  <text class="heading" x="278" y="468" text-anchor="middle">Historical risk analysis</text>
-  <text class="body" x="278" y="493" text-anchor="middle">Volatility, drawdown, and correlations</text>
-  <text class="body" x="278" y="517" text-anchor="middle">Holding-level risk contributions</text>
+  <rect class="box done" x="54" y="438" width="448" height="104" rx="12"/>
+  <text class="heading" x="278" y="468" text-anchor="middle">Historical risk inputs</text>
+  <text class="body" x="278" y="493" text-anchor="middle">SQL returns and trailing volatility implemented</text>
+  <text class="body" x="278" y="517" text-anchor="middle">Portfolio risk calculations planned</text>
   <rect x="538" y="438" width="448" height="104" rx="12" fill="#e9f2ff" stroke="#99b9df" stroke-width="1.5"/>
   <text class="heading" x="762" y="468" text-anchor="middle">Forecasting and evaluation</text>
   <text class="body" x="762" y="493" text-anchor="middle">20-session risk model versus baselines</text>

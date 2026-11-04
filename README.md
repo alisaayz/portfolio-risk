@@ -1,13 +1,13 @@
 # Personal Portfolio Risk Platform
 
-**Status:** Data audit implemented; three benchmark source discrepancies remain open.
+**Status:** Versioned SQL ingestion and historical inputs implemented; portfolio analysis and modeling planned.
 **Last updated:** November 4, 2026.
 
 ## 1. Executive summary
 
 The Personal Portfolio Risk Platform is a financial analytics project for evaluating existing investments and comparing hypothetical portfolios. Its intended application will explain portfolio volatility, identify major sources of risk, and examine exposure to historical market stress.
 
-The central research question is whether a trained model can forecast volatility over the next 20 trading days more accurately than historical estimates. The first implementation establishes the data foundation: a reproducible Python workflow that downloads real market history, checks its quality, and preserves evidence. Portfolio calculations, SQL storage, model training, and the application are subsequent milestones.
+The central research question is whether a trained model can forecast volatility over the next 20 trading days more accurately than historical estimates. The implemented foundation downloads and audits real market history, preserves evidence, and loads versioned observations into DuckDB and Parquet. SQL views enforce source-selection rules and calculate calendar-aligned returns and historical volatility inputs. Portfolio calculations, model training, and the application are subsequent milestones.
 
 ## 2. Work completed
 
@@ -15,7 +15,9 @@ The current implementation includes an isolated Python environment, pinned depen
 
 Corporate-action diagnostics cover **134 dividend events and one split**. A selected Apple split and dividend amount were checked against an issuer announcement. Fifteen selected closes match a separate finance website. A full-window comparison of FRED SP500 with Yahoo ^GSPC identified **three unresolved benchmark discrepancies** after accounting for published precision. Original source values are retained; benchmark acceptance is on hold.
 
-Twelve regression tests validate audit failures and source alignment. Both audits can be replayed from saved evidence without new downloads. The stock/ETF sample supports further prototype work, while the benchmark requires a documented source decision. No claim of complete independent price certification or model performance is made.
+The SQL warehouse retains **10,314 price rows across two captures** while selecting **5,157 observations** for analytical use. Five Parquet tables preserve normalized data and source rules. The repeated build leaves counts, dataset ID, and export hashes unchanged. All SQL daily returns and complete trailing-volatility windows match an independent NumPy calculation.
+
+Twenty regression tests cover audit failures, source alignment, transaction rollback, version selection, source quarantine, and export integrity. The [Python application workflow](.github/workflows/python-app.yml) runs fixture-based checks on pushes and pull requests. The three benchmark discrepancies remain unresolved and quarantined under the source policy. No model-performance claim is made.
 
 The research scope, SQL schema, forecast target, evaluation design, and delivery checklist are also documented. A [Qlib source walkthrough](docs/01_QLIB_WALKTHROUGH.md) explains the adaptations required for volatility forecasting. No risk model has been trained.
 
@@ -23,7 +25,7 @@ The research scope, SQL schema, forecast target, evaluation design, and delivery
 
 ### Architecture and implementation status
 
-![Architecture showing the implemented market-data sample and Python audit, with SQL storage, risk calculations, modeling, scenarios, and application still planned](docs/assets/project-workflow.svg)
+![Architecture showing implemented acquisition, SQL storage, and historical inputs; portfolio analysis, modeling, scenarios, and the application remain planned](docs/assets/project-workflow.svg)
 
 *Green components are implemented for the initial sample. Remaining components describe the planned platform.*
 
@@ -33,8 +35,8 @@ The research scope, SQL schema, forecast target, evaluation design, and delivery
 | Evidence | Timestamped CSV snapshots, structured metadata, request settings, package versions, and SHA-256 hashes | Implemented; downloaded prices remain local |
 | Quality control | Exchange-session coverage, duplicates, missing/invalid values, OHLC consistency, volume, and adjustment diagnostics | Implemented; see the [audit report](docs/DATA_AUDIT.md) |
 | Verification | Regression tests, issuer cross-check, separate website spot checks, FRED benchmark reconciliation, and offline replay | Implemented; three benchmark exceptions remain open |
-| SQL foundation | Versioned DuckDB tables and Parquet normalization | Planned |
-| Historical risk | Returns, volatility, drawdown, correlations, and holding risk contributions | Planned |
+| SQL foundation | Transactional loading, explicit dataset versions, normalized Parquet, and policy-controlled views | Implemented; see the [SQL report](docs/SQL_LAYER.md) |
+| Historical inputs | Calendar-aligned daily returns and complete trailing 20-return volatility windows | Implemented; portfolio calculations remain planned |
 | Modeling | Next-20-session variance forecasts compared with historical baselines | Planned |
 | Application | Dated holdings, portfolio comparisons, historical scenarios, and visible assumptions | Planned |
 
@@ -67,7 +69,7 @@ The end date is exclusive. Each download creates a new local snapshot. To reprod
 .venv/bin/python scripts/audit_market_data.py --snapshot data/audit/<run-id>
 ```
 
-The script generates `docs/DATA_AUDIT.md`, a coverage figure, and detailed local audit JSON. A structural failure produces a nonzero exit status. Unit tests use small synthetic fixtures to test failures; reported project findings come from downloaded market data.
+The audit script generates `docs/DATA_AUDIT.md`, a coverage figure, and detailed local audit JSON. A structural failure produces a nonzero exit status. Unit tests use small synthetic fixtures to test failures; reported project findings come from downloaded market data.
 
 To acquire external references and check a saved baseline:
 
@@ -76,6 +78,16 @@ To acquire external references and check a saved baseline:
 ```
 
 This comparison generates `docs/CROSS_SOURCE_VALIDATION.md` and returns exit status 2 while unresolved comparisons remain. That is a data-quality finding, not a failed regression test. Offline replay instructions are in the report.
+
+### Build and inspect the SQL warehouse
+
+```bash
+.venv/bin/python -m scripts.build_warehouse --snapshot data/audit/<selected-run-id> --historical-snapshot data/audit/<earlier-run-id> --external-snapshot data/validation/<external-run-id>
+```
+
+The earlier capture is optional. The command verifies saved inputs, loads DuckDB, selects the explicit dataset, exports Parquet, and generates `docs/SQL_LAYER.md`. Repeat the same command to check idempotence. Dataset identity includes source manifests, policy, transformation code, SQL definitions, and the DuckDB version. Queries are in [sql/diagnostics.sql](sql/diagnostics.sql); the [SQL walkthrough](docs/03_SQL_WALKTHROUGH.md) explains their purpose.
+
+The Python application workflow installs the pinned environment and runs the regression suite on pushes and pull requests. It uses test fixtures rather than private/local market-data files. This project is not distributed as a PyPI package.
 
 ### Planned forecasting and portfolio methodology
 
@@ -89,13 +101,14 @@ The initial application will support daily, USD-denominated stocks and ETFs in l
 
 - [Data audit](docs/DATA_AUDIT.md): observed findings, provenance, methods, and limitations.
 - [Cross-source validation](docs/CROSS_SOURCE_VALIDATION.md): website quote checks and unresolved FRED/Yahoo benchmark differences.
+- [SQL milestone report](docs/SQL_LAYER.md) and [walkthrough](docs/03_SQL_WALKTHROUGH.md): database composition, observed counts, and SQL interpretation.
 - [Data-audit walkthrough](docs/02_DATA_AUDIT_WALKTHROUGH.md): how to read and explain the implementation.
 - [Action checklist](docs/ACTION_PLAN.md): tasks and completion criteria.
 - [Project plan](docs/PROJECT_PLAN.md): the broader technical specifications.
 
 The [source policy](docs/DATA_SOURCE_POLICY.md) accepts the audited stock/ETF sample for prototype work, selects FRED as the preferred price-index context source, and quarantines Yahoo ^GSPC. The underlying three discrepancies remain unresolved.
 
-Next: implement the versioned SQL ingestion layer and issue ledger, including enforcement of this source policy. Portfolio risk calculations follow those data controls.
+The SQL views now enforce this source policy. Next: calculate and reconcile a baseline portfolio risk report, including covariance, drawdown, and instrument risk contributions under explicit holdings assumptions.
 
 ### References
 

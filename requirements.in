@@ -4,3 +4,4 @@ exchange-calendars
 matplotlib
 numpy
 requests
+duckdb
