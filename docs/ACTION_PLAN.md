@@ -94,6 +94,13 @@ The system must connect real market data to an explainable risk report. A foreca
 
 **Output:** a usable application, reproducible repository, evaluation report, and demonstration. Deployment, streaming, deep learning, and automated trading are later choices, outside this first-version checklist.
 
+## News extension — feasibility audit completed; implementation remains proposed
+
+- [x] Inspect bounded historical archive samples and document schema, title, timestamp, duplicate, and candidate-company coverage.
+- [x] Preserve unavailable API responses and distinguish those from successful bulk-metadata access.
+- [ ] Implement a forward-recorded after-close collector with relevance and coverage controls; evaluate text classification separately.
+- [ ] Establish compatible historical news coverage before any prices-plus-news forecasting comparison. Do not open 2026 scores or alter EV-001 during source exploration.
+
 ## Immediate work queue
 
 1. Review the data-audit walkthrough and the three open benchmark source exceptions.
@@ -102,5 +109,6 @@ The system must connect real market data to an explainable risk report. A foreca
 4. Review DS-002 acceptance evidence, the maintenance-page failure, adjusted-price differences, and full SQL reconciliation in the expanded walkthrough.
 5. Build and independently reconcile SQL features and forward targets using the implemented date contract. Add future-value perturbation tests before training.
 6. Train and evaluate development folds; freeze the final recipe before opening any 2026 model scores.
+7. Develop the proposed news-context layer separately, preserving coverage/availability records and verifying historical compatibility before predictive use.
 
-**Current state:** data acquisition, audit, cross-source comparison, versioned SQL/Parquet storage, historical inputs, and the baseline portfolio report are implemented. The original three-instrument dataset remains retained with 5,157 selected rows; the active dataset now uses the expanded capture. Three benchmark discrepancies remain quarantined. Sixty-two regression tests cover the current system. DS-002 selects 27,504 accepted rows across sixteen instruments; 37,818 retained price rows preserve earlier captures. All returns and complete historical volatility windows reconcile with NumPy. Date-only evaluation membership is implemented with a reserved 2026 model test; feature/target construction and model scores remain planned. Two labeled demonstration portfolios use real data; no personal holdings have been supplied. Qlib execution, model training, dedicated stress scenarios, and the application remain outstanding.
+**Current state:** data acquisition, audit, cross-source comparison, versioned SQL/Parquet storage, historical inputs, and the baseline portfolio report are implemented. The original three-instrument dataset remains retained with 5,157 selected rows; the active dataset now uses the expanded capture. Three benchmark discrepancies remain quarantined. Sixty-eight regression tests cover the current system. A bounded news metadata audit is implemented; news collection, sentiment inference, and event-return analysis remain proposed. DS-002 selects 27,504 accepted rows across sixteen instruments; 37,818 retained price rows preserve earlier captures. All returns and complete historical volatility windows reconcile with NumPy. Date-only evaluation membership is implemented with a reserved 2026 model test; feature/target construction and model scores remain planned. Two labeled demonstration portfolios use real data; no personal holdings have been supplied. Qlib execution, model training, dedicated stress scenarios, and the application remain outstanding.

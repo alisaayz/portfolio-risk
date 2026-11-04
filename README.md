@@ -1,6 +1,6 @@
 # Personal Portfolio Risk Platform
 
-**Status:** 16-instrument source acceptance, SQL risk inputs, portfolio baseline, and evaluation date checks implemented; modeling pipeline and application planned.
+**Status:** 16-instrument SQL foundation, portfolio baseline, evaluation date checks, and bounded news feasibility audit implemented; forecasting and application planned.
 **Last updated:** November 4, 2026.
 
 ## 1. Executive summary
@@ -21,7 +21,9 @@ The historical portfolio engine accepts validated weights or latest-close quanti
 
 The [evaluation protocol](docs/EVALUATION_PROTOCOL.md) reserves **2026 for final historical model testing**, with main validation in 2025 and earlier development folds. A date-only pipeline enforces warmup, target boundaries, incomplete-outcome exclusions, and non-overlapping primary origins. It computes no model scores. The [Qlib walkthrough](docs/01_QLIB_WALKTHROUGH.md) documents the workflow reference; Qlib has not been executed.
 
-**Sixty-two regression tests pass locally**, covering data integrity, source acceptance, policy scope, rollback, exports, portfolio calculations, numerical reconciliation, and chronological boundaries. The [Python application workflow](.github/workflows/python-app.yml) runs fixture-based checks on pushes and pull requests. Modeling features/targets, model training, and the interactive application remain subsequent milestones; no forecast-performance claim is made.
+A bounded [news feasibility audit](docs/NEWS_FEASIBILITY.md) inspects **5,944 records** from three historical GDELT archive batches. Titles appear in 5,942 records; precise publication fields appear in 2,778, with 90 later-than-batch timestamps flagged for review. This demonstrates sample metadata access, not continuous news coverage or forecast usefulness. An offline auditor verifies saved hashes and reports schema, timing, duplicates, and candidate company mentions. No news model, live collector, or event-return calculation is implemented.
+
+**Sixty-eight regression tests pass locally**, covering data integrity, source acceptance, policy scope, rollback, exports, portfolio calculations, numerical reconciliation, and chronological boundaries. The [Python application workflow](.github/workflows/python-app.yml) runs fixture-based checks on pushes and pull requests. Modeling features/targets, model training, and the interactive application remain subsequent milestones; no forecast-performance claim is made.
 
 ## 3. Project composition and methodology
 
@@ -41,6 +43,7 @@ The [evaluation protocol](docs/EVALUATION_PROTOCOL.md) reserves **2026 for final
 | Historical inputs | Calendar-aligned daily returns and complete trailing 20-return volatility windows | Returns used in baseline; trailing volatility reserved for forecasting |
 | Portfolio baseline | Sample covariance, annualized volatility, full-history drawdown, correlations, and Euler holding contributions | Implemented; see the [demonstration report](docs/BASELINE_PORTFOLIO_REPORT.md) |
 | Evaluation membership | Versioned chronological folds, horizon-end exclusions, warmup, and a reserved 2026 primary grid | Implemented; [eligibility counts](docs/EVALUATION_SPLITS.md) |
+| News feasibility | Bounded historical metadata probes and offline schema/timestamp/relevance diagnostics | Audit implemented; [findings](docs/NEWS_FEASIBILITY.md); production collection/NLP planned |
 | Modeling | Next-20-session variance forecasts compared with historical baselines | Planned |
 | Application | Dated holdings, portfolio comparisons, historical scenarios, and visible assumptions | Planned |
 
@@ -130,6 +133,14 @@ The implemented split manifest uses dates only. Features, target values, model r
 .venv/bin/python -m scripts.evaluation_splits --snapshot data/audit/<expanded-run-id>
 ```
 
+### Proposed news extension
+
+The intended question is whether news adds information about risk beyond recent price behavior. The [feasibility report](docs/NEWS_FEASIBILITY.md) compares archived metadata, filing sources, financial-news datasets, and a candidate sentiment model. It records successful archive samples and unavailable API probes. Later market reactions are evaluation outcomes and must not become inputs to earlier forecasts. Historical availability, relevance, feed gaps, and duplicated stories require separate checks.
+
+![Implemented price foundation and news audit with proposed collection, text features, and comparison experiment](docs/assets/news-extension.svg)
+
+The proposed first application is an after-close company-news context layer. A future prediction comparison would use identical origins for prices-only and prices-plus-news models after compatible historical coverage is established. Current samples do not justify filling missing feeds with zero sentiment, claiming exact historical availability, or inferring ETF holdings exposure from a company mention. The next core implementation remains the price-only feature/target pipeline; news collection and NLP remain proposed extensions.
+
 ### Planned forecasting and application methodology
 
 Each modeling row will represent an instrument at a forecast date, with inputs available by that day's close. The target will be realized variance over the following 20 trading sessions, annualized using a 252-session convention. Displayed volatility will be the square root of variance.
@@ -142,6 +153,7 @@ The initial application will support daily, USD-denominated stocks and ETFs in l
 
 - [Reference universe](docs/REFERENCE_UNIVERSE.md), [expanded audit](docs/UNIVERSE_AUDIT.md), and [source validation](docs/UNIVERSE_VALIDATION.md): selection, evidence, and acceptance limits.
 - [Expanded SQL walkthrough](docs/05_EXPANDED_SQL_WALKTHROUGH.md): policy gates, archived failures, numerical checks, and capture differences.
+- [News feasibility](docs/NEWS_FEASIBILITY.md): observed archive metadata, timing limitations, candidate sources, and proposed implementation sequence.
 - [Evaluation protocol](docs/EVALUATION_PROTOCOL.md) and [date eligibility](docs/EVALUATION_SPLITS.md): testing contract, implemented boundaries, and planned model checks.
 - [Data audit](docs/DATA_AUDIT.md): observed findings, provenance, methods, and limitations.
 - [Cross-source validation](docs/CROSS_SOURCE_VALIDATION.md): website quote checks and unresolved FRED/Yahoo benchmark differences.
