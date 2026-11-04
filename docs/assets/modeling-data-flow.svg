@@ -5,7 +5,7 @@
   <style>text{font-family:Arial,Helvetica,sans-serif;fill:#172b46}.title{font-size:26px;font-weight:700}.heading{font-size:19px;font-weight:700}.body{font-size:16px}.small{font-size:14px;fill:#52647a}.done{fill:#e7f3ed;stroke:#85b69b}.line{fill:none;stroke:#52647a;stroke-width:2;marker-end:url(#arrow)}</style>
   <rect width="1040" height="740" rx="18" fill="#f4f7fb"/>
   <text x="40" y="48" class="title">Keep the forecast inputs separate from the future outcome.</text>
-  <text x="40" y="78" class="body">Implemented SQL and independent numerical checks · No model trained or scored</text>
+  <text x="40" y="78" class="body">Implemented SQL and numerical checks · Machine-learning training remains planned</text>
   <rect x="210" y="105" width="620" height="82" rx="10" class="done"/>
   <text x="520" y="138" text-anchor="middle" class="heading">Accepted market history: read-only source</text>
   <text x="520" y="165" text-anchor="middle" class="body">16 instruments · 27,504 expected-session price observations</text>
@@ -28,6 +28,6 @@
   <text x="520" y="595" text-anchor="middle" class="body">15,776 initial-training examples · 3,680 main-validation examples</text>
   <text x="520" y="617" text-anchor="middle" class="small">Feature, target, membership, and joined development tables; four Parquet exports</text>
   <text x="40" y="674" class="small">2026 feature/date rows are retained; all numeric final-test outcomes and model scores remain uncomputed.</text>
-  <text x="40" y="703" class="small">Next: historical forecast baselines, development evaluation, and one trained model.</text>
+  <text x="40" y="703" class="small">Historical benchmarks evaluated on 2023–2025; next: train and compare one model.</text>
   <text x="40" y="727" class="small">Revised price histories remain a limitation; causal transformations do not prove point-in-time source availability.</text>
 </svg>

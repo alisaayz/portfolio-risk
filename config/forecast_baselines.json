@@ -1,0 +1,16 @@
+{
+  "baseline_protocol_id": "BL-001",
+  "schema_version": 1,
+  "development_years": [2023, 2024, 2025],
+  "ewma_decays": [0.90, 0.94, 0.97],
+  "ewma_initialization": "first_valid_annualized_squared_return",
+  "ewma_adjust": false,
+  "missing_return_rule": "reset_state_and_consecutive_history",
+  "target_assumption": "current_variance_persists_over_next_20_sessions",
+  "primary_stride_sessions": 20,
+  "primary_grid_anchor": "first_feature_ready_origin_in_each_calendar_year_before_label_filtering",
+  "ewma_selection_year": 2025,
+  "ewma_selection_metric": "equal_instrument_mean_annualized_volatility_mae",
+  "selection_tiebreak": "ascending_method_id",
+  "qlike_prediction_floor": 1e-12
+}

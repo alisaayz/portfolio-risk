@@ -67,11 +67,14 @@ The system must connect real market data to an explainable risk report. A foreca
 
 ### 6. Train and compare against simple alternatives
 
-- [ ] Implement trailing-20-day and exponentially weighted variance forecasts first.
+- [x] Implement trailing-20-session variance and EWMA candidates 0.90/0.94/0.97; verify recurrence, causality, matched origins, and metrics.
 - [ ] Train one pooled gradient-boosted model with a documented positive-variance output convention. Tune using development data only.
-- [ ] Record dataset version, parameters, seed, metrics, and model artifacts in MLflow.
-- [ ] Evaluate annualized-volatility MAE and variance QLIKE on identical forecast origins; inspect results by instrument and market period.
-- [ ] Use non-overlapping 20-day origins for the primary comparison. Open the final test only after choosing the modeling procedure.
+- [x] Preserve all benchmark candidates, data/code versions, configurations, forecasts, origins, per-origin errors, and metrics in content-addressed local experiment records.
+- [ ] Integrate experiment tracking for trained models in MLflow; no MLflow installation or run is claimed yet.
+- [x] Evaluate benchmark volatility MAE and variance QLIKE on identical 2023–2025 development origins; report all candidates and per-instrument/exposure-group results.
+- [ ] Evaluate the trained model against those same benchmark samples and report unsuccessful experiments.
+- [x] Use a fixed twenty-session primary grid for development comparisons, with daily overlapping results identified separately.
+- [ ] Freeze the complete modeling procedure before deriving final 2026 outcomes or opening final-test scores.
 
 **Output:** a comparison report showing when the model helps and when it fails. **Done when:** the experiment is reproducible and conclusions match the evidence, even if a baseline wins.
 
@@ -118,8 +121,8 @@ See [the adjustment roadmap](PORTFOLIO_ADJUSTMENT_ROADMAP.md). Schedule after va
 3. Review the baseline report, especially capital weights versus risk contributions and the different estimation/replay windows.
 4. Review DS-002 acceptance evidence, the maintenance-page failure, adjusted-price differences, and full SQL reconciliation in the expanded walkthrough.
 5. Review the modeling feature dictionary, split/corporate-action examples, and distinction between predictor columns and outcomes.
-6. Implement trailing-variance and exponentially weighted forecast baselines using identical eligible development origins.
+6. Review the benchmark report, particularly primary-versus-secondary metric tradeoffs and the limits of selecting EWMA using 2025 scores.
 7. Train and evaluate development folds; freeze the final recipe before deriving final-test outcomes or opening any 2026 model scores.
 8. Develop the proposed news-context layer separately, preserving coverage/availability records and verifying historical compatibility before predictive use.
 
-**Current state:** data acquisition, audit, cross-source comparison, versioned SQL/Parquet storage, historical inputs, and the baseline portfolio report are implemented. The original three-instrument dataset remains retained with 5,157 selected rows; the active dataset now uses the expanded capture. Three benchmark discrepancies remain quarantined. Eighty regression tests cover the current system. A bounded news metadata audit is implemented; news collection, sentiment inference, and event-return analysis remain proposed. DS-002 selects 27,504 accepted rows across sixteen instruments; 37,818 retained price rows preserve earlier captures. All returns and complete historical volatility windows reconcile with NumPy. The modeling layer implements twelve features, development-only targets, and chronological membership with independent numerical/leakage checks. The dataset has 15,776 initial-training and 3,680 validation examples. Final 2026 numerical targets and all model scores remain uncomputed. Two labeled demonstration portfolios use real data; no personal holdings have been supplied. Qlib execution, model training, dedicated stress scenarios, and the application remain outstanding.
+**Current state:** data acquisition, audit, cross-source comparison, versioned SQL/Parquet storage, historical inputs, and the baseline portfolio report are implemented. The original three-instrument dataset remains retained with 5,157 selected rows; the active dataset now uses the expanded capture. Three benchmark discrepancies remain quarantined. Ninety-two regression tests cover the current system. A bounded news metadata audit is implemented; news collection, sentiment inference, and event-return analysis remain proposed. DS-002 selects 27,504 accepted rows across sixteen instruments; 37,818 retained price rows preserve earlier captures. All returns and complete historical volatility windows reconcile with NumPy. The modeling layer implements twelve features, development-only targets, and chronological membership with independent numerical/leakage checks. The dataset has 15,776 initial-training and 3,680 validation examples. Fixed-form forecast benchmarks have measured development scores; machine-learning training, 2026 forecasts/numerical targets, and final-test scores remain uncomputed. Two labeled demonstration portfolios use real data; no personal holdings have been supplied. Qlib execution, model training, dedicated stress scenarios, and the application remain outstanding.

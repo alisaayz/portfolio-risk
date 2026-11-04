@@ -95,7 +95,7 @@ Identity binds the accepted market dataset and recipe, actual price-input hash, 
 
 Revised adjusted histories remain return proxies rather than point-in-time observations or exact brokerage cash flows. The historical dataset is a current-survivor research sample. No preprocessing, hyperparameter selection, model fitting, forecast scoring, news ingestion, or portfolio recommendation is performed by this builder.
 
-Next: implement trailing-variance and exponentially weighted forecast baselines, evaluate development folds on identical eligible origins, then train one documented model. Any preprocessing is fitted within the corresponding training partition. Freeze the full procedure before opening reserved 2026 model scores or deriving its evaluation targets.
+The subsequent [forecast benchmark experiment](BASELINE_FORECAST_REPORT.md) now evaluates trailing variance and three EWMA candidates on identical development origins. Next: train and compare one documented model against those references. Any preprocessing is fitted within the corresponding training partition. Freeze the full procedure before opening reserved 2026 model scores or deriving its evaluation targets.
 
 ```bash
 .venv/bin/python -m scripts.build_modeling_dataset

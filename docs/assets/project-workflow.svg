@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1040" height="820" viewBox="0 0 1040 820" role="img" aria-labelledby="title description">
   <title id="title">Personal Portfolio Risk Platform: implementation workflow</title>
-  <desc id="description">The initial market-data acquisition and audit are implemented, with source discrepancies retained for review. Versioned SQL storage and historical return/volatility inputs are also implemented. Historical portfolio risk and baseline comparisons are implemented. Sixteen instruments are accepted under DS-002 after structural and limited source checks. Modeling features, development targets, and evaluation membership are implemented; forecasts, dedicated stress scenarios, and application remain planned. Explainable portfolio adjustment suggestions are a requested later extension.</desc>
+  <desc id="description">The initial market-data acquisition and audit are implemented, with source discrepancies retained for review. Versioned SQL storage and historical return/volatility inputs are also implemented. Historical portfolio risk and baseline comparisons are implemented. Sixteen instruments are accepted under DS-002 after structural and limited source checks. Modeling features, development targets, and fixed-form development forecasts are implemented; machine-learning training, dedicated stress scenarios, and application remain planned. Explainable portfolio adjustment suggestions are a requested later extension.</desc>
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#52647a"/></marker>
     <style>
@@ -16,7 +16,7 @@
   </defs>
   <rect width="1040" height="820" rx="18" fill="#f4f7fb"/>
   <text class="title" x="44" y="51">Personal Portfolio Risk Platform</text>
-  <text class="subtitle" x="44" y="79">Green: data, SQL, risk, and modeling data implemented · Forecasts and application: planned</text>
+  <text class="subtitle" x="44" y="79">Green: data, SQL, risk, and development benchmarks implemented · ML and app: planned</text>
   <rect class="box done" x="210" y="106" width="620" height="76" rx="12"/>
   <text class="heading" x="520" y="136" text-anchor="middle">Historical market data</text>
   <text class="body" x="520" y="161" text-anchor="middle">Daily prices, adjusted prices, dividends, and splits</text>
@@ -35,9 +35,9 @@
   <text class="body" x="278" y="493" text-anchor="middle">Volatility, drawdown, and return correlations</text>
   <text class="body" x="278" y="517" text-anchor="middle">Covariance-based holding risk contributions</text>
   <rect class="box done" x="538" y="438" width="448" height="104" rx="12"/>
-  <text class="heading" x="762" y="468" text-anchor="middle">Modeling dataset (implemented)</text>
-  <text class="body" x="762" y="493" text-anchor="middle">12 features, development targets, and date checks</text>
-  <text class="body" x="762" y="517" text-anchor="middle">Training planned; 2026 outcomes and scores withheld</text>
+  <text class="heading" x="762" y="468" text-anchor="middle">Modeling data and forecast benchmarks</text>
+  <text class="body" x="762" y="493" text-anchor="middle">12 features; matched development forecast comparisons</text>
+  <text class="body" x="762" y="517" text-anchor="middle">ML training planned; 2026 evaluation reserved</text>
   <path class="line" d="M278 542 V567 H520 V592"/>
   <rect class="box done" x="210" y="594" width="620" height="76" rx="12"/>
   <text class="heading" x="520" y="624" text-anchor="middle">Historical portfolio baseline comparisons</text>

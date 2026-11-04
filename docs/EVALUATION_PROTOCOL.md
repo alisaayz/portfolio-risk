@@ -59,9 +59,9 @@ At the November 3 snapshot cutoff, each instrument has ten completed primary tes
 | Storage and recovery | Repeated loads, transaction rollback, explicit versions, export corruption | Implemented for expanded warehouse; every SQL return and complete risk window reconciled |
 | Date membership | Warmup, fold purging, horizon completeness, year-end exclusions, stable primary grid | Implemented and regression-tested |
 | Feature/target correctness | SQL versus NumPy, complete session endpoints, future-price perturbation, and split/year-boundary examples | Implemented for twelve price features and pre-2026 targets; final-test values withheld |
-| Forecast baselines | Known constant/variable-return fixtures, positive outputs, common evaluation origins | Planned with forecasting implementation |
-| Model evaluation | Rolling development years, pooled/per-instrument errors, fixed final test, reproducible seeds | Protocol fixed; execution planned |
-| Robustness | Predeclared development slices for high/low volatility, equity/bond/gold groups, and sensitivity to feature windows | Planned; choices fixed before final scoring |
+| Forecast baselines | Known recurrence/metric fixtures, nonnegative forecasts with explicit QLIKE flooring, and common origins | Implemented; trailing twenty sessions and three EWMA candidates evaluated on development years |
+| Model evaluation | Rolling development years, per-instrument/group errors, fixed final test, reproducible seeds | Fixed-form benchmarks evaluated; trained-model and final-test execution planned |
+| Robustness | Predeclared development slices and sensitivity | Exposure-group and EWMA-decay development results implemented; regime/feature-window sensitivity remains planned |
 | Portfolio forecasts | Evaluate portfolio predictions separately, including correlation estimation | Planned; descriptive portfolio baseline already reconciled |
 | Operation | Failed requests, stale data, interrupted jobs, and forward-recorded predictions | Partially implemented for acquisition; operational application planned |
 
@@ -81,3 +81,9 @@ Before opening 2026 model scores, freeze source acceptance, dataset, features, s
 Generated membership CSVs and full manifests remain local. Identical evidence, code, calendar version, and protocol reproduce the same manifest identity. The public report contains eligibility counts rather than prices or forecast scores.
 
 Chronological evaluation follows [scikit-learn's time-series split guidance](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.TimeSeriesSplit.html) and [Forecasting: Principles and Practice on time-series cross-validation](https://otexts.com/fpp3/tscv.html). The custom session/end-date rules address this project's overlapping 20-session labels; a generic chronological split alone does not establish those rules.
+
+## Implemented benchmark experiment BL-001
+
+[BL-001](../config/forecast_baselines.json) evaluates trailing-20-session variance and EWMA decays 0.90/0.94/0.97 on the existing development folds. The primary development grid anchors at each year's first feature-ready origin before eligibility filtering, then advances every twenty sessions. All methods share complete target dates. The current sample has twelve primary origins per instrument/year. Daily overlapping comparisons are secondary.
+
+EWMA decay selection uses equal-instrument primary 2025 volatility MAE, with ascending method ID as a deterministic tie-break. All candidates remain reported; selection-year scores are development evidence. QLIKE uses the already specified prediction floor and does not replace the primary selection metric. The [benchmark report](BASELINE_FORECAST_REPORT.md) documents tradeoffs and experiment identity. No 2026 forecast, numeric outcome, or model score is computed.
