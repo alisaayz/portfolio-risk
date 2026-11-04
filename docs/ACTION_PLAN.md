@@ -56,11 +56,12 @@ The system must connect real market data to an explainable risk report. A foreca
 
 ### 5. Build features, future targets, and chronological splits
 
-- [ ] Implement SQL features using only information available at the forecast origin: trailing variance, returns, downside variation, and drawdown.
-- [ ] Calculate the next-20-session realized-variance target from the specification in the project plan. Preserve future targets separately from available-at-origin features.
+- [x] Implement twelve SQL features using prices through the forecast origin: returns, trailing variance, downside variation, drawdown, negative frequency, and extreme moves.
+- [x] Calculate next-20-session realized-variance targets for development origins, storing them separately from features. Clip source observations before 2026 and withhold boundary-crossing/final-test target values.
 - [x] Record EV-001: 2020–2024 initial training, 2025 main validation, reserved 2026 historical model test, and earlier development folds. Implement and test date-only membership, warmup, and label-boundary exclusions.
-- [ ] Apply the date contract to actual features/targets, freeze modeling inputs and recipe, and enforce separation before opening test scores.
-- [ ] Check feature/target alignment manually for selected instrument-date rows, including a split boundary.
+- [x] Apply EV-001 to actual features/development targets and preserve a versioned feature/target recipe. Reconcile values and endpoints; future-price perturbation cannot alter earlier inputs.
+- [ ] Freeze preprocessing, baseline parameters, model settings, and the complete procedure before opening final scores.
+- [x] Record independently reconciled AAPL examples at the 2020 split and 2024/2025 year boundaries; test shifted endpoints, missing sessions, and zero-return paths.
 
 **Output:** a versioned modeling dataset, feature dictionary, and split manifest. **Done when:** each feature and target can be traced to its source sessions and no future values enter the inputs.
 
@@ -116,8 +117,9 @@ See [the adjustment roadmap](PORTFOLIO_ADJUSTMENT_ROADMAP.md). Schedule after va
 2. Read the SQL walkthrough and inspect accepted prices, context, and quarantined issues with the example queries.
 3. Review the baseline report, especially capital weights versus risk contributions and the different estimation/replay windows.
 4. Review DS-002 acceptance evidence, the maintenance-page failure, adjusted-price differences, and full SQL reconciliation in the expanded walkthrough.
-5. Build and independently reconcile SQL features and forward targets using the implemented date contract. Add future-value perturbation tests before training.
-6. Train and evaluate development folds; freeze the final recipe before opening any 2026 model scores.
-7. Develop the proposed news-context layer separately, preserving coverage/availability records and verifying historical compatibility before predictive use.
+5. Review the modeling feature dictionary, split/corporate-action examples, and distinction between predictor columns and outcomes.
+6. Implement trailing-variance and exponentially weighted forecast baselines using identical eligible development origins.
+7. Train and evaluate development folds; freeze the final recipe before deriving final-test outcomes or opening any 2026 model scores.
+8. Develop the proposed news-context layer separately, preserving coverage/availability records and verifying historical compatibility before predictive use.
 
-**Current state:** data acquisition, audit, cross-source comparison, versioned SQL/Parquet storage, historical inputs, and the baseline portfolio report are implemented. The original three-instrument dataset remains retained with 5,157 selected rows; the active dataset now uses the expanded capture. Three benchmark discrepancies remain quarantined. Sixty-eight regression tests cover the current system. A bounded news metadata audit is implemented; news collection, sentiment inference, and event-return analysis remain proposed. DS-002 selects 27,504 accepted rows across sixteen instruments; 37,818 retained price rows preserve earlier captures. All returns and complete historical volatility windows reconcile with NumPy. Date-only evaluation membership is implemented with a reserved 2026 model test; feature/target construction and model scores remain planned. Two labeled demonstration portfolios use real data; no personal holdings have been supplied. Qlib execution, model training, dedicated stress scenarios, and the application remain outstanding.
+**Current state:** data acquisition, audit, cross-source comparison, versioned SQL/Parquet storage, historical inputs, and the baseline portfolio report are implemented. The original three-instrument dataset remains retained with 5,157 selected rows; the active dataset now uses the expanded capture. Three benchmark discrepancies remain quarantined. Eighty regression tests cover the current system. A bounded news metadata audit is implemented; news collection, sentiment inference, and event-return analysis remain proposed. DS-002 selects 27,504 accepted rows across sixteen instruments; 37,818 retained price rows preserve earlier captures. All returns and complete historical volatility windows reconcile with NumPy. The modeling layer implements twelve features, development-only targets, and chronological membership with independent numerical/leakage checks. The dataset has 15,776 initial-training and 3,680 validation examples. Final 2026 numerical targets and all model scores remain uncomputed. Two labeled demonstration portfolios use real data; no personal holdings have been supplied. Qlib execution, model training, dedicated stress scenarios, and the application remain outstanding.

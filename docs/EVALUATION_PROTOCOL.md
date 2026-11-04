@@ -38,7 +38,7 @@ Twenty means exchange sessions, not calendar days or twenty nonmissing rows. Tar
 
 The implemented [date-membership builder](../scripts/evaluation_splits.py) enforces warmup, session integrity, fold boundaries, future-label availability, and a stable non-overlapping primary test grid. It calculates dates and counts only. It does not compute test outcome values or model scores, or confer source acceptance on additional instruments. [Observed membership counts](EVALUATION_SPLITS.md).
 
-Feature construction must subsequently pass future-value perturbation tests: altering observations after t must leave features at t unchanged. Features and future labels must be stored separately. Revised adjusted histories remain a limitation: those tests establish transformation causality, not historical vendor availability or point-in-time archival accuracy.
+The [modeling layer](MODELING_DATASET.md) now passes future-value perturbation tests: altering observations after t leaves earlier features unchanged. It stores features, development labels, and membership separately and computes no numerical final-test outcomes. New feature versions must pass the same controls. Revised adjusted histories remain a limitation: those tests establish transformation causality, not historical vendor availability or point-in-time archival accuracy.
 
 ## Comparisons fixed before opening the final test
 
@@ -58,7 +58,7 @@ At the November 3 snapshot cutoff, each instrument has ten completed primary tes
 | Source acceptance | Selected independent quote/action checks, source policy, and discrepancy quarantine | Implemented for sixteen instruments with limited quote/action evidence; comparator quarantined |
 | Storage and recovery | Repeated loads, transaction rollback, explicit versions, export corruption | Implemented for expanded warehouse; every SQL return and complete risk window reconciled |
 | Date membership | Warmup, fold purging, horizon completeness, year-end exclusions, stable primary grid | Implemented and regression-tested |
-| Feature/target correctness | SQL versus NumPy and selected manual calculations; future-data perturbation and split-boundary examples | Planned with feature pipeline |
+| Feature/target correctness | SQL versus NumPy, complete session endpoints, future-price perturbation, and split/year-boundary examples | Implemented for twelve price features and pre-2026 targets; final-test values withheld |
 | Forecast baselines | Known constant/variable-return fixtures, positive outputs, common evaluation origins | Planned with forecasting implementation |
 | Model evaluation | Rolling development years, pooled/per-instrument errors, fixed final test, reproducible seeds | Protocol fixed; execution planned |
 | Robustness | Predeclared development slices for high/low volatility, equity/bond/gold groups, and sensitivity to feature windows | Planned; choices fixed before final scoring |

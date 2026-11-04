@@ -180,3 +180,9 @@ A reproducible offline auditor and six regression checks cover metadata shape, t
 ## Requested later phase: portfolio adjustment suggestions — November 4, 2026
 
 The user wants the platform to propose weight changes when existing holdings exceed personal risk tolerance, and later suggest replacement characteristics or specific screened candidates. Record personal constraints, evaluate alternatives using consistent risk estimates, explain tradeoffs, and report infeasible targets. Implement reweighting before expanding the candidate universe. This is a future roadmap item; no optimizer, recommendation engine, preference profile, or trading capability is implemented. The next core task remains the price-only feature/target pipeline.
+
+## Implemented modeling dataset — November 4, 2026
+
+Twelve causal price-based SQL features, separate development targets, EV-001 membership, and explicit development views are implemented in a distinct versioned DuckDB/Parquet layer. The market warehouse is read-only. All 330,048 feature cells and 24,128 pre-2026 target rows reconcile with independent NumPy, including null positions and incomplete windows. The initial-training pool contains 15,776 examples; main validation contains 3,680; final refitting may later use 19,776 eligible pre-2026 examples after recipe selection.
+
+Real-data boundary checks include the August 2020 Apple split and training/validation/test transitions. Future-value perturbation preserves earlier features; changing 2026 prices cannot alter development labels. Final-test numerical outcomes remain uncomputed. Eighty software tests pass locally. No preprocessing is fitted and no model is trained or scored. Read [MODELING_DATASET.md](MODELING_DATASET.md) and the [feature dictionary/walkthrough](06_MODELING_DATASET_WALKTHROUGH.md). Next: forecast baselines and chronological development evaluation before model training.

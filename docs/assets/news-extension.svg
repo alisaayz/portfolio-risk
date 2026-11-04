@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1040" height="680" viewBox="0 0 1040 680" role="img" aria-labelledby="title description">
   <title id="title">Proposed news extension and verified feasibility work</title>
-  <desc id="description">The accepted market-data foundation and a bounded GDELT metadata audit are implemented. Price features, news collection and relevance checks, NLP features, and comparative forecasting are planned. All final 2026 model scores remain reserved.</desc>
+  <desc id="description">The accepted market-data foundation and a bounded GDELT metadata audit are implemented. Price features and development targets are implemented. News collection/relevance checks, NLP, and comparative forecasting remain planned. All final 2026 model scores remain reserved.</desc>
   <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#52647a"/></marker></defs>
   <style>text{font-family:Arial,Helvetica,sans-serif;fill:#172b46}.title{font-size:26px;font-weight:700}.heading{font-size:19px;font-weight:700}.body{font-size:16px}.small{font-size:14px;fill:#52647a}.done{fill:#e7f3ed;stroke:#85b69b}.planned{fill:#e9f2ff;stroke:#99b9df}.line{fill:none;stroke:#52647a;stroke-width:2;marker-end:url(#arrow)}</style>
   <rect width="1040" height="680" rx="18" fill="#f4f7fb"/>
@@ -17,10 +17,10 @@
   <text x="772" y="258" text-anchor="middle" class="heading">Collection and relevance checks</text>
   <text x="772" y="287" text-anchor="middle" class="body">Availability times, duplicates, company relevance</text>
   <text x="772" y="312" text-anchor="middle" class="small">Missing coverage remains distinct from no news</text>
-  <rect x="40" y="250" width="455" height="104" rx="10" class="planned"/>
+  <rect x="40" y="250" width="455" height="104" rx="10" class="done"/>
   <text x="267" y="283" text-anchor="middle" class="heading">Price-only forecast inputs</text>
-  <text x="267" y="312" text-anchor="middle" class="body">Past returns, volatility, volume, and drawdown</text>
-  <text x="267" y="337" text-anchor="middle" class="small">Feature and future-target reconciliation required</text>
+  <text x="267" y="312" text-anchor="middle" class="body">12 verified price features; development targets</text>
+  <text x="267" y="337" text-anchor="middle" class="small">Numerical and future-price leakage checks pass</text>
   <path class="line" d="M772 329 V353"/>
   <rect x="545" y="355" width="455" height="94" rx="10" class="planned"/>
   <text x="772" y="389" text-anchor="middle" class="heading">News features and context overlay</text>

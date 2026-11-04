@@ -38,7 +38,7 @@ The descriptive portfolio baseline was regenerated on the accepted expanded data
 
 The complete suite contains **62 software tests**. New checks exercise scope bindings, every-instrument quote coverage, issuer-content failures, changed instrument identities, quarantine rules, rollback, and independent numerical reconciliation. These are software/data checks; feature leakage tests and chronological forecast evaluation remain subsequent work.
 
-Next: construct separate SQL modeling features and future targets under [EV-001](EVALUATION_PROTOCOL.md), reconcile them independently, and test that changes after a forecast origin cannot alter that origin's inputs. Keep final 2026 model scores unopened until the complete modeling recipe is frozen.
+The subsequent [modeling dataset](MODELING_DATASET.md) now implements separate SQL features/development targets, independent reconciliation, and future-value perturbation under [EV-001](EVALUATION_PROTOCOL.md). Next: forecast baselines and development evaluation. Keep final 2026 model scores unopened until the complete modeling recipe is frozen.
 
 ```bash
 .venv/bin/python -m scripts.verify_warehouse
