@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1040" height="820" viewBox="0 0 1040 820" role="img" aria-labelledby="title description">
   <title id="title">Personal Portfolio Risk Platform: implementation workflow</title>
-  <desc id="description">The initial market-data acquisition and audit are implemented, with source discrepancies retained for review. Versioned SQL storage and historical return/volatility inputs are also implemented. Historical portfolio risk and baseline comparisons are implemented. Sixteen instruments are accepted under DS-002 after structural and limited source checks. Date-only evaluation membership is implemented; forecasting, dedicated stress scenarios, and application remain planned.</desc>
+  <desc id="description">The initial market-data acquisition and audit are implemented, with source discrepancies retained for review. Versioned SQL storage and historical return/volatility inputs are also implemented. Historical portfolio risk and baseline comparisons are implemented. Sixteen instruments are accepted under DS-002 after structural and limited source checks. Date-only evaluation membership is implemented; forecasting, dedicated stress scenarios, and application remain planned. Explainable portfolio adjustment suggestions are a requested later extension.</desc>
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#52647a"/></marker>
     <style>
@@ -46,5 +46,5 @@
   <path class="line" d="M520 670 V695"/>
   <rect x="210" y="697" width="620" height="76" rx="12" fill="#172b46"/>
   <text x="520" y="727" text-anchor="middle" font-size="18" font-weight="700" fill="#fff">Local interactive application (planned)</text>
-  <text x="520" y="752" text-anchor="middle" font-size="15" fill="#dce7f5">Holdings interface, forecast scenarios, and scheduled updates</text>
+  <text x="520" y="752" text-anchor="middle" font-size="15" fill="#dce7f5">Holdings and scenarios; adjustment suggestions as a later extension</text>
 </svg>

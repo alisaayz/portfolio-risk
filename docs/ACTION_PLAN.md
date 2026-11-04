@@ -101,6 +101,15 @@ The system must connect real market data to an explainable risk report. A foreca
 - [ ] Implement a forward-recorded after-close collector with relevance and coverage controls; evaluate text classification separately.
 - [ ] Establish compatible historical news coverage before any prices-plus-news forecasting comparison. Do not open 2026 scores or alter EV-001 during source exploration.
 
+## Later phase: portfolio adjustment suggestions — requested, not implemented
+
+- [ ] Add dated user risk preferences, protected holdings, position bounds, and limits on allocation changes.
+- [ ] Suggest feasible reweightings of current holdings and show before/after risk, concentration, and allocation turnover. Report infeasible targets.
+- [ ] Describe useful replacement criteria, then optionally screen an approved candidate universe with supporting evidence.
+- [ ] Independently verify constraints, chronological policy evaluation, sensitivity, and explanation accuracy before release.
+
+See [the adjustment roadmap](PORTFOLIO_ADJUSTMENT_ROADMAP.md). Schedule after validation of the core risk system; this does not replace the immediate work below.
+
 ## Immediate work queue
 
 1. Review the data-audit walkthrough and the three open benchmark source exceptions.

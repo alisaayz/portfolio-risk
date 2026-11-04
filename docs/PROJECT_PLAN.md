@@ -98,7 +98,7 @@ Historical ingestion snapshots are retained; canonical price views select an exp
 | Modeling and evaluation | Weeks 3–4 | Feature pipeline, tracked model runs, chronological comparison with baselines |
 | Application and operation | Weeks 5–6 | Holdings/scenario interface, stress reports, scheduled updates, documentation and demo |
 
-Forecast-driven portfolio optimization, neural networks, real-time streaming, and language-model commentary are possible extensions. Add them only when they answer an observed limitation of the core system. If an LLM is added later, supply its numerical statements from validated calculation outputs and evaluate faithfulness.
+Explainable portfolio adjustment suggestions are a requested later phase: reweight current holdings first, then provide replacement criteria and optional candidates from an approved universe. See [PORTFOLIO_ADJUSTMENT_ROADMAP.md](PORTFOLIO_ADJUSTMENT_ROADMAP.md). Implementation follows validation of the core risk platform. Neural networks, real-time streaming, and language-model commentary remain possible extensions. Add them only when they answer an observed limitation of the core system. If an LLM is added later, supply its numerical statements from validated calculation outputs and evaluate faithfulness.
 
 ## First two-week sprint
 
@@ -176,3 +176,7 @@ Small adjusted-close differences between captures are preserved rather than patc
 The user requested consideration of breaking news and measurable market reactions, with feasibility reviewed first. Three bounded GDELT archive probes contain 5,944 records and 5,942 titles. Precise publication fields are present in 2,778 records, with 90 later-than-batch values requiring review. The DOC API probe returned 429; the SEC probe returned 403. No restriction was bypassed and no API access or complete historical coverage is claimed.
 
 A reproducible offline auditor and six regression checks cover metadata shape, timestamp handling, duplicates, hashes, and candidate aliases. The complete suite has 68 passing tests. Source/model candidates and their limits are documented in [NEWS_FEASIBILITY.md](NEWS_FEASIBILITY.md). News collection, NLP inference, event reactions, and any predictive benefit remain proposed; no dependency, SQL policy, or EV-001 change was made. Next: complete price-only modeling features/targets, then develop a separately evaluated news-context prototype before admitting news to a forecast.
+
+## Requested later phase: portfolio adjustment suggestions — November 4, 2026
+
+The user wants the platform to propose weight changes when existing holdings exceed personal risk tolerance, and later suggest replacement characteristics or specific screened candidates. Record personal constraints, evaluate alternatives using consistent risk estimates, explain tradeoffs, and report infeasible targets. Implement reweighting before expanding the candidate universe. This is a future roadmap item; no optimizer, recommendation engine, preference profile, or trading capability is implemented. The next core task remains the price-only feature/target pipeline.
