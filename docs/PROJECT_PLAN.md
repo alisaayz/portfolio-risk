@@ -1,6 +1,6 @@
 # Portfolio risk project plan
 
-Working plan dated November 3, 2026. Allocate approximately five to six weeks at 12–20 hours per week, using two-week demonstrations to adjust scope. Data access and the user's learning pace may change the schedule.
+Working plan established November 3, 2026; implementation status updated November 4, 2026. Allocate approximately five to six weeks at 12–20 hours per week, using two-week demonstrations to adjust scope. Data access and the user's learning pace may change the schedule.
 
 ## Product and research scope
 
@@ -60,7 +60,7 @@ The success criterion is a reproducible, honest comparison and a useful risk app
 
 ### Market prices and corporate actions
 
-First candidate: yfinance for personal research, with explicit settings, saved raw responses, corporate-action checks, and provider-use constraints recorded. It is an unofficial interface; availability and completeness need testing. Public sharing of code does not establish rights to redistribute downloaded prices.
+First candidate: yfinance for personal research, with explicit settings, saved provider-library output, corporate-action checks, and provider-use constraints recorded. It is an unofficial interface; availability and completeness need testing. Public sharing of code does not establish rights to redistribute downloaded prices.
 
 Alternative candidates can include a documented public historical snapshot or an API provider. Audit adjustments, history coverage, access restrictions, update options, and usage terms before selecting. Alpha Vantage documents adjusted time-series endpoints, but suitable endpoint access and any paid requirement must be checked; do not assume the needed data is free or purchase access.
 
@@ -147,4 +147,12 @@ The planned SQL layer must retain source values and quality issues separately. R
 
 ## Implemented SQL milestone — November 4, 2026
 
-The warehouse retains two price captures (10,314 rows) and selects 5,157 canonical observations through an explicit dataset pointer. SQL enforces DS-001, retains three active discrepancy records, and calculates calendar-aligned returns and complete historical volatility windows. Five normalized Parquet tables are versioned and hash-checked. Repeated real-data loading preserves counts, dataset identity, and exports; all SQL returns and complete volatility windows reconcile with NumPy. Portfolio calculations, universe expansion, and forecasting remain subsequent work. See [SQL_LAYER.md](SQL_LAYER.md).
+The warehouse retains two price captures (10,314 rows) and selects 5,157 canonical observations through an explicit dataset pointer. SQL enforces DS-001, retains three active discrepancy records, and calculates calendar-aligned returns and complete historical volatility windows. Five normalized Parquet tables are versioned and hash-checked. Repeated real-data loading preserves counts, dataset identity, and exports; all SQL returns and complete volatility windows reconcile with NumPy. Portfolio baseline calculations are now implemented as described below; universe expansion and forecasting remain subsequent work. See [SQL_LAYER.md](SQL_LAYER.md).
+
+## Implemented portfolio baseline — November 4, 2026
+
+Dated JSON inputs accept validated positive weights summing to one or quantities valued at the latest common provider Close. Personal inputs and reports remain private. The public demonstration compares AAPL/SPY/BND allocations of 30%/50%/20% and 10%/40%/50% using real market data.
+
+Sample covariance uses the last 252 common returns, N−1, and a 252-session annualization convention. Portfolio volatility, correlations, and Euler holding contributions use that window; maximum drawdown uses the full common 2020–2026 replay. Both scenarios assume fixed weights rebalanced daily without costs or taxes. Sample covariance differs from the squared-return forward target defined above.
+
+SQL and NumPy returns and covariance reconcile; weighted-series volatility, Euler sums, and a separate scalar drawdown replay also reconcile. Thirty regression tests cover the complete implementation. See the [measured report](BASELINE_PORTFOLIO_REPORT.md) and [walkthrough](04_PORTFOLIO_BASELINE_WALKTHROUGH.md). Portfolio snapshot persistence in SQL, dedicated stress analysis, forecasting, and the interface remain planned; this milestone uses validated JSON inputs.

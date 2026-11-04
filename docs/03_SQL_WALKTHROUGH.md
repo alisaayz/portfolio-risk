@@ -77,4 +77,4 @@ DuckDB 2.0 requires results to be consumed before some other connection operatio
 
 The Python application workflow runs the regression suite on pushes and pull requests using self-contained fixtures. It installs the pinned dependencies and needs neither downloaded histories nor account secrets. Its result must be verified on GitHub before claiming the remote checks passed. It does not publish a Python package.
 
-Next: calculate and independently reconcile a portfolio baseline report from dated holdings and declared weight assumptions. Portfolio covariance, holding risk contributions, historical stress scenarios, and trained forecasts are not implemented by this milestone.
+The subsequent [portfolio baseline](BASELINE_PORTFOLIO_REPORT.md) now uses these SQL returns and adds independently reconciled sample covariance, holding risk contributions, and drawdown. Its [walkthrough](04_PORTFOLIO_BASELINE_WALKTHROUGH.md) explains the different volatility estimator. Dedicated stress scenarios and trained forecasts remain planned. Next: expand the reference universe and construct versioned features, forward targets, and chronological splits.

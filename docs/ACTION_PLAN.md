@@ -42,14 +42,14 @@ The system must connect real market data to an explainable risk report. A foreca
 
 **Output:** one command produces an audited, versioned price dataset and quality report. **Done when:** failures are visible and reruns preserve reproducible results.
 
-### 4. Produce a personally useful baseline report
+### 4. Produce a personally useful baseline report — implemented for the initial sample
 
-- [ ] Support a dated portfolio entered as weights or quantities, with validation and a declared currency.
-- [ ] Calculate adjusted returns, annualized volatility, drawdown, correlations, and covariance-based holding risk contributions.
-- [ ] Reconcile selected results using a second calculation path. Show missing-history exclusions and common-history dates.
-- [ ] Compare two user-defined portfolios under the same assumptions. If using demonstration holdings, label them explicitly and use real market history.
+- [x] Support a dated portfolio entered as weights or quantities, with validation and a declared currency.
+- [x] Calculate adjusted returns, annualized volatility, drawdown, correlations, and covariance-based holding risk contributions.
+- [x] Reconcile selected results using a second calculation path. Show missing-history exclusions and common-history dates.
+- [x] Compare two user-defined portfolios under the same assumptions. If using demonstration holdings, label them explicitly and use real market history.
 
-**Output:** a report that answers “where is my risk coming from?” **Done when:** the numbers reconcile and every chart identifies its period, portfolio convention, and data version.
+**Output:** [baseline report](BASELINE_PORTFOLIO_REPORT.md) and [walkthrough](04_PORTFOLIO_BASELINE_WALKTHROUGH.md). SQL returns and sample covariance reconcile with NumPy; volatility and drawdown also have separate calculation checks. Charts identify their windows and dataset, with portfolio conventions in the report. Quantity valuation is limited to the latest common close; historical share/split reconstruction remains outside this implementation.
 
 ## Checkpoint 2: trained model with evidence — weeks 3–4
 
@@ -96,6 +96,8 @@ The system must connect real market data to an explainable risk report. A foreca
 
 1. Review the data-audit walkthrough and the three open benchmark source exceptions.
 2. Read the SQL walkthrough and inspect accepted prices, context, and quarantined issues with the example queries.
-3. Calculate a baseline portfolio report with declared holdings assumptions; expand the reference universe after that calculation is verified.
+3. Review the baseline report, especially capital weights versus risk contributions and the different estimation/replay windows.
+4. Select and audit approximately 12–20 reference instruments, recording selection and survivorship limits.
+5. Build SQL features, forward targets, and chronological splits before model training.
 
-**Current state:** the source walkthrough, Python environment, real-data acquisition, structural audit, cross-source comparison, and 12 regression tests are implemented. The original three-instrument sample contains 5,157 rows. Three benchmark discrepancies remain open. SQL storage, explicit dataset selection, source-policy enforcement, and historical SQL inputs are implemented for three instruments. Twenty regression tests cover the current system. Qlib, portfolio risk calculations, and model training are not implemented.
+**Current state:** data acquisition, audit, cross-source comparison, versioned SQL/Parquet storage, historical inputs, and the baseline portfolio report are implemented. The original three-instrument sample contains 5,157 accepted rows. Three benchmark discrepancies remain quarantined. Thirty regression tests cover the current system. Two labeled demonstration portfolios use real data; no personal holdings have been supplied. Universe expansion, Qlib execution, model training, dedicated stress scenarios, and the application remain outstanding.

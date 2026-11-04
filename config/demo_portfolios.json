@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "is_demo": true,
+  "as_of_date": "2026-11-03",
+  "report_currency": "USD",
+  "risk_window_sessions": 252,
+  "convention": "fixed_weights_daily_rebalanced",
+  "portfolios": [
+    {
+      "id": "equity_heavy",
+      "name": "Equity-heavy demonstration",
+      "input_type": "weights",
+      "positions": [
+        {"instrument_id": "AAPL", "weight": 0.30},
+        {"instrument_id": "SPY", "weight": 0.50},
+        {"instrument_id": "BND", "weight": 0.20}
+      ]
+    },
+    {
+      "id": "higher_bond",
+      "name": "Higher-bond demonstration",
+      "input_type": "weights",
+      "positions": [
+        {"instrument_id": "AAPL", "weight": 0.10},
+        {"instrument_id": "SPY", "weight": 0.40},
+        {"instrument_id": "BND", "weight": 0.50}
+      ]
+    }
+  ]
+}

@@ -1,13 +1,13 @@
 # Personal Portfolio Risk Platform
 
-**Status:** Versioned SQL ingestion and historical inputs implemented; portfolio analysis and modeling planned.
+**Status:** Versioned data pipeline and historical portfolio risk report implemented; forecasting and application planned.
 **Last updated:** November 4, 2026.
 
 ## 1. Executive summary
 
 The Personal Portfolio Risk Platform is a financial analytics project for evaluating existing investments and comparing hypothetical portfolios. Its intended application will explain portfolio volatility, identify major sources of risk, and examine exposure to historical market stress.
 
-The central research question is whether a trained model can forecast volatility over the next 20 trading days more accurately than historical estimates. The implemented foundation downloads and audits real market history, preserves evidence, and loads versioned observations into DuckDB and Parquet. SQL views enforce source-selection rules and calculate calendar-aligned returns and historical volatility inputs. Portfolio calculations, model training, and the application are subsequent milestones.
+The central research question is whether a trained model can forecast volatility over the next 20 trading days more accurately than historical estimates. The implemented foundation downloads and audits real market history, preserves evidence, and loads versioned observations into DuckDB and Parquet. SQL views enforce source-selection rules and calculate calendar-aligned returns and historical volatility inputs. The baseline report compares dated portfolios using historical covariance, volatility, drawdown, and holding risk contributions. Model training and the application are subsequent milestones.
 
 ## 2. Work completed
 
@@ -17,7 +17,9 @@ Corporate-action diagnostics cover **134 dividend events and one split**. A sele
 
 The SQL warehouse retains **10,314 price rows across two captures** while selecting **5,157 observations** for analytical use. Five Parquet tables preserve normalized data and source rules. The repeated build leaves counts, dataset ID, and export hashes unchanged. All SQL daily returns and complete trailing-volatility windows match an independent NumPy calculation.
 
-Twenty regression tests cover audit failures, source alignment, transaction rollback, version selection, source quarantine, and export integrity. The [Python application workflow](.github/workflows/python-app.yml) runs fixture-based checks on pushes and pull requests. The three benchmark discrepancies remain unresolved and quarantined under the source policy. No model-performance claim is made.
+The historical risk engine accepts validated weights or latest-close quantities, aligns common history, and independently reconciles SQL aggregation and covariance against NumPy. Two explicitly labeled demonstrations use real market history. Over the 252 returns ending November 3, 2026, annualized sample volatility is **11.29%** for the equity-heavy demonstration and **7.24%** for the higher-bond demonstration. Full-history maximum drawdowns are **−26.94%** and **−19.46%**, respectively, over January 2, 2020–November 3, 2026. These are daily-rebalanced hypothetical allocations, without costs or taxes.
+
+Thirty regression tests cover audit failures, source alignment, transactional loading, export integrity, portfolio validation, as-of filtering, risk decomposition, and drawdown. The [Python application workflow](.github/workflows/python-app.yml) runs fixture-based checks on pushes and pull requests. The three benchmark discrepancies remain unresolved and quarantined under the source policy. No model-performance claim is made.
 
 The research scope, SQL schema, forecast target, evaluation design, and delivery checklist are also documented. A [Qlib source walkthrough](docs/01_QLIB_WALKTHROUGH.md) explains the adaptations required for volatility forecasting. No risk model has been trained.
 
@@ -25,7 +27,7 @@ The research scope, SQL schema, forecast target, evaluation design, and delivery
 
 ### Architecture and implementation status
 
-![Architecture showing implemented acquisition, SQL storage, and historical inputs; portfolio analysis, modeling, scenarios, and the application remain planned](docs/assets/project-workflow.svg)
+![Architecture showing implemented acquisition, SQL storage, historical risk analysis and portfolio comparisons; forecasting, dedicated stress scenarios and application remain planned](docs/assets/project-workflow.svg)
 
 *Green components are implemented for the initial sample. Remaining components describe the planned platform.*
 
@@ -36,7 +38,8 @@ The research scope, SQL schema, forecast target, evaluation design, and delivery
 | Quality control | Exchange-session coverage, duplicates, missing/invalid values, OHLC consistency, volume, and adjustment diagnostics | Implemented; see the [audit report](docs/DATA_AUDIT.md) |
 | Verification | Regression tests, issuer cross-check, separate website spot checks, FRED benchmark reconciliation, and offline replay | Implemented; three benchmark exceptions remain open |
 | SQL foundation | Transactional loading, explicit dataset versions, normalized Parquet, and policy-controlled views | Implemented; see the [SQL report](docs/SQL_LAYER.md) |
-| Historical inputs | Calendar-aligned daily returns and complete trailing 20-return volatility windows | Implemented; portfolio calculations remain planned |
+| Historical inputs | Calendar-aligned daily returns and complete trailing 20-return volatility windows | Returns used in baseline; trailing volatility reserved for forecasting |
+| Portfolio baseline | Sample covariance, annualized volatility, full-history drawdown, correlations, and Euler holding contributions | Implemented; see the [demonstration report](docs/BASELINE_PORTFOLIO_REPORT.md) |
 | Modeling | Next-20-session variance forecasts compared with historical baselines | Planned |
 | Application | Dated holdings, portfolio comparisons, historical scenarios, and visible assumptions | Planned |
 
@@ -89,7 +92,25 @@ The earlier capture is optional. The command verifies saved inputs, loads DuckDB
 
 The Python application workflow installs the pinned environment and runs the regression suite on pushes and pull requests. It uses test fixtures rather than private/local market-data files. This project is not distributed as a PyPI package.
 
-### Planned forecasting and portfolio methodology
+### Historical portfolio risk methodology
+
+The [demonstration report](docs/BASELINE_PORTFOLIO_REPORT.md) compares the allocations in [demo_portfolios.json](config/demo_portfolios.json). SQL computes weighted daily returns and sample covariance; NumPy independently reconciles both. Covariance uses the most recent 252 common returns, denominator N−1, and annualization by 252. Portfolio volatility is `sqrt(wᵀΣw)`. Euler contributions allocate that volatility to holdings and sum to the total; negative contributions are preserved.
+
+![Capital allocation and estimated risk shares for two demonstration portfolios](docs/assets/portfolio-risk-contributions.svg)
+
+In the equity-heavy demonstration, AAPL represents **30% of capital but 52.91% of estimated volatility risk**. Capital weights alone do not explain portfolio risk. This is an instrument-level result; it does not measure underlying ETF holdings overlap.
+
+Drawdown uses all common closing history, including initial capital. Both portfolios assume fixed weights rebalanced daily; today's allocation is replayed retrospectively. Risk estimates and drawdowns therefore cover different periods and are historical measurements rather than forecasts. The demeaned sample-covariance estimator is distinct from the existing squared-return/RMS historical input and planned forward variance target.
+
+After building the warehouse, reproduce the public demonstration with:
+
+```bash
+.venv/bin/python -m scripts.portfolio_baseline --input config/demo_portfolios.json --publish-demo
+```
+
+Reports record the dataset, configuration, input hash, and calculation-code hashes. Downloaded histories and detailed replay outputs remain local. Personal inputs should be saved in `private/`; configurations labeled `is_demo: false` produce only private outputs and cannot use `--publish-demo`. Quantity valuation uses provider Close and supports only the latest common close. The [baseline walkthrough](docs/04_PORTFOLIO_BASELINE_WALKTHROUGH.md) explains validation, formulas, and limitations.
+
+### Planned forecasting and application methodology
 
 Each modeling row will represent an instrument at a forecast date, with inputs available by that day's close. The target will be realized variance over the following 20 trading sessions, annualized using a 252-session convention. Displayed volatility will be the square root of variance.
 
@@ -102,13 +123,14 @@ The initial application will support daily, USD-denominated stocks and ETFs in l
 - [Data audit](docs/DATA_AUDIT.md): observed findings, provenance, methods, and limitations.
 - [Cross-source validation](docs/CROSS_SOURCE_VALIDATION.md): website quote checks and unresolved FRED/Yahoo benchmark differences.
 - [SQL milestone report](docs/SQL_LAYER.md) and [walkthrough](docs/03_SQL_WALKTHROUGH.md): database composition, observed counts, and SQL interpretation.
+- [Portfolio baseline report](docs/BASELINE_PORTFOLIO_REPORT.md) and [walkthrough](docs/04_PORTFOLIO_BASELINE_WALKTHROUGH.md): measured comparisons, assumptions, and calculation checks.
 - [Data-audit walkthrough](docs/02_DATA_AUDIT_WALKTHROUGH.md): how to read and explain the implementation.
 - [Action checklist](docs/ACTION_PLAN.md): tasks and completion criteria.
 - [Project plan](docs/PROJECT_PLAN.md): the broader technical specifications.
 
 The [source policy](docs/DATA_SOURCE_POLICY.md) accepts the audited stock/ETF sample for prototype work, selects FRED as the preferred price-index context source, and quarantines Yahoo ^GSPC. The underlying three discrepancies remain unresolved.
 
-The SQL views now enforce this source policy. Next: calculate and reconcile a baseline portfolio risk report, including covariance, drawdown, and instrument risk contributions under explicit holdings assumptions.
+The SQL views now enforce this source policy. Next: expand and audit the reference universe to approximately 12–20 instruments, then implement versioned SQL features, forward targets, and chronological evaluation splits before training a model.
 
 ### References
 
