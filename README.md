@@ -1,13 +1,13 @@
 # Personal Portfolio Risk Platform
 
-**Status:** SQL foundation, portfolio analysis, and chronological machine-learning development experiments implemented; final testing and application planned.
+**Status:** Data pipeline, historical comparison application, and chronological model development implemented; portfolio forecasts and final model testing remain planned.
 **Last updated:** November 4, 2026.
 
 ## 1. Executive summary
 
 The Personal Portfolio Risk Platform is a financial analytics project for evaluating existing investments and comparing hypothetical portfolios. Its intended application will explain portfolio volatility, identify major sources of risk, and examine exposure to historical market stress. A later suggestion layer will propose weight changes or replacement criteria relative to user-defined risk preferences, with optional candidate screening.
 
-The central research question is whether a trained model can forecast volatility over the next 20 trading days more accurately than historical estimates. The implemented foundation downloads and audits real market history, preserves evidence, and loads versioned observations into DuckDB and Parquet. SQL views enforce source-selection rules and calculate calendar-aligned returns and historical volatility inputs. A separate versioned modeling layer builds causal features and pre-2026 targets under the chronological evaluation contract. The baseline report compares dated portfolios using historical covariance, volatility, drawdown, and holding risk contributions. Historical benchmarks and pooled gradient-boosted models are evaluated on development years; final testing and the application are subsequent milestones.
+The central research question is whether a trained model can forecast volatility over the next 20 trading days more accurately than historical estimates. The implemented foundation downloads and audits real market history, preserves evidence, and loads versioned observations into DuckDB and Parquet. SQL views enforce source-selection rules and calculate calendar-aligned returns and historical volatility inputs. A separate versioned modeling layer builds causal features and pre-2026 targets under the chronological evaluation contract. The baseline report compares dated portfolios using historical covariance, volatility, drawdown, and holding risk contributions. Historical benchmarks and pooled gradient-boosted models are evaluated on development years; a local application now exposes historical portfolio comparisons; final model testing remains reserved.
 
 ## 2. Work completed
 
@@ -31,13 +31,15 @@ The [trained-model experiment](docs/MODEL_DEVELOPMENT_REPORT.md) fits three fixe
 
 The [development robustness review](docs/DEVELOPMENT_ROBUSTNESS.md) keeps every fitted model fixed while shifting the twenty-session grid by 0, 5, 10, and 15 sessions. In 2025 the selected model beats selected EWMA on MAE in **three of four phases**, and trailing variance in **all four**. The EWMA ranking reverses at the five-session offset. Offset zero exactly reproduces the original primary comparison; these dependent diagnostics do not change selection or the final-test grid. Leave-one-instrument-out aggregation is also recorded without refitting.
 
-**One hundred and twelve regression tests pass locally**, covering data integrity, source acceptance, policy scope, rollback, exports, portfolio calculations, numerical reconciliation, and chronological boundaries. The [Python application workflow](.github/workflows/python-app.yml) runs fixture-based checks on pushes and pull requests. Final model testing and the interactive application remain subsequent milestones; development results do not establish final-test or live performance. A [future adjustment roadmap](docs/PORTFOLIO_ADJUSTMENT_ROADMAP.md) records requested reweighting, replacement criteria, and optional candidate suggestions; none is implemented.
+A [local portfolio comparison application](docs/APPLICATION.md) now supports two weight-based portfolios, selectable historical estimation windows, an optional user-entered volatility reference, wealth/drawdown charts, holding risk shares, correlations, three fixed historical stress windows, and JSON export. It reads accepted data without changing the warehouse and keeps entries in memory. Browser tests confirm the demo results and input/error behavior; incomplete stress windows remain unavailable. It does not use trained-model forecasts or generate allocation suggestions.
+
+**One hundred and twenty-one regression tests pass locally**, covering data integrity, source acceptance, policy scope, rollback, exports, portfolio calculations, numerical reconciliation, and chronological boundaries. The [Python application workflow](.github/workflows/python-app.yml) runs fixture-based checks on pushes and pull requests. Final model testing and portfolio-forecast integration remain subsequent milestones; development results do not establish final-test or live performance. A [future adjustment roadmap](docs/PORTFOLIO_ADJUSTMENT_ROADMAP.md) records requested reweighting, replacement criteria, and optional candidate suggestions; none is implemented.
 
 ## 3. Project composition and methodology
 
 ### Architecture and implementation status
 
-![Architecture showing implemented acquisition, SQL storage, historical risk analysis and portfolio comparisons; development forecast benchmarks and trained models; dedicated stress scenarios and application remain planned](docs/assets/project-workflow.svg)
+![Architecture showing implemented acquisition, SQL storage, historical risk analysis and portfolio comparisons; development model forecasts, historical stress replay, and a local comparison application; portfolio forecasts remain planned](docs/assets/project-workflow.svg)
 
 *Green components are implemented for the initial sample. Remaining components describe the planned platform.*
 
@@ -55,7 +57,19 @@ The [development robustness review](docs/DEVELOPMENT_ROBUSTNESS.md) keeps every 
 | Modeling dataset | Twelve causal features, development-only 20-session targets, separate membership, and numerical/leakage checks | Implemented; [report](docs/MODELING_DATASET.md) and [feature dictionary](docs/06_MODELING_DATASET_WALKTHROUGH.md) |
 | Forecast benchmarks | Trailing variance and three EWMA candidates, matched primary/daily samples, per-instrument/group metrics, and versioned experiments | Implemented on development years; [results](docs/BASELINE_FORECAST_REPORT.md) |
 | Machine learning | Pooled positive-variance gradient boosting, purged chronological folds, fixed candidate grid, and independent score verification | Implemented on development years; [results](docs/MODEL_DEVELOPMENT_REPORT.md); final refit/test reserved |
-| Application | Dated holdings, portfolio comparisons, historical scenarios, and visible assumptions | Planned |
+| Application | Two weight-based portfolios, selectable estimation window, reference comparison, historical stress replay, charts, and JSON export | Implemented locally for historical risk; [guide](docs/APPLICATION.md); portfolio forecasts/suggestions planned |
+
+### Local application
+
+![Working local portfolio comparison application with explicitly labeled demonstration holdings](docs/assets/application-preview.png)
+
+After building the accepted warehouse, launch:
+
+```bash
+.venv/bin/python -m scripts.serve_portfolio_app
+```
+
+Open [http://127.0.0.1:8765](http://127.0.0.1:8765). The interface compares historical portfolio risk, not predicted investment returns. Entries stay in memory; export is user triggered. The [application guide](docs/APPLICATION.md) explains calculations, the fixed historical scenario registry, local operation, verified behavior, and remaining limitations. Final 2026 model scores are not used or opened.
 
 ### Data quality findings
 
@@ -200,13 +214,13 @@ The intended question is whether news adds information about risk beyond recent 
 
 The proposed first application is an after-close company-news context layer. A future prediction comparison would use identical origins for prices-only and prices-plus-news models after compatible historical coverage is established. Current samples do not justify filling missing feeds with zero sentiment, claiming exact historical availability, or inferring ETF holdings exposure from a company mention. The price-only feature/target pipeline is now implemented. Historical forecast benchmarks and development evaluation are now implemented. Price-only trained-model development evaluation is implemented; news collection and NLP remain proposed extensions.
 
-### Trained-model development and planned application
+### Trained-model development and application boundaries
 
 Each modeling row represents an instrument at a forecast date, with price inputs through that day's close. The implemented development target is realized variance over the following 20 trading sessions, annualized using a 252-session convention. Displayed volatility is the square root of variance; final-test numerical targets remain withheld.
 
 Training, validation, and final testing follow the declared 2020–2024 / 2025 / 2026 chronological contract, with earlier development folds. Training labels whose future windows reach the next evaluation period are excluded. The implemented benchmark report evaluates trailing and exponentially weighted variance forecasts using annualized-volatility mean absolute error and variance QLIKE. Trained candidates use the same development origins and benchmark definitions. Final model scores remain unopened until the complete modeling recipe is frozen.
 
-The initial application will support daily, USD-denominated stocks and ETFs in long-only, unleveraged portfolios. Fixed-weight historical scenarios will explicitly assume daily rebalancing; they will represent hypothetical exposures rather than actual past investment performance. Portfolio forecasting will require a separate correlation estimate and separate evaluation. ETF look-through holdings, taxes, derivatives, and automated trading are outside the initial scope.
+The local application supports daily, USD-denominated instruments in long-only, unleveraged portfolios. Fixed-weight historical scenarios explicitly assume daily rebalancing and represent hypothetical exposures rather than actual past investment performance. Portfolio forecasting will require a separate correlation estimate and separate evaluation. ETF look-through holdings, taxes, derivatives, and automated trading are outside the initial scope.
 
 ### Later phase: explainable portfolio adjustments
 

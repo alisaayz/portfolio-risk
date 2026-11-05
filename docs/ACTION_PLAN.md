@@ -85,16 +85,16 @@ The system must connect real market data to an explainable risk report. A foreca
 
 - [ ] Combine predicted instrument volatilities with a documented trailing, regularized correlation estimate.
 - [ ] Evaluate portfolio forecasts against portfolio baselines; do not infer portfolio accuracy solely from instrument accuracy.
-- [ ] Replay selected historical stress periods using fixed weights and explicit daily-rebalancing assumptions; keep buy-and-hold results separate.
-- [ ] Explain holdings that lack the required history rather than silently filling it.
+- [x] Replay three HS-001 historical windows using fixed weights and daily rebalancing; preserve unavailable complete windows and label assumptions.
+- [x] Reject incomplete common price history and report unavailable historical scenario windows without filling or compressing sessions.
 
 **Output:** existing-versus-alternative portfolio reports with forecast and historical risk views.
 
 ### 8. Package the system and make it repeatable
 
-- [ ] Add a local interface for portfolio entry, comparison, and inspecting results.
+- [x] Add a local weight-entry interface with historical comparison, optional volatility reference, charts, correlations, stress replay, and JSON export.
 - [ ] Add a repeatable batch workflow with caching, job status, and stale-data warnings based on observed failures.
-- [ ] Document environment setup, commands, sources, assumptions, limitations, and reproduction steps.
+- [x] Document setup, commands, sources, assumptions, limitations, and current reproduction steps; keep final editorial review outstanding.
 - [ ] Prepare a short demonstration and an interview explanation covering one data problem, one modeling decision, and one unsuccessful experiment.
 
 **Output:** a usable application, reproducible repository, evaluation report, and demonstration. Deployment, streaming, deep learning, and automated trading are later choices, outside this first-version checklist.
@@ -123,11 +123,15 @@ See [the adjustment roadmap](PORTFOLIO_ADJUSTMENT_ROADMAP.md). Schedule after va
 4. Review DS-002 acceptance evidence, the maintenance-page failure, adjusted-price differences, and full SQL reconciliation in the expanded walkthrough.
 5. Review the modeling feature dictionary, split/corporate-action examples, and distinction between predictor columns and outcomes.
 6. Review the benchmark report, particularly primary-versus-secondary metric tradeoffs and the limits of selecting EWMA using 2025 scores.
-7. Review trained-model evidence and the completed fixed-model grid/aggregation sensitivity; implement usable portfolio analysis before final procedure freeze. Keep 2026 outcomes/scores reserved.
+7. Review trained-model evidence and the completed fixed-model grid/aggregation sensitivity; review the local historical comparison application and define portfolio-forecast composition before final procedure freeze. Keep 2026 outcomes/scores reserved.
 8. Develop the proposed news-context layer separately, preserving coverage/availability records and verifying historical compatibility before predictive use.
 
-**Current state:** data acquisition, audit, cross-source comparison, versioned SQL/Parquet storage, historical inputs, and the baseline portfolio report are implemented. The original three-instrument dataset remains retained with 5,157 selected rows; the active dataset now uses the expanded capture. Three benchmark discrepancies remain quarantined. One hundred and twelve regression tests cover the current system. A bounded news metadata audit is implemented; news collection, sentiment inference, and event-return analysis remain proposed. DS-002 selects 27,504 accepted rows across sixteen instruments; 37,818 retained price rows preserve earlier captures. All returns and complete historical volatility windows reconcile with NumPy. The modeling layer implements twelve features, development-only targets, and chronological membership with independent numerical/leakage checks. The dataset has 15,776 initial-training and 3,680 validation examples. Fixed-form benchmarks and three trained candidates have measured development scores. Repeat fitting, model restoration, and independent saved-score reconciliation pass. Final refitting, 2026 forecasts/numerical targets, and final-test scores remain uncomputed. Two labeled demonstration portfolios use real data; no personal holdings have been supplied. Qlib execution, final model testing, dedicated stress scenarios, and the application remain outstanding.
+**Current state:** data acquisition, audit, cross-source comparison, versioned SQL/Parquet storage, historical inputs, and the baseline portfolio report are implemented. The original three-instrument dataset remains retained with 5,157 selected rows; the active dataset now uses the expanded capture. Three benchmark discrepancies remain quarantined. One hundred and twenty-one regression tests cover the current system. A bounded news metadata audit is implemented; news collection, sentiment inference, and event-return analysis remain proposed. DS-002 selects 27,504 accepted rows across sixteen instruments; 37,818 retained price rows preserve earlier captures. All returns and complete historical volatility windows reconcile with NumPy. The modeling layer implements twelve features, development-only targets, and chronological membership with independent numerical/leakage checks. The dataset has 15,776 initial-training and 3,680 validation examples. Fixed-form benchmarks and three trained candidates have measured development scores. Repeat fitting, model restoration, and independent saved-score reconciliation pass. Final refitting, 2026 forecasts/numerical targets, and final-test scores remain uncomputed. Two labeled demonstration portfolios use real data; no personal holdings have been supplied. A local historical comparison application and three fixed stress windows are implemented. Qlib execution, portfolio forecasts, final model testing, persistent private portfolio snapshots, and operational refresh remain outstanding.
 
 ## Development sensitivity checkpoint
 
 RB-001 evaluates four grid phases and leave-one-instrument-out score aggregation without refitting or reselection. Offset zero exactly matches the original primary comparison. The model/EWMA 2025 MAE ranking changes at the five-session offset; the selected model wins three of four phases versus EWMA and four versus trailing variance. These are dependent development diagnostics. Read [DEVELOPMENT_ROBUSTNESS.md](DEVELOPMENT_ROBUSTNESS.md). Final-test outcomes remain reserved.
+
+## Local historical application checkpoint
+
+A localhost-only comparison page uses the verified historical engine and read-only warehouse. Weight inputs, optional user volatility reference, wealth/drawdown, risk shares, correlations, three complete-or-unavailable HS-001 windows, and local JSON export are implemented. Personal entries stay in memory. Nine application tests and browser checks pass; the complete suite has 121 tests. Read [APPLICATION.md](APPLICATION.md). The page does not use model forecasts, open 2026 outcomes, persist private snapshots, or generate suggestions.

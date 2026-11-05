@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Portfolio Risk · Local research preview</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="/">Portfolio<span>Risk</span></a><span class="local-label"><span class="status-dot"></span>Local research preview</span><a class="research-link" href="https://github.com/alisaayz/portfolio-risk" target="_blank" rel="noopener noreferrer">Project &amp; research ↗</a></header>
+  <main>
+    <section class="intro"><p class="eyebrow">PERSONAL PORTFOLIO ANALYSIS</p><h1>See beyond your allocations.</h1><p class="lede">Compare two portfolios, understand what drives their historical risk, and explore how the same weights behaved in difficult periods.</p><div class="snapshot" id="snapshot">Loading accepted local data…</div></section>
+    <div id="fatal-error" class="notice error" role="alert" hidden></div>
+    <div class="workspace" id="workspace" hidden>
+      <section class="card inputs" aria-labelledby="inputs-title">
+        <div class="section-top"><h2 id="inputs-title">Your comparison</h2><button id="load-demo" class="text-button" type="button">Reset demo</button></div>
+        <p class="quiet" id="input-label">Demonstration holdings · edit to explore your own.</p>
+        <form id="portfolio-form">
+          <div class="paired"><label>Portfolio A<input id="name-a" maxlength="80" required value="Portfolio A"></label><label>Portfolio B<input id="name-b" maxlength="80" required value="Portfolio B"></label></div>
+          <div class="paired controls"><label>As-of date<input id="as-of" type="date" required></label><label>Risk window<select id="risk-window"><option value="63">63 sessions</option><option value="126">126 sessions</option><option value="252" selected>252 sessions</option></select></label></div>
+          <div class="allocation-heading"><h3>Capital weights</h3><span>Enter percentages</span></div>
+          <table class="positions"><thead><tr><th scope="col">Instrument</th><th scope="col">A, %</th><th scope="col">B, %</th><th scope="col"><span class="sr-only">Remove</span></th></tr></thead><tbody id="position-rows"></tbody><tfoot><tr><th scope="row">Total</th><td id="total-a">100%</td><td id="total-b">100%</td><td></td></tr></tfoot></table>
+          <div class="add-position"><label class="sr-only" for="add-symbol">Choose an instrument</label><select id="add-symbol"></select><button id="add-position" class="secondary-button" type="button">Add</button></div>
+          <label class="reference-label">Your annualized volatility reference, % <span class="optional">optional</span><input id="vol-reference" type="number" min="0.01" max="200" step="0.01" placeholder="For example, 12"></label>
+          <p class="field-help">Compares historical volatility with a level you choose. It does not measure future losses or guarantee a risk limit.</p>
+          <div id="form-error" class="notice error" role="alert" hidden></div>
+          <button id="analyze" class="primary-button" type="submit">Analyze portfolios <span aria-hidden="true">↗</span></button>
+        </form>
+        <div class="privacy-note"><strong>Local by design.</strong> Entries stay in memory. They are not written to the repository or sent to an external service.</div>
+      </section>
+      <section id="results" class="results" aria-label="Analysis results" aria-live="polite">
+        <div class="results-top"><div><p class="eyebrow">HISTORICAL RISK</p><h2 id="result-title">Ready to compare</h2><p id="result-context" class="quiet">Run an analysis to view results.</p></div><button id="download" class="secondary-button" type="button" disabled>Export JSON ↓</button></div>
+        <div id="result-content" hidden>
+          <div class="metric-grid" id="metrics"></div>
+          <section class="card chart-card"><div class="section-top"><div><h3>Historical replay</h3><p class="quiet">Fixed weights rebalanced daily · no costs or taxes</p></div><div class="chart-tabs" role="group" aria-label="Chart metric"><button type="button" id="wealth-tab" class="selected" aria-pressed="true">Wealth</button><button type="button" id="drawdown-tab" aria-pressed="false">Drawdown</button></div></div><div id="chart" class="chart" role="img" aria-label="Comparison of historical portfolio wealth"></div><div class="chart-footer"><span id="chart-start"></span><div id="chart-legend" class="legend"></div><span id="chart-end"></span></div><p id="chart-description" class="field-help"></p></section>
+          <section class="card"><div class="section-top"><div><h3>Where risk comes from</h3><p class="quiet">Capital allocation can differ from contribution to volatility.</p></div></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Holding</th><th>A weight</th><th>A risk share</th><th>B weight</th><th>B risk share</th></tr></thead><tbody id="risk-rows"></tbody></table></div><p class="field-help">Risk shares use historical sample covariance. Negative shares indicate a diversifying contribution; they are preserved.</p></section>
+          <section class="card"><div class="section-top"><div><h3>Historical stress windows</h3><p class="quiet">How these weights would have behaved, rather than your actual past returns.</p></div></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Window</th><th>A replay return</th><th>A drawdown</th><th>B replay return</th><th>B drawdown</th></tr></thead><tbody id="stress-rows"></tbody></table></div><p class="field-help">Replay starts at the named starting close. Drawdown is measured within that window. Incomplete windows remain unavailable.</p></section>
+          <details class="card details"><summary>Methods, source status &amp; correlations</summary><div id="method-notes" class="method-notes"></div><div class="table-scroll"><table class="data-table correlation-table" id="correlation-table"></table></div></details>
+        </div>
+        <aside class="research-note"><span class="research-icon" aria-hidden="true">↗</span><div><strong>A separate model research track.</strong><p>This page uses historical covariance, not machine-learning forecasts. The trained-model development comparison and its limitations are available in the <a href="https://github.com/alisaayz/portfolio-risk/blob/main/docs/MODEL_DEVELOPMENT_REPORT.md" target="_blank" rel="noopener noreferrer">research report</a>. Final 2026 model results remain reserved.</p></div></aside>
+      </section>
+    </div>
+    <footer>Daily USD stocks and ETFs · long-only portfolios · saved research data</footer>
+  </main>
+</body>
+</html>

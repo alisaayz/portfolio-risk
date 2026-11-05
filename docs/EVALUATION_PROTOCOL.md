@@ -63,7 +63,7 @@ At the November 3 snapshot cutoff, each instrument has ten completed primary tes
 | Model evaluation | Rolling development years, per-instrument/group errors, fixed final test, reproducible seeds | Fixed-form benchmarks and purged trained-model development folds evaluated; final test reserved |
 | Robustness | Predeclared development slices and sensitivity | Exposure-group, realized-regime, EWMA-decay, fixed-grid-phase and omission-aggregation diagnostics implemented; feature-window sensitivity remains planned |
 | Portfolio forecasts | Evaluate portfolio predictions separately, including correlation estimation | Planned; descriptive portfolio baseline already reconciled |
-| Operation | Failed requests, stale data, interrupted jobs, and forward-recorded predictions | Partially implemented for acquisition; operational application planned |
+| Operation | Failed requests, stale data, interrupted jobs, and forward-recorded predictions | Acquisition controls and local application validation/stale-result handling implemented; automated refresh and forward recording planned |
 
 Stress slices and sensitivity experiments use development data to guide decisions. Test-period breakdowns are descriptive reporting after the recipe is frozen. No test-year slice may be used to choose a replacement model without retiring the holdout and labeling subsequent results exploratory.
 
