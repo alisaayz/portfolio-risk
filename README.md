@@ -1,6 +1,6 @@
 # riskitnot
 
-**Status:** Version 1 is released. Version 2 planning is underway. [Version 2 action plan](docs/V2_ACTION_PLAN.md) · [Version 1 release](https://github.com/alisaayz/portfolio-risk/tree/v1.0.0)
+**Status:** Version 1 is released. Version 2 checkpoint 1 is ready for participant sessions. [Version 2 action plan](docs/V2_ACTION_PLAN.md) · [Version 1 release](https://github.com/alisaayz/portfolio-risk/tree/v1.0.0)
 
 ## 1. Executive summary
 

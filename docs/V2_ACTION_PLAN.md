@@ -10,6 +10,8 @@ Plan four two-week checkpoints for a local release. Participant access and data 
 
 ## 1. Establish the Version 1 baseline
 
+The cases, rubric, and application rehearsal are complete. Participant sessions and the observed baseline are pending. [Facilitator protocol](V1_DECISION_PILOT.md) · [Participant cases](V1_PARTICIPANT_CASES.md) · [Baseline readout](V1_PILOT_BASELINE.md)
+
 **Weeks 1–2.** Adapt the facilitator guide around a realistic decision. Ask participants to review a demo portfolio with a clear objective, explain volatility and loss in their own words, and choose whether to keep, reweight, or replace a holding. Include a case where a lower-volatility substitute violates the desired exposure and one where the evidence is inconclusive. Ask how participants handle this decision today and whether the tool changes it. [Version 1 facilitator guide](USABILITY_PILOT.md) · [Moderated usability testing](https://www.gov.uk/service-manual/user-research/using-moderated-usability-testing)
 
 - Use five to eight consenting participants for the first round if available. Test Version 1 first and record anonymized observations.
