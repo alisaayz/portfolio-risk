@@ -2,7 +2,7 @@
 
 Updated November 4, 2026. The local application connects the accepted SQL warehouse to the independently reconciled historical risk engine. It supports side-by-side portfolio analysis while keeping weights and portfolio amounts local. Requested new symbols are sent to the market-data provider for their history. It does not use machine-learning forecasts or recommend allocations.
 
-![Local application showing demonstration portfolios, drawdown, risk shares, and historical stress windows](assets/application-preview.png)
+![Local application showing one demonstration portfolio, optional comparison, and unanswered risk-preference questions](assets/application-preview.png)
 
 ## Run the application
 
@@ -17,9 +17,9 @@ Open [the local application](http://127.0.0.1:8765). Stop the process with Ctrl+
 
 ## What is implemented
 
-Enter two long-only USD portfolios as percentages, select an as-of date and a 63-, 126-, or 252-session estimation window, and run the comparison. The interface searches the versioned U.S. directory by ticker or company name. New histories are loaded and audited in a single-worker queue before use. Searchable listing candidates are broader than loaded/validated price histories; failures remain visible. See [the expansion report](US_MARKET_EXPANSION.md). The starting AAPL/SPY/BND holdings are demonstrations. “A weight (%)” and “B weight (%)” mean the percentage of each named portfolio allocated to a holding. Up to 100 positive positions per portfolio are supported. Zero positions are omitted; positive weights must sum to 100% without automatic rescaling. Invalid inputs produce a visible error. Editing inputs marks previous results stale and disables export until recalculation.
+Enter one long-only USD portfolio as percentages, select an as-of date and a 63-, 126-, or 252-session estimation window, and assess its historical risk. Enable the optional alternative only when exploring a comparison; it starts with copied current weights. The interface searches the versioned U.S. directory by ticker or company name. New histories are loaded and audited in a single-worker queue before use. Searchable listing candidates are broader than loaded/validated price histories; failures remain visible. See [the expansion report](US_MARKET_EXPANSION.md). The starting AAPL/SPY/BND holdings are demonstrations. “Weight (%)” is the share of the current portfolio allocated to a holding. Comparison mode adds an independently editable alternative column; each portfolio must total 100%. Up to 100 positive positions per portfolio are supported. Zero positions are omitted; positive weights must sum to 100% without automatic rescaling. Invalid inputs produce a visible error. Editing inputs marks previous results stale and disables export until recalculation.
 
-Results include annualized sample volatility, full-history maximum drawdown, wealth/drawdown charts, capital weights versus Euler volatility-risk shares, pairwise correlations, and three fixed historical windows. An optional annualized-volatility reference compares the historical estimate with a level entered by the user. It does not guarantee a future risk limit and does not generate suggestions.
+Results include annualized sample volatility, full-history maximum drawdown, wealth/drawdown charts, capital weights versus Euler volatility-risk shares, pairwise correlations, and three fixed historical windows. An optional five-question guide reflects self-reported preferences and compares explicitly stated loss comfort with historical drawdown. A manual annualized-volatility reference remains under Advanced for deliberate use. It does not guarantee a future risk limit and does not generate suggestions.
 
 The demonstration matches the existing portfolio baseline: 11.29% versus 7.24% annualized volatility over 252 returns ending November 3, 2026; full-history maximum drawdowns are −26.94% and −19.46%. AAPL's 30% capital allocation contributes 52.91% of the first demonstration's estimated volatility. These are labeled hypothetical allocations, not personal holdings or actual investment performance.
 
@@ -27,7 +27,7 @@ The demonstration matches the existing portfolio baseline: 11.29% versus 7.24% a
 
 ```mermaid
 flowchart LR
-    A[Local browser: portfolio weights and reference] --> B[Validated local JSON request]
+    A[Local browser: one portfolio and optional preferences] --> B[Validated local JSON request]
     C[Accepted warehouse: read-only] --> D[Reconciled historical risk engine]
     A --> J[U.S. directory search]
     J --> K[Queued provider request and AP-001 audit]
@@ -45,7 +45,7 @@ flowchart LR
     H --> I[User-triggered local JSON export]
 ```
 
-Both portfolios use the same complete common history. Sample covariance uses N−1, annualization by 252, and the selected estimation window. Portfolio variance is `wᵀΣw`; Euler contributions sum to volatility, and negative diversifying contributions are retained. Correlation and risk shares remain undefined when the required denominator is zero. The original SQL/NumPy reconciliations run for each analysis.
+One portfolio is assessed on its complete available history. When comparison is enabled, both scenarios use the same complete common history. Sample covariance uses N−1, annualization by 252, and the selected estimation window. Portfolio variance is `wᵀΣw`; Euler contributions sum to volatility, and negative diversifying contributions are retained. Correlation and risk shares remain undefined when the required denominator is zero. The original SQL/NumPy reconciliations run for each analysis.
 
 Full-history charts and maximum drawdown cover a different interval from the trailing covariance estimate; both windows are displayed. Replay assumes fixed weights rebalanced daily with no transaction costs or taxes. It describes how the entered exposures would have behaved, not how an actual investor traded.
 
@@ -69,6 +69,10 @@ The saved market snapshot remains through November 3, 2026; this page makes no l
 
 ## Broader-search and measurement update
 
-The full suite now contains 136 passing tests. Added checks cover directory classification/search, class-share mapping, immutable replay, cache tampering, metadata/type/currency/timezone mismatches, missing-session and adjustment barriers, failure retention, separate composition without warehouse writes, and verified metric-summary display. Actual local HTTP checks exercise queued loading and a mixed META/AAPL portfolio. Browser checks verify META addition, VOO keyboard addition, clear weight labels, unchanged demo metrics, a development scorecard, and mobile/desktop sizing. Existing user entries were preserved; public previews contain demonstration values only.
+The full suite now contains 146 passing tests. Added checks cover directory classification/search, class-share mapping, immutable replay, cache tampering, metadata/type/currency/timezone mismatches, missing-session and adjustment barriers, failure retention, separate composition without warehouse writes, and verified metric-summary display. Actual local HTTP checks exercise queued loading and a mixed META/AAPL portfolio. Browser checks verify META addition, VOO keyboard addition, clear weight labels, unchanged demo metrics, a development scorecard, and mobile/desktop sizing. Existing user entries were preserved; public previews contain demonstration values only.
 
 The proposed [user-measurement study](METRICS_AND_EXPERIMENTS.md) is documented but has not recruited participants, recorded task outcomes, collected telemetry, or produced a significance result. This distinction is explicit in the scorecard and README.
+
+## Single-portfolio and preference-guide update
+
+The default view submits and renders one portfolio, with one risk card/series and three-column holding/stress tables. Comparison is opt-in; copied alternative weights can be edited independently and are excluded while hidden. Ten new tests and browser checks cover the personal workflow and RQ-001 interpretation. Hidden invalid alternative totals do not block a single-portfolio report. The guide remains optional, accepts partial/uncertain answers, and generates no volatility target or investment recommendation. Inputs remain in memory. Read [RISK_PREFERENCES.md](RISK_PREFERENCES.md) for original question definitions, deterministic rules, source principles, limits, and privacy behavior.

@@ -23,6 +23,7 @@ import pandas as pd
 from scripts.audit_market_data import ROOT, sha256
 from scripts.portfolio_baseline import analyze, drawdown_summary, serializable, validate_configuration
 from scripts import market_catalog, application_market_data
+from scripts import risk_preferences
 
 ASSETS = {'/': ('index.html', 'text/html; charset=utf-8'),
           '/app.js': ('app.js', 'text/javascript; charset=utf-8'),
@@ -31,7 +32,7 @@ MAX_BODY_BYTES = 65536
 
 
 def validate_request(payload):
-    if not isinstance(payload, dict) or set(payload) != {'configuration', 'volatility_reference'}:
+    if not isinstance(payload, dict) or not {'configuration', 'volatility_reference'} <= set(payload) or set(payload) - {'configuration', 'volatility_reference', 'risk_preferences'}:
         raise ValueError('Provide a portfolio configuration and optional volatility reference')
     config = payload['configuration']
     if not isinstance(config, dict):
@@ -48,6 +49,7 @@ def validate_request(payload):
             if not re.fullmatch(r'[A-Z][A-Z0-9.-]{0,15}', position['instrument_id']):
                 raise ValueError('Invalid instrument symbol')
     limit = payload['volatility_reference']
+    risk_preferences.validate_preferences(payload.get('risk_preferences'))
     if limit is not None and (isinstance(limit, bool) or not isinstance(limit, (int, float))
                               or not math.isfinite(limit) or not 0 < limit <= 2):
         raise ValueError('Volatility reference must be above zero and at most 200%')
@@ -96,6 +98,7 @@ def assess(connection, payload, registry=None):
               for day, row in daily.iterrows()]
     return serializable({
         'analysis': result, 'reference_comparisons': assessment,
+        'risk_preferences': risk_preferences.summarize(payload.get('risk_preferences'), result['scenarios']),
         'historical_scenarios': historical_scenarios(result, daily, registry),
         'chart_series': series, 'is_demo': config['is_demo'],
         'method': 'historical_sample_covariance', 'model_forecasts_used': False,
@@ -258,6 +261,7 @@ def handler_class(database):
                     value['research_scorecard'] = research_scorecard()
                 except (FileNotFoundError, ValueError, KeyError):
                     value['research_scorecard'] = None
+                value['risk_questionnaire'] = risk_preferences.questionnaire()
                 self.send_json(200, value)
             except (duckdb.Error, ValueError, IndexError):
                 self.send_json(503, {'error': 'Accepted local data is unavailable. Build the warehouse before starting the application.'})

@@ -1,13 +1,13 @@
 # Personal Portfolio Risk Platform
 
-**Status:** U.S. listing search, on-demand historical portfolio analysis, model development, and a development-metrics scorecard implemented; user experiments and final model testing remain planned.
+**Status:** Personal portfolio analysis, optional risk-preference guidance, U.S. symbol search, and model development implemented; user experiments and final model testing remain planned.
 **Last updated:** November 4, 2026.
 
 ## 1. Executive summary
 
-The Personal Portfolio Risk Platform is a financial analytics project for evaluating existing investments and comparing hypothetical portfolios. Its local application explains historical portfolio volatility, identifies major sources of risk, and replays fixed historical stress windows. U.S. symbol discovery and on-demand application histories are separate from the fixed research dataset. A later suggestion layer will propose weight changes or replacement criteria relative to user-defined risk preferences, with optional candidate screening.
+The Personal Portfolio Risk Platform is a financial analytics project for evaluating existing investments and comparing hypothetical portfolios. Its local application starts with one portfolio, explains historical risk, and offers an optional alternative comparison. A short preference guide separates self-reported comfort with fluctuations from cash-access needs and puts historical drawdowns in context. U.S. symbol discovery and on-demand application histories are separate from the fixed research dataset. A later suggestion layer will propose weight changes or replacement criteria relative to user-defined risk preferences, with optional candidate screening.
 
-The central research question is whether a trained model can forecast volatility over the next 20 trading days more accurately than historical estimates. The implemented foundation downloads and audits real market history, preserves evidence, and loads versioned observations into DuckDB and Parquet. SQL views enforce source-selection rules and calculate calendar-aligned returns and historical volatility inputs. A separate versioned modeling layer builds causal features and pre-2026 targets under the chronological evaluation contract. The baseline report compares dated portfolios using historical covariance, volatility, drawdown, and holding risk contributions. Historical benchmarks and pooled gradient-boosted models are evaluated on development years; a local application now exposes historical portfolio comparisons; final model testing remains reserved.
+The central research question is whether a trained model can forecast volatility over the next 20 trading days more accurately than historical estimates. The implemented foundation downloads and audits real market history, preserves evidence, and loads versioned observations into DuckDB and Parquet. SQL views enforce source-selection rules and calculate calendar-aligned returns and historical volatility inputs. A separate versioned modeling layer builds causal features and pre-2026 targets under the chronological evaluation contract. The baseline report compares dated portfolios using historical covariance, volatility, drawdown, and holding risk contributions. Historical benchmarks and pooled gradient-boosted models are evaluated on development years; a local application now provides historical portfolio analysis with optional comparison; final model testing remains reserved.
 
 ## 2. Work completed
 
@@ -31,13 +31,15 @@ The [trained-model experiment](docs/MODEL_DEVELOPMENT_REPORT.md) fits three fixe
 
 The [development robustness review](docs/DEVELOPMENT_ROBUSTNESS.md) keeps every fitted model fixed while shifting the twenty-session grid by 0, 5, 10, and 15 sessions. In 2025 the selected model beats selected EWMA on MAE in **three of four phases**, and trailing variance in **all four**. The EWMA ranking reverses at the five-session offset. Offset zero exactly reproduces the original primary comparison; these dependent diagnostics do not change selection or the final-test grid. Leave-one-instrument-out aggregation is also recorded without refitting.
 
-A [local portfolio comparison application](docs/APPLICATION.md) now supports two weight-based portfolios, selectable historical estimation windows, an optional user-entered volatility reference, wealth/drawdown charts, holding risk shares, correlations, three fixed historical stress windows, and JSON export. It reads accepted data without changing the warehouse and keeps entries in memory. Browser tests confirm the demo results and input/error behavior; incomplete stress windows remain unavailable. It does not use trained-model forecasts or generate allocation suggestions.
+A [local portfolio comparison application](docs/APPLICATION.md) now starts with one weight-based portfolio and offers an optional alternative comparison, selectable historical estimation windows, a five-question risk-preference guide, and an Advanced manual volatility reference, wealth/drawdown charts, holding risk shares, correlations, three fixed historical stress windows, and JSON export. It reads accepted data without changing the warehouse and keeps entries in memory. Browser tests confirm the demo results and input/error behavior; incomplete stress windows remain unavailable. It does not use trained-model forecasts or generate allocation suggestions.
 
 The [U.S. market expansion](docs/US_MARKET_EXPANSION.md) adds local ticker/company search over **11,806 stock/ETF candidates** from **13,237 active, non-test Nasdaq directory listings**. Listing records are not audited price histories. Additional histories are loaded through a queue, validated under separate **AP-001** controls, cached with hashes, and combined in memory for historical analysis. META, VOO, and BRK.B each pass structural/provider checks on 1,719 sessions; no independent price cross-check is claimed for those additions. The original research database remains unchanged.
 
 The dashboard now displays verified **development MAE and QLIKE**, separately from portfolio risk. A [measurement and experimentation plan](docs/METRICS_AND_EXPERIMENTS.md) defines proposed user-task success, completion-time and misunderstanding guardrails, a participant-randomized report comparison, and dependence-aware forecast inference. No user study or statistically significant improvement is claimed. Software checks establish implementation behavior rather than user benefit.
 
-**One hundred and thirty-six regression tests pass locally**, covering data integrity, source acceptance, policy scope, rollback, exports, portfolio calculations, numerical reconciliation, and chronological boundaries. The [Python application workflow](.github/workflows/python-app.yml) runs fixture-based checks on pushes and pull requests. Final model testing and portfolio-forecast integration remain subsequent milestones; development results do not establish final-test or live performance. A [future adjustment roadmap](docs/PORTFOLIO_ADJUSTMENT_ROADMAP.md) records requested reweighting, replacement criteria, and optional candidate suggestions; none is implemented.
+The [personal workflow and RQ-001 guide](docs/RISK_PREFERENCES.md) let users assess one portfolio without supplying a second allocation or choosing a volatility target. Five optional questions cover horizon, unexpected-expense flexibility, stability/growth preference, reaction to a decline, and explicit loss comfort. Uncertain answers remain unspecified. The report separates willingness and access needs and compares an explicitly stated decline comfort with historical drawdown. It produces no validated risk score, inferred volatility target, or allocation recommendation. Comparison starts from copied current weights and stays optional.
+
+**146 regression tests pass locally**, covering data integrity, source acceptance, policy scope, rollback, exports, portfolio calculations, numerical reconciliation, and chronological boundaries. The [Python application workflow](.github/workflows/python-app.yml) runs fixture-based checks on pushes and pull requests. Final model testing and portfolio-forecast integration remain subsequent milestones; development results do not establish final-test or live performance. A [future adjustment roadmap](docs/PORTFOLIO_ADJUSTMENT_ROADMAP.md) records requested reweighting, replacement criteria, and optional candidate suggestions; none is implemented.
 
 ## 3. Project composition and methodology
 
@@ -61,12 +63,12 @@ The dashboard now displays verified **development MAE and QLIKE**, separately fr
 | Modeling dataset | Twelve causal features, development-only 20-session targets, separate membership, and numerical/leakage checks | Implemented; [report](docs/MODELING_DATASET.md) and [feature dictionary](docs/06_MODELING_DATASET_WALKTHROUGH.md) |
 | Forecast benchmarks | Trailing variance and three EWMA candidates, matched primary/daily samples, per-instrument/group metrics, and versioned experiments | Implemented on development years; [results](docs/BASELINE_FORECAST_REPORT.md) |
 | Machine learning | Pooled positive-variance gradient boosting, purged chronological folds, fixed candidate grid, and independent score verification | Implemented on development years; [results](docs/MODEL_DEVELOPMENT_REPORT.md); final refit/test reserved |
-| Application | Search U.S. candidates, queue requested-history audits, compare portfolios, inspect source status and development metrics | Implemented for historical risk; [guide](docs/APPLICATION.md); portfolio forecasts/suggestions planned |
+| Application | Assess one portfolio, optionally compare an alternative, reflect risk preferences, search U.S. candidates, and inspect historical/development metrics | Implemented for historical risk; [guide](docs/APPLICATION.md); portfolio forecasts/suggestions planned |
 | User measurement | Task-success, time/error guardrails, randomized report comparison, and prespecified inference | [Design documented](docs/METRICS_AND_EXPERIMENTS.md); participants, outcome collection, and significance testing not yet executed |
 
 ### Local application
 
-![Working local portfolio comparison application with explicitly labeled demonstration holdings](docs/assets/application-preview.png)
+![Single-portfolio application with optional comparison and unanswered risk-preference questions](docs/assets/application-preview.png)
 
 After building the accepted warehouse, create or replay the U.S. directory and launch:
 
@@ -76,6 +78,12 @@ After building the accepted warehouse, create or replay the U.S. directory and l
 ```
 
 Open [http://127.0.0.1:8765](http://127.0.0.1:8765). The interface compares historical portfolio risk, not predicted investment returns. Portfolio weights stay in memory; requested symbols are sent to the provider for market history and that evidence is cached locally. Export is user triggered. The [application guide](docs/APPLICATION.md) explains calculations, the fixed historical scenario registry, local operation, verified behavior, and remaining limitations. Final 2026 model scores are not used or opened.
+
+### Personal risk preferences
+
+Start with one portfolio and use the optional five-question guide if risk preferences are unclear. It summarizes expressed priorities and access needs separately. Only an explicitly selected decline-comfort value is compared with historical drawdown; missing or uncertain answers do not generate a numerical threshold. Manual annualized-volatility references remain under Advanced. The guide is a self-reflection prototype, not a validated investor score or a forecast of a safe loss limit. See [its methodology and limits](docs/RISK_PREFERENCES.md).
+
+The optional alternative starts with copied current weights and can be edited independently. Disabling comparison excludes it from validation and calculation while preserving its entries in browser memory. This supports a single-portfolio routine and a separate exploration workflow.
 
 ### Broader application coverage and measurement
 

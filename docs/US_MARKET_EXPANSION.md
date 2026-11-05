@@ -19,7 +19,7 @@ Directory membership does not establish price availability, complete history, or
 5. Preserve CSV library output, metadata, audit, recipe, timestamps, and hashes under AP-001. A ready capture is published atomically; failures are retained separately. Replays verify evidence hashes and rerun the audit.
 6. For a portfolio containing additional symbols, compose a separate in-memory analytical dataset with the accepted base history. Reuse the SQL/NumPy reconciled portfolio engine. Do not write additional assets into the frozen research warehouse or feed them into model evaluation.
 
-The browser supports up to 100 positions per portfolio, subject to data availability. Allocation percentages must sum to 100% independently for Portfolios A and B. The initial AAPL/SPY/BND holdings are a demonstration, not the instrument-coverage limit. New symbols initially receive zero weight until the user supplies allocations.
+The browser supports up to 100 positions per portfolio, subject to data availability. The application starts with one portfolio; an optional alternative can be enabled. Each submitted portfolio must independently total 100%. The initial AAPL/SPY/BND holdings are a demonstration, not the instrument-coverage limit. New symbols initially receive zero weight until the user supplies allocations.
 
 ## Source tiers and the saved cutoff
 

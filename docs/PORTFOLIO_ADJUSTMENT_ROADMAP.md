@@ -65,3 +65,7 @@ A future language-model explanation must use validated calculation outputs and s
 Implement after the core risk engine, personal preference inputs, portfolio forecast evaluation, and usable comparison interface. News can provide later context, but is not a prerequisite or a sole basis for suggestions. No optimization library or recommendation model has been installed or selected for this phase.
 
 Method references: [PyPortfolioOpt objectives and constraints](https://pyportfolioopt.readthedocs.io/en/latest/MeanVariance.html), [Cvxportfolio holding and turnover constraints](https://www.cvxportfolio.com/en/stable/constraints.html), and [Investor.gov on asset allocation, diversification, and rebalancing](https://www.investor.gov/introduction-investing/getting-started/asset-allocation). These are references for future design, not executed implementations or evidence of achieved risk reduction.
+
+## Preference-reflection foundation now available
+
+RQ-001 now elicits self-reported preferences and access needs, and the interface supports one portfolio with an optional manually edited alternative. This does not implement the adjustment engine or establish validated constraints: no volatility target, feasible weight suggestion, replacement criteria, candidate recommendation, or full financial-capacity assessment is inferred. Read [RISK_PREFERENCES.md](RISK_PREFERENCES.md). The three suggestion stages above remain planned.

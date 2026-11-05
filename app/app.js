@@ -1,7 +1,7 @@
 'use strict';
 
 const $ = id => document.getElementById(id);
-const state = {context: null, positions: [], result: null, demo: true, metric: 'wealth', revision: 0};
+const state = {context: null, positions: [], result: null, demo: true, metric: 'wealth', revision: 0, compare: false, alternativeInitialized: false};
 let searchSequence = 0;
 let searchTimer;
 let searchMatches = [];
@@ -36,6 +36,37 @@ function totals() {
     $(`total-${key}`).classList.toggle('invalid-total', Math.abs(total - 100) > 1e-8);
   }
 }
+function buttonLabel() {
+  $('analyze').replaceChildren(document.createTextNode(state.compare ? 'Compare portfolios ' : 'Assess my portfolio '), element('span', '↗'));
+}
+function syncMode() {
+  $('compare-mode').checked = state.compare;
+  document.querySelectorAll('[data-comparison-only]').forEach(node => {
+    node.hidden = !state.compare;
+    node.querySelectorAll('input').forEach(input => {input.disabled = !state.compare;});
+  });
+  $('portfolio-names').classList.toggle('single', !state.compare);
+  $('inputs-title').textContent = state.compare ? 'Your comparison' : 'Your portfolio';
+  $('name-a-label').textContent = state.compare ? 'Current portfolio name' : 'Portfolio name';
+  $('weight-a-heading').textContent = state.compare ? 'Current (%)' : 'Weight (%)';
+  $('weight-help').textContent = state.compare ? 'Each portfolio column must total 100%. The alternative is a hypothetical scenario.' : 'Enter the share of your portfolio in each holding. The total must be 100%.';
+  buttonLabel();
+}
+function copyCurrentWeights() {
+  state.positions.forEach(position => {position.b = position.a;});
+  state.alternativeInitialized = true;
+}
+function questionnaireFields() {
+  $('risk-questions').replaceChildren();
+  for (const question of state.context.risk_questionnaire.questions) {
+    const label = element('label', question.prompt, 'risk-question');
+    const select = document.createElement('select'); select.id = `preference-${question.id}`;
+    const placeholder = element('option', 'Choose an answer or skip'); placeholder.value = ''; select.append(placeholder);
+    for (const choice of question.choices) {const option = element('option', choice.label); option.value = choice.value; select.append(option);}
+    select.addEventListener('change', dirty); label.append(select); $('risk-questions').append(label);
+    if (question.help) $('risk-questions').append(element('p', question.help, 'field-help'));
+  }
+}
 function renderPositions() {
   $('position-rows').replaceChildren();
   state.positions.forEach(position => {
@@ -45,9 +76,10 @@ function renderPositions() {
       const cell = element('td'), input = document.createElement('input');
       input.type = 'number'; input.min = '0'; input.max = '100'; input.step = 'any';
       input.value = String(position[key]);
-      input.setAttribute('aria-label', `${position.symbol} weight in portfolio ${key.toUpperCase()}, percent`);
+      input.setAttribute('aria-label', `${position.symbol} weight in ${key === 'a' ? 'your portfolio' : 'the alternative'}, percent`);
       input.addEventListener('input', () => {position[key] = input.value === '' ? 0 : Number(input.value); totals(); dirty();});
       cell.append(input); row.append(cell);
+      if (key === 'b') cell.dataset.comparisonOnly = '';
     }
     const cell = element('td'), remove = element('button', '×', 'remove-position');
     remove.type = 'button'; remove.setAttribute('aria-label', `Remove ${position.symbol}`);
@@ -55,6 +87,7 @@ function renderPositions() {
     cell.append(remove); row.append(cell); $('position-rows').append(row);
   });
   totals();
+  syncMode();
 }
 async function searchSymbols() {
   const sequence = ++searchSequence, query = $('add-symbol').value.trim();
@@ -105,31 +138,38 @@ function loadDemo() {
   $('add-symbol').value = '';
   const config = state.context.demo_configuration;
   $('name-a').value = config.portfolios[0].name;
-  $('name-b').value = config.portfolios[1].name;
+  $('name-b').value = 'Alternative portfolio';
   $('as-of').value = config.as_of_date;
   $('risk-window').value = String(config.risk_window_sessions);
   $('vol-reference').value = '';
-  const maps = config.portfolios.map(p => new Map(p.positions.map(v => [v.instrument_id, v.weight * 100])));
-  const symbols = [...new Set(config.portfolios.flatMap(p => p.positions.map(v => v.instrument_id)))];
-  state.positions = symbols.map(symbol => ({symbol, a: maps[0].get(symbol) || 0, b: maps[1].get(symbol) || 0}));
+  state.positions = config.portfolios[0].positions.map(position => ({symbol: position.instrument_id, a: position.weight * 100, b: position.weight * 100}));
+  state.compare = false; state.alternativeInitialized = false;
+  $('risk-questions').querySelectorAll('select').forEach(select => {select.value = '';});
   state.demo = true; $('input-label').textContent = 'Demonstration holdings · edit to explore your own.';
   renderPositions();
 }
 function requestPayload() {
-  const portfolios = ['a', 'b'].map(key => {
+  const portfolios = (state.compare ? ['a', 'b'] : ['a']).map(key => {
     if (state.positions.some(p => !Number.isFinite(p[key]) || p[key] < 0)) throw new Error('Use finite, nonnegative allocation percentages.');
     const positions = state.positions.filter(p => p[key] > 0).map(p => ({instrument_id: p.symbol, weight: p[key] / 100}));
     const total = positions.reduce((sum, p) => sum + p.weight, 0);
-    if (!positions.length || Math.abs(total - 1) > 1e-10) throw new Error(`Portfolio ${key.toUpperCase()} must total 100%. Weights are not automatically rescaled.`);
+    if (!positions.length || Math.abs(total - 1) > 1e-10) throw new Error(`${key === 'a' ? 'Your portfolio' : 'The alternative'} must total 100%. Weights are not automatically rescaled.`);
     return {id: `portfolio_${key}`, name: $(`name-${key}`).value.trim(), input_type: 'weights', positions};
   });
+  const answers = {};
+  for (const question of state.context.risk_questionnaire.questions) {
+    const answer = $(`preference-${question.id}`).value;
+    if (answer) answers[question.id] = answer;
+  }
   return {configuration: {schema_version: 1, is_demo: state.demo, as_of_date: $('as-of').value,
     report_currency: 'USD', risk_window_sessions: Number($('risk-window').value),
     convention: 'fixed_weights_daily_rebalanced', portfolios},
-    volatility_reference: $('vol-reference').value === '' ? null : Number($('vol-reference').value) / 100};
+    volatility_reference: $('vol-reference').value === '' ? null : Number($('vol-reference').value) / 100,
+    risk_preferences: Object.keys(answers).length ? {questionnaire_id: state.context.risk_questionnaire.questionnaire_id, answers} : null};
 }
 function metricCards(value) {
   $('metrics').replaceChildren();
+  $('metrics').classList.toggle('single', value.analysis.scenarios.length === 1);
   value.analysis.scenarios.forEach((portfolio, index) => {
     const card = element('article', undefined, `metric-card ${index ? 'b' : 'a'}`);
     card.append(element('p', portfolio.name, 'metric-name'), element('p', 'Annualized historical volatility', 'metric-label'),
@@ -141,6 +181,26 @@ function metricCards(value) {
       `reference-tag ${comparison.comparison === 'above_reference' ? 'above' : ''}`));
     $('metrics').append(card);
   });
+}
+function preferenceSummary(value) {
+  const profile = value.risk_preferences;
+  $('preference-card').hidden = !profile;
+  if (!profile) return;
+  const uncertain = Object.values(profile.answers).filter(answer => answer === 'unsure').length;
+  $('preference-progress').textContent = `${profile.answered_questions} of 5 answered${uncertain ? `; ${uncertain} still uncertain` : ''}. Comfort with risk and ability to bear losses are kept separate.`;
+  const output = $('preference-summary'); output.replaceChildren();
+  for (const [title, statements] of [['Comfort with fluctuations', profile.willingness_statements], ['Access to money', profile.access_and_capacity_notes]]) {
+    if (!statements.length) continue;
+    output.append(element('h4', title)); const list = element('ul'); statements.forEach(text => list.append(element('li', text))); output.append(list);
+  }
+  profile.review_notes.forEach(text => output.append(element('p', text, 'notice source-notice')));
+  for (const comparison of profile.historical_comparisons) {
+    const portfolio = value.analysis.scenarios.find(row => row.id === comparison.portfolio_id);
+    let text = `${portfolio.name}: the largest historical peak-to-trough decline was ${percent(comparison.historical_maximum_decline)}.`;
+    if (comparison.stated_decline_comfort === null) text += ` A hypothetical $1,000 at that peak would have fallen to about $${comparison.illustrative_trough_balance.toFixed(0)}. No loss-comfort threshold has been inferred.`;
+    else text += ` That is ${comparison.comparison === 'past_decline_above_stated_comfort' ? 'above' : 'at or below'} the ${percent(comparison.stated_decline_comfort)} decline you said would start feeling hard to tolerate.`;
+    output.append(element('p', text));
+  }
 }
 function drawChart() {
   if (!state.result) return;
@@ -174,17 +234,26 @@ function drawChart() {
   for (const metric of ['wealth', 'drawdown']) {$(`${metric}-tab`).classList.toggle('selected', state.metric === metric); $(`${metric}-tab`).setAttribute('aria-pressed', String(state.metric === metric));}
 }
 function tables(value) {
-  const analysis = value.analysis, [a, b] = analysis.scenarios;
+  const analysis = value.analysis, portfolios = analysis.scenarios;
+  const riskHeading = element('tr'), stressHeading = element('tr');
+  riskHeading.append(element('th', 'Holding')); stressHeading.append(element('th', 'Window'));
+  portfolios.forEach((portfolio, index) => {
+    const prefix = portfolios.length === 1 ? '' : `${index ? 'Alternative' : 'Current'} `;
+    riskHeading.append(element('th', `${prefix}weight`), element('th', `${prefix}risk share`));
+    stressHeading.append(element('th', `${prefix}replay return`), element('th', `${prefix}drawdown`));
+  });
+  $('risk-heading').replaceChildren(riskHeading); $('stress-heading').replaceChildren(stressHeading);
   $('risk-rows').replaceChildren(...analysis.symbols.map((symbol, i) => {
     const row = element('tr');
-    for (const text of [symbol, percent(a.weights[i]), percent(a.risk_shares[i]), percent(b.weights[i]), percent(b.risk_shares[i])]) row.append(element('td', text));
+    row.append(element('td', symbol));
+    for (const portfolio of portfolios) row.append(element('td', percent(portfolio.weights[i])), element('td', percent(portfolio.risk_shares[i])));
     return row;
   }));
   const scenarios = [...new Set(value.historical_scenarios.map(row => row.scenario_id))];
   $('stress-rows').replaceChildren(...scenarios.map(id => {
     const rows = value.historical_scenarios.filter(row => row.scenario_id === id), row = element('tr');
     const name = element('td', rows[0].name); name.append(element('span', `${rows[0].start_close} → ${rows[0].end_close}`, 'secondary-text')); row.append(name);
-    for (const portfolio of [a, b]) {
+    for (const portfolio of portfolios) {
       const item = rows.find(r => r.portfolio_id === portfolio.id);
       for (const key of ['replay_return', 'maximum_drawdown']) {
         const cell = element('td', item.available ? percent(item[key]) : 'Unavailable');
@@ -208,7 +277,7 @@ function methods(value) {
   const a = value.analysis, notes = $('method-notes'); notes.replaceChildren();
   for (const text of [
     `Volatility and correlations use sample covariance (N−1), annualized by 252, over ${a.risk_window_sessions} common returns: ${a.risk_window_start} through ${a.risk_window_end}.`,
-    `Full-history drawdown and the replay chart cover ${a.history_start} through ${a.history_end}. Both portfolios share these dates. Reported holdings are ${value.is_demo ? 'explicit demonstrations' : 'your entered scenarios'}, not evidence of actual historical investment performance.`,
+    `Full-history drawdown and the replay chart cover ${a.history_start} through ${a.history_end}. ${a.scenarios.length === 1 ? 'All displayed historical calculations use this portfolio snapshot.' : 'Both portfolios share these dates.'} Reported holdings are ${value.is_demo ? 'explicit demonstrations' : 'your entered scenarios'}, not evidence of actual historical investment performance.`,
     'Inputs are daily USD stocks and ETFs. Cash, leverage, taxes, transaction costs, currency conversion, and underlying ETF holdings overlap are not modeled.',
     `${state.context.source_issues.length} retained index-source exceptions remain outside portfolio calculations. Neither FRED context nor the quarantined Yahoo index is used to calculate these portfolio results.`,
     'Saved adjusted price histories may be revised. This page uses a stored research snapshot and does not download live prices or use trained-model forecasts.'
@@ -228,18 +297,25 @@ async function runAnalysis(event) {
     $('source-status').hidden = !provisional.length;
     $('source-status').textContent = provisional.length ? `${provisional.map(row => row.symbol).join(', ')}: provider identity and structural checks passed; independent price cross-checks have not been performed. Source warnings are retained in the exported report.` : '';
     $('results').classList.remove('stale'); $('result-content').hidden = false;
-    $('result-title').textContent = value.is_demo ? 'Demonstration comparison' : 'Your portfolio comparison';
+    const single = value.analysis.scenarios.length === 1;
+    $('result-title').textContent = value.is_demo ? (single ? 'Demonstration risk report' : 'Demonstration comparison') : (single ? 'Your risk report' : 'Portfolio comparison');
     $('result-context').textContent = `${value.analysis.risk_window_sessions}-session risk estimate ending ${shortDate(value.analysis.risk_window_end)} · historical, not a forecast`;
-    metricCards(value); drawChart(); tables(value); methods(value); $('download').disabled = false;
+    metricCards(value); preferenceSummary(value); drawChart(); tables(value); methods(value); $('download').disabled = false;
     if (revision !== state.revision) {
       $('results').classList.add('stale');
       $('result-context').textContent = 'Inputs changed during calculation. Run analysis again to refresh.';
       $('download').disabled = true;
     }
   } catch (error) {$('form-error').textContent = error.message; $('form-error').hidden = false;}
-  finally {$('analyze').disabled = false; $('analyze').replaceChildren(document.createTextNode('Analyze portfolios '), element('span', '↗')); $('results').setAttribute('aria-busy', 'false');}
+  finally {$('analyze').disabled = false; buttonLabel(); $('results').setAttribute('aria-busy', 'false');}
 }
 $('portfolio-form').addEventListener('submit', runAnalysis);
+$('compare-mode').addEventListener('change', () => {
+  state.compare = $('compare-mode').checked;
+  if (state.compare && !state.alternativeInitialized) copyCurrentWeights();
+  renderPositions(); dirty();
+});
+$('copy-weights').addEventListener('click', () => {copyCurrentWeights(); renderPositions(); dirty();});
 for (const id of ['name-a', 'name-b', 'as-of', 'risk-window', 'vol-reference']) $(id).addEventListener('input', dirty);
 $('add-position').addEventListener('click', addSymbol);
 $('add-symbol').addEventListener('input', () => {clearTimeout(searchTimer); searchTimer = setTimeout(searchSymbols, 180);});
@@ -271,7 +347,7 @@ async function initialize() {
       $('research-secondary').textContent = `MAE is annualized-volatility error in percentage points. Lower is better. 2025 secondary variance QLIKE: model ${qlike[0]}, EWMA ${qlike[1]}, trailing ${qlike[2]}. Each primary comparison uses 192 correlated instrument/window pairs.`;
     }
     $('as-of').min = state.context.earliest_common_close; $('as-of').max = state.context.latest_common_close;
-    $('workspace').hidden = false; loadDemo(); await runAnalysis();
+    $('workspace').hidden = false; questionnaireFields(); loadDemo(); await runAnalysis();
   } catch (error) {$('fatal-error').textContent = error.message; $('fatal-error').hidden = false; $('snapshot').textContent = 'Local data is unavailable.';}
 }
 initialize();

@@ -44,6 +44,6 @@
   <text class="body" x="520" y="649" text-anchor="middle">Dated inputs, daily rebalancing, and three fixed historical stress windows</text>
   <path class="line" d="M520 670 V695"/>
   <rect class="box done" x="210" y="697" width="620" height="76" rx="12"/>
-  <text x="520" y="727" text-anchor="middle" class="heading">Local historical comparison application</text>
-  <text x="520" y="752" text-anchor="middle" class="body">U.S. search, source audits, charts and metrics; forecasts/suggestions planned</text>
+  <text x="520" y="727" text-anchor="middle" class="heading">Personal historical risk application</text>
+  <text x="520" y="752" text-anchor="middle" class="body">One portfolio, optional comparison and preference guide; forecasts planned</text>
 </svg>

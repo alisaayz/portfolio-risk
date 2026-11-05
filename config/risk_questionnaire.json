@@ -1,0 +1,35 @@
+{
+  "questionnaire_id": "RQ-001",
+  "schema_version": 1,
+  "title": "Understand your risk preferences",
+  "purpose": "Reflect stated preferences and access needs; do not derive a volatility target or investment allocation.",
+  "questions": [
+    {"id": "horizon", "prompt": "When might you need some of this money?", "choices": [
+      {"value": "under_one", "label": "Within the next year"},
+      {"value": "one_to_three", "label": "In 1–3 years"},
+      {"value": "three_to_five", "label": "In 3–5 years"},
+      {"value": "over_five", "label": "More than 5 years from now"},
+      {"value": "unsure", "label": "I'm not sure yet"}]},
+    {"id": "liquidity", "prompt": "Could you cover an unexpected expense without selling these investments?", "choices": [
+      {"value": "other_resources", "label": "Yes, using money outside this portfolio"},
+      {"value": "partly", "label": "Partly; I might need some of this money"},
+      {"value": "portfolio_needed", "label": "I would probably need this portfolio"},
+      {"value": "unsure", "label": "I'm not sure"}]},
+    {"id": "priority", "prompt": "Which statement best describes what you want?", "choices": [
+      {"value": "stability", "label": "Keeping the balance relatively steady matters most"},
+      {"value": "balance", "label": "I want a balance between stability and growth"},
+      {"value": "growth", "label": "I want growth and accept that the balance can swing"},
+      {"value": "unsure", "label": "I'm still figuring this out"}]},
+    {"id": "reaction", "prompt": "If the value fell 20% over a few months, what would you most likely do?", "choices": [
+      {"value": "reduce", "label": "Sell some or most of the investments"},
+      {"value": "hold", "label": "Keep the holdings while reviewing the situation"},
+      {"value": "unsure", "label": "I don't know how I would react"}]},
+    {"id": "loss_comfort", "prompt": "What decline would start feeling hard to tolerate?", "help": "Use a hypothetical $1,000 balance to picture the change. A loss can last or become larger; recovery is not assumed.", "choices": [
+      {"value": "any", "label": "Any decline would concern me"},
+      {"value": "5", "label": "About 5%: $1,000 falls to $950"},
+      {"value": "10", "label": "About 10%: $1,000 falls to $900"},
+      {"value": "20", "label": "About 20%: $1,000 falls to $800"},
+      {"value": "30", "label": "About 30%: $1,000 falls to $700"},
+      {"value": "unsure", "label": "I can't put a number on it yet"}]}
+  ]
+}
