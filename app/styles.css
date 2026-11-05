@@ -11,3 +11,9 @@ main{max-width:1450px;margin:auto;padding:42px 5% 24px}.intro{max-width:800px;ma
 @media(min-width:1400px){.workspace{grid-template-columns:365px minmax(0,1fr);gap:32px}.card{padding:25px}.metric-value{font-size:41px}}
 @media(max-width:1050px){main{padding-left:3%;padding-right:3%}.workspace{grid-template-columns:310px minmax(0,1fr);gap:18px}.card{padding:18px}.metric-card{padding:17px}.metric-value{font-size:31px}.chart-tabs button{font-size:9px;padding:6px}.section-top{gap:7px}.chart-card .section-top{flex-wrap:wrap}.research-link{font-size:11px}}
 @media(max-width:780px){.workspace{grid-template-columns:minmax(0,1fr)}.inputs{position:static}.intro{margin-bottom:25px}main{padding:29px 5% 20px}.topbar{height:65px;gap:15px}.local-label{font-size:10px}.research-link{display:none}.inputs{max-width:none}.metric-grid{gap:12px}.results-top{padding-top:6px}.card{padding:21px}.chart{min-height:170px}h1{letter-spacing:-1px}.lede{font-size:13px}.chart-footer .legend{display:none}}
+
+.reweight-limit { margin-top: 14px; max-width: 220px; }
+.reweight-constraints input { width: 70px; margin: 0; padding: 5px; text-align: right; }
+.reweight-constraints input[type=checkbox] { width: auto; margin: 0 8px; }
+#preview-reweight, #use-reweight { margin-top: 12px; }
+#reweight-summary { background: #eef5f5; color: #31515f; }

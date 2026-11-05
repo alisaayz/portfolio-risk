@@ -39,6 +39,31 @@
         <div id="result-content" hidden>
           <p id="source-status" class="notice source-notice" hidden></p>
           <div class="metric-grid" id="metrics"></div>
+          <details class="card details" id="reweight-card" hidden>
+            <summary>Explore lower-risk weights</summary>
+            <p class="field-help">Use the current holdings and historical risk window. An entered volatility reference becomes the optional target.</p>
+            <form id="reweight-form">
+              <label class="reweight-limit">Maximum portfolio value to move (%)
+                <input id="turnover-limit" type="number" min="0" max="100" step="any" value="10" required>
+              </label>
+              <p class="field-help">Moving 10% from one holding to another uses a 10% budget. Weight limits must include the current allocation.</p>
+              <div class="table-scroll"><table class="data-table reweight-constraints">
+                <thead><tr><th scope="col">Holding</th><th scope="col">Min (%)</th><th scope="col">Max (%)</th><th scope="col">Keep weight</th></tr></thead>
+                <tbody id="reweight-constraints"></tbody>
+              </table></div>
+              <button class="secondary-button" id="preview-reweight" type="submit">Preview new weights</button>
+            </form>
+            <p class="notice error" id="reweight-error" role="alert" hidden></p>
+            <div id="reweight-preview" hidden>
+              <p class="notice" id="reweight-summary" role="status"></p>
+              <div class="table-scroll"><table class="data-table">
+                <thead><tr><th scope="col">Holding</th><th scope="col">Current</th><th scope="col">Scenario</th><th scope="col">Current risk share</th><th scope="col">Scenario risk share</th></tr></thead>
+                <tbody id="reweight-rows"></tbody>
+              </table></div>
+              <p class="field-help">These estimates use saved historical returns and exclude trading costs and taxes.</p>
+              <button class="secondary-button" type="button" id="use-reweight">Use as alternative</button>
+            </div>
+          </details>
           <section class="card preference-card" id="preference-card" hidden><h3>Your risk preferences</h3><p class="quiet" id="preference-progress"></p><div id="preference-summary"></div><p class="field-help">The comparisons describe this saved history. Future losses may be larger or persist; no recommended allocation or numerical volatility target is inferred.</p></section>
           <section class="card chart-card"><div class="section-top"><div><h3>Historical replay</h3><p class="quiet">Fixed weights rebalanced daily · no costs or taxes</p></div><div class="chart-tabs" role="group" aria-label="Chart metric"><button type="button" id="wealth-tab" class="selected" aria-pressed="true">Wealth</button><button type="button" id="drawdown-tab" aria-pressed="false">Drawdown</button></div></div><div id="chart" class="chart" role="img" aria-label="Comparison of historical portfolio wealth"></div><div class="chart-footer"><span id="chart-start"></span><div id="chart-legend" class="legend"></div><span id="chart-end"></span></div><p id="chart-description" class="field-help"></p></section>
           <section class="card"><div class="section-top"><div><h3>Where risk comes from</h3><p class="quiet">Capital allocation can differ from contribution to volatility.</p></div></div><div class="table-scroll"><table class="data-table"><thead id="risk-heading"></thead><tbody id="risk-rows"></tbody></table></div><p class="field-help">Risk shares use historical sample covariance. Negative shares indicate a diversifying contribution; they are preserved.</p></section>

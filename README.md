@@ -1,11 +1,11 @@
 # Personal Portfolio Risk Platform
 
-**Status:** Historical portfolio analysis, risk-preference guidance, report experiment tooling, and the retrospective 2026 volatility holdout are complete. Participant evaluation remains planned.
+**Status:** Historical portfolio analysis, constrained reweighting, risk-preference guidance, report experiment tooling, and the retrospective 2026 volatility holdout are implemented. Participant evaluation remains planned.
 **Last updated:** November 5, 2026.
 
 ## 1. Executive summary
 
-The Personal Portfolio Risk Platform is a financial analytics project for evaluating existing investments and comparing hypothetical portfolios. Its local application starts with one portfolio, explains historical risk, and offers an optional alternative comparison. A short preference guide separates self-reported comfort with fluctuations from cash-access needs and puts historical drawdowns in context. U.S. symbol discovery and on-demand application histories are separate from the fixed research dataset. A local study workflow supports a product decision about whether a chart should appear by default in the portfolio risk report. A later suggestion layer will propose weight changes or replacement criteria relative to user-defined risk preferences, with optional candidate screening.
+The Personal Portfolio Risk Platform is a financial analytics project for evaluating existing investments and comparing hypothetical portfolios. Its local application starts with one portfolio, explains historical risk, and offers an optional alternative comparison. A short preference guide separates self-reported comfort with fluctuations from cash-access needs and puts historical drawdowns in context. U.S. symbol discovery and on-demand application histories are separate from the fixed research dataset. A local study workflow supports a product decision about whether a chart should appear by default in the portfolio risk report. The dashboard can propose a hypothetical reweighting of current holdings within user-defined limits. Replacement criteria and candidate screening are planned.
 
 The central research question is whether a trained model can forecast volatility over the next 20 trading days more accurately than historical estimates. The implemented foundation downloads and audits real market history, preserves evidence, and loads versioned observations into DuckDB and Parquet. SQL views enforce source-selection rules and calculate calendar-aligned returns and historical volatility inputs. A separate versioned modeling layer builds causal features and pre-2026 targets under the chronological evaluation contract. The baseline report compares dated portfolios using historical covariance, volatility, drawdown, and holding risk contributions. Development evaluation compares historical benchmarks and a gradient boosting model on both individual instruments and two complete portfolios. The local application provides historical risk analysis. The retrospective 2026 holdout completed the model comparison on ten shared market dates.
 
@@ -35,7 +35,7 @@ The [portfolio forecast evaluation](docs/PORTFOLIO_FORECAST_DEVELOPMENT.md) comb
 
 The [2026 holdout](docs/FINAL_EVALUATION_REPORT.md) refit the selected model using **19,776 pre-2026 labels** and evaluated ten non-overlapping market windows. For the two demo portfolios, volatility MAE was **1.63 percentage points** for the trained model, **2.23** for EWMA, and **2.20** for trailing 20. Both portfolio uncertainty intervals include zero. Under the frozen decision rule, the forecast stays in research.
 
-A [local portfolio comparison application](docs/APPLICATION.md) now starts with one weight-based portfolio and offers an optional alternative comparison, selectable historical estimation windows, a five-question risk-preference guide, and an Advanced manual volatility reference, wealth/drawdown charts, holding risk shares, correlations, three fixed historical stress windows, and JSON export. It reads accepted data without changing the warehouse and keeps entries in memory. Browser tests confirm the demo results and input/error behavior; incomplete stress windows remain unavailable. It does not use trained-model forecasts or generate allocation suggestions.
+A [local portfolio comparison application](docs/APPLICATION.md) now starts with one weight-based portfolio and offers an optional alternative comparison, selectable historical estimation windows, a five-question risk-preference guide, and an Advanced manual volatility reference, wealth/drawdown charts, holding risk shares, correlations, three fixed historical stress windows, and JSON export. It reads accepted data without changing the warehouse and keeps entries in memory. Browser tests confirm the demo results and input/error behavior; incomplete stress windows remain unavailable. The reweighting preview uses the dashboard’s historical covariance estimates.
 
 The [U.S. market expansion](docs/US_MARKET_EXPANSION.md) adds local ticker/company search over **11,806 stock/ETF candidates** from **13,237 active, non-test Nasdaq directory listings**. Listing records are not audited price histories. Additional histories are loaded through a queue, validated under separate **AP-001** controls, cached with hashes, and combined in memory for historical analysis. META, VOO, and BRK.B each pass structural/provider checks on 1,719 sessions; no independent price cross-check is claimed for those additions. The original research database remains unchanged.
 
@@ -47,7 +47,9 @@ The [UX-P01 study workflow](docs/COMPREHENSION_PILOT.md) uses three scored quest
 
 The [report experiment brief](docs/REPORT_EXPERIMENT.md) defines the user need, release decision, and evidence required at each step. The Python analysis estimates sample size and evaluates a separately registered cohort with a one-sided exact hypothesis test, effect sizes, confidence intervals, and guardrails. Temporary database fixtures verify cohort isolation and the decision logic. Participant outcomes are pending.
 
-**153 regression tests pass locally**, covering data integrity, portfolio calculations, chronological boundaries, and study consent, scoring, and record integrity. The [Python application workflow](.github/workflows/python-app.yml) runs fixture-based checks on pushes and pull requests. A forward-recorded forecast evaluation remains a future research milestone. A [future adjustment roadmap](docs/PORTFOLIO_ADJUSTMENT_ROADMAP.md) records requested reweighting, replacement criteria, and optional candidate suggestions; none is implemented.
+The dashboard can preview weight changes while respecting a move budget, holding limits, and locked weights. In the equity-heavy demo, moving ten percentage points from AAPL to BND lowers estimated historical volatility from **11.29% to 9.58%**. A 36-date development replay compares future realized volatility with unchanged weights and simpler rules. A direct risk-based shift matches the optimizer’s mean at the 252-session setting for both demos. [Reweighting method and replay](docs/PORTFOLIO_REWEIGHTING.md)
+
+**156 regression tests pass locally**, covering data integrity, portfolio calculations, chronological boundaries, and study consent, scoring, and record integrity. The [Python application workflow](.github/workflows/python-app.yml) runs fixture-based checks on pushes and pull requests. A forward-recorded forecast evaluation remains a future research milestone. The adjustment roadmap records future replacement criteria and candidate screening. [Adjustment roadmap](docs/PORTFOLIO_ADJUSTMENT_ROADMAP.md)
 
 ## 3. Project composition and methodology
 
@@ -73,6 +75,7 @@ The [report experiment brief](docs/REPORT_EXPERIMENT.md) defines the user need, 
 | Machine learning | Pooled positive-variance gradient boosting, purged chronological folds, fixed candidate grid, and independent score verification | Implemented through the [retrospective 2026 holdout](docs/FINAL_EVALUATION_REPORT.md) |
 | Portfolio forecast development | Combine forecast holding variances with a shared 60-session co-movement matrix and evaluate two demos on a matched grid | [Development comparison](docs/PORTFOLIO_FORECAST_DEVELOPMENT.md) with paired error intervals |
 | Application | Assess one portfolio, optionally compare an alternative, reflect risk preferences, search U.S. candidates, and inspect historical/development metrics | Implemented for historical risk; [guide](docs/APPLICATION.md); portfolio forecasts/suggestions planned |
+| Reweighting | Minimize estimated historical variance within holding and move limits, then compare on the same data | [Implemented for existing holdings](docs/PORTFOLIO_REWEIGHTING.md) |
 | User measurement | Identical numerical facts, optional chart, three scored tasks, and consented random assignment | [Pilot and confirmatory analysis implemented](docs/REPORT_EXPERIMENT.md); participant evidence pending |
 
 ### Local application
@@ -283,17 +286,23 @@ Training, validation, and final testing follow the declared 2020–2024 / 2025 /
 
 The local application supports daily, USD-denominated instruments in long-only, unleveraged portfolios. Fixed-weight historical scenarios explicitly assume daily rebalancing and represent hypothetical exposures rather than actual past investment performance. Portfolio forecasts are evaluated separately on the development grid using a fixed co-movement estimator. ETF look-through holdings, taxes, derivatives, and automated trading are outside the initial scope.
 
-### Later phase: explainable portfolio adjustments
+### Reweight existing holdings
 
-If a portfolio exceeds the user's chosen risk tolerance, the planned suggestion layer will first explore changes to existing holding weights. It can later describe replacement characteristics or screen a defined candidate universe. Alternatives will show before/after estimated risk, concentration, risk contributions, allocation changes, and assumptions. If the requested target is infeasible, the system will report that result explicitly. Lower standalone volatility alone is insufficient; the candidate's co-movement with the remaining portfolio matters.
+```mermaid
+flowchart LR
+    A[Current holdings and historical covariance] --> C[Constrained variance minimization]
+    B[Move budget, holding limits, locks, and optional target] --> C
+    C --> D[Compare risk, concentration, and weights]
+    D --> E[User can load the scenario as an alternative]
+```
 
-The [adjustment roadmap](docs/PORTFOLIO_ADJUSTMENT_ROADMAP.md) defines proposed inputs, stages, visual workflow, and evaluation requirements. This is a later extension after the core risk system is validated. It provides options for the user to consider; it does not guarantee future risk limits, forecast returns, or execute trades.
+Open **Explore lower-risk weights** after assessing a portfolio. Review the suggested weights, estimated volatility, historical drawdown, largest weight, and risk shares. The preview reports whether an entered target is achievable under the given limits. An explicit action loads the proposed weights for comparison and stress replay. Replacement criteria and candidate screening are future extensions. [Reweighting method and replay](docs/PORTFOLIO_REWEIGHTING.md) · [Adjustment roadmap](docs/PORTFOLIO_ADJUSTMENT_ROADMAP.md)
 
 ### Documentation and next milestone
 
 - [Reference universe](docs/REFERENCE_UNIVERSE.md), [expanded audit](docs/UNIVERSE_AUDIT.md), and [source validation](docs/UNIVERSE_VALIDATION.md): selection, evidence, and acceptance limits.
 - [Expanded SQL walkthrough](docs/05_EXPANDED_SQL_WALKTHROUGH.md): policy gates, archived failures, numerical checks, and capture differences.
-- [Portfolio adjustment roadmap](docs/PORTFOLIO_ADJUSTMENT_ROADMAP.md): future weight suggestions, replacement criteria, and candidate screening.
+- [Portfolio adjustment roadmap](docs/PORTFOLIO_ADJUSTMENT_ROADMAP.md): implemented reweighting and planned replacement criteria and candidate screening.
 - [Forecast benchmark report](docs/BASELINE_FORECAST_REPORT.md) and [walkthrough](docs/07_FORECAST_BASELINES_WALKTHROUGH.md): measured development errors, method tradeoffs, and experiment records.
 - [Modeling dataset](docs/MODELING_DATASET.md) and [walkthrough/dictionary](docs/06_MODELING_DATASET_WALKTHROUGH.md): features, development outcomes, timing checks, and reproducible artifacts.
 - [News feasibility](docs/NEWS_FEASIBILITY.md): observed archive metadata, timing limitations, candidate sources, and proposed implementation sequence.

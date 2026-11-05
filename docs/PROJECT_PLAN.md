@@ -232,3 +232,7 @@ PF-001 combines fixed holding forecasts with a 60-session co-movement estimate a
 ## Completed 2026 model holdout — November 5, 2026
 
 EV-002 freezes the model, forecasts, metrics, and decision rule before scoring the ten complete primary windows. The model improves demo portfolio MAE by 0.60 percentage points versus EWMA and 0.57 versus trailing 20. Both nominal two-date intervals include zero. The dashboard continues to present historical risk, with the forecast results available in the research report. [Holdout report](FINAL_EVALUATION_REPORT.md)
+
+## Implemented reweighting preview — November 5, 2026
+
+RW-001 proposes a constrained historical-risk alternative using only existing holdings. The interface compares before and after risk and concentration and lets the user load the result as an alternative. A matched development replay measures 20-session realized volatility over 36 dates. A direct volatility-based shift matches the solver at the 252-session setting in both demonstrations. [Method and evidence](PORTFOLIO_REWEIGHTING.md)

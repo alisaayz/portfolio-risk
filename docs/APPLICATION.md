@@ -1,6 +1,6 @@
 # Local portfolio comparison application
 
-Updated November 4, 2026. The local application connects the accepted SQL warehouse to the independently reconciled historical risk engine. It supports side-by-side portfolio analysis while keeping weights and portfolio amounts local. Requested new symbols are sent to the market-data provider for their history. It does not use machine-learning forecasts or recommend allocations.
+Updated November 4, 2026. The local application connects the accepted SQL warehouse to the independently reconciled historical risk engine. It supports side-by-side portfolio analysis while keeping weights and portfolio amounts local. Requested new symbols are sent to the market-data provider for their history. It offers a constrained historical reweighting preview for existing holdings.
 
 ![Local application showing one demonstration portfolio, optional comparison, and unanswered risk-preference questions](assets/application-preview.png)
 
@@ -65,7 +65,7 @@ The service reads the warehouse without changing it and keeps submitted inputs i
 
 The initial nine application tests cover equivalence with the verified engine, optional references, invalid inputs, scenario endpoints and within-window drawdown, unavailable periods, date formatting, JSON validation, local request boundaries, and unchanged warehouse hashes after actual HTTP analysis. Browser checks confirmed the demo metrics, reference comparisons, invalid totals, stale-result status, chart switching, JSON export, and desktop/mobile layout. The exported demonstration contains 1,719 chart dates and the expected unrounded risk values. A mobile overflow and date-only formatting inconsistency found during testing were corrected.
 
-The saved market snapshot remains through November 3, 2026; this page makes no live-price claim. Three retained index-source exceptions remain excluded from portfolio calculations. Revised histories and the current-survivor universe remain limitations. ETF look-through, cash, leverage, FX conversion, trading costs, and taxes are not modeled. Weight entry is available in the browser; latest-close quantity input remains supported separately by the existing command-line engine. A hash-verified development scorecard now shows 2023–2025 instrument-level MAE and 2025 secondary QLIKE. Its values are separate from the entered portfolios and do not demonstrate statistical significance. The fixed model universe contains sixteen instruments. EV-002 publishes the retrospective 2026 results in a separate research report. [Holdout report](FINAL_EVALUATION_REPORT.md) Portfolio forecasts, persistent private snapshots, news context, and adjustment suggestions are subsequent phases.
+The saved market snapshot remains through November 3, 2026; this page makes no live-price claim. Three retained index-source exceptions remain excluded from portfolio calculations. Revised histories and the current-survivor universe remain limitations. ETF look-through, cash, leverage, FX conversion, trading costs, and taxes are not modeled. Weight entry is available in the browser; latest-close quantity input remains supported separately by the existing command-line engine. A hash-verified development scorecard now shows 2023–2025 instrument-level MAE and 2025 secondary QLIKE. Its values are separate from the entered portfolios and do not demonstrate statistical significance. The fixed model universe contains sixteen instruments. EV-002 publishes the retrospective 2026 results in a separate research report. [Holdout report](FINAL_EVALUATION_REPORT.md) Portfolio forecasts, persistent private snapshots, news context, and replacement screening are subsequent phases.
 
 ## Broader-search and measurement update
 
@@ -80,3 +80,7 @@ The default view submits and renders one portfolio, with one risk card/series an
 ## Report comprehension study
 
 The report study link opens a separate demonstration at `/study`. It uses fixed holdings and opens in practice mode by default. See the [study guide](COMPREHENSION_PILOT.md) for the comparison, consented recording option, and descriptive summary.
+
+## Reweight existing holdings
+
+Assess a portfolio, then open **Explore lower-risk weights**. The preview uses the current date and covariance window and accepts a move budget, per-holding limits, locked weights, and the optional manual volatility reference. **Use as alternative** loads the weights into the comparison dashboard. [Method and verified replay](PORTFOLIO_REWEIGHTING.md)

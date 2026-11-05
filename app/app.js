@@ -20,6 +20,8 @@ async function api(path, payload) {
   return value;
 }
 function dirty() {
+  clearReweightPreview();
+  $('reweight-card').hidden = true;
   state.revision += 1;
   state.demo = false;
   $('input-label').textContent = 'Your entries · processed locally, without saving.';
@@ -133,6 +135,8 @@ async function addSymbol() {
   finally {$('add-position').disabled = false;}
 }
 function loadDemo() {
+  clearReweightPreview();
+  $('reweight-card').hidden = true;
   state.revision += 1;
   $('load-status').textContent = '';
   $('add-symbol').value = '';
@@ -148,8 +152,8 @@ function loadDemo() {
   state.demo = true; $('input-label').textContent = 'Demonstration holdings · edit to explore your own.';
   renderPositions();
 }
-function requestPayload() {
-  const portfolios = (state.compare ? ['a', 'b'] : ['a']).map(key => {
+function requestPayload(compare = state.compare) {
+  const portfolios = (compare ? ['a', 'b'] : ['a']).map(key => {
     if (state.positions.some(p => !Number.isFinite(p[key]) || p[key] < 0)) throw new Error('Use finite, nonnegative allocation percentages.');
     const positions = state.positions.filter(p => p[key] > 0).map(p => ({instrument_id: p.symbol, weight: p[key] / 100}));
     const total = positions.reduce((sum, p) => sum + p.weight, 0);
@@ -305,10 +309,108 @@ async function runAnalysis(event) {
       $('results').classList.add('stale');
       $('result-context').textContent = 'Inputs changed during calculation. Run analysis again to refresh.';
       $('download').disabled = true;
+    } else {
+      renderReweightControls(value);
     }
   } catch (error) {$('form-error').textContent = error.message; $('form-error').hidden = false;}
   finally {$('analyze').disabled = false; buttonLabel(); $('results').setAttribute('aria-busy', 'false');}
 }
+let reweightRequest = 0;
+let reweightScenario = null;
+
+function clearReweightPreview() {
+  reweightRequest += 1;
+  reweightScenario = null;
+  $('reweight-preview').hidden = true;
+  $('reweight-error').hidden = true;
+}
+
+function renderReweightControls(value) {
+  clearReweightPreview();
+  const {symbols, scenarios} = value.analysis;
+  const rows = symbols.flatMap((symbol, index) => {
+    if (scenarios[0].weights[index] <= 0) return [];
+    const row = element('tr');
+    row.dataset.symbol = symbol;
+    row.append(element('td', symbol));
+    for (const [label, initial] of [['minimum', '0'], ['maximum', '100'], ['lock', null]]) {
+      const input = element('input');
+      input.setAttribute('aria-label', `${symbol} ${label}`);
+      input.name = label;
+      if (initial === null) input.type = 'checkbox';
+      else {
+        input.type = 'number'; input.min = '0'; input.max = '100';
+        input.step = 'any'; input.required = true; input.value = initial;
+      }
+      const cell = element('td'); cell.append(input); row.append(cell);
+    }
+    return [row];
+  });
+  $('reweight-constraints').replaceChildren(...rows);
+  $('reweight-card').hidden = rows.length < 2;
+}
+
+function showReweight(value) {
+  const status = {
+    already_within_target: 'The current estimate is already within your target.',
+    no_improvement: 'The allowed changes do not materially lower the estimate.',
+    lower_risk: 'This scenario lowers estimated historical volatility.',
+    target_unreachable: 'The target is out of reach under these limits. Here is the lowest estimated risk found.',
+    target_met: 'This scenario reaches your historical volatility target.',
+  };
+  $('reweight-summary').textContent = `${status[value.status]} Historical volatility ${percent(value.current_volatility)} → ${percent(value.alternative_volatility)}. Maximum drawdown ${percent(value.current_drawdown)} → ${percent(value.alternative_drawdown)}. Largest weight ${percent(value.current_largest_weight)} → ${percent(value.alternative_largest_weight)}. Portfolio value moved ${percent(value.turnover)} of ${percent(value.turnover_limit)} allowed.`;
+  $('reweight-rows').replaceChildren(...value.holdings.map(holding => {
+    const row = element('tr');
+    row.append(element('td', holding.symbol));
+    for (const key of ['current_weight', 'alternative_weight', 'current_risk_share', 'alternative_risk_share']) {
+      row.append(element('td', percent(holding[key])));
+    }
+    return row;
+  }));
+  $('use-reweight').hidden = value.turnover === 0;
+  $('reweight-preview').hidden = false;
+  reweightScenario = value;
+}
+
+$('reweight-form').addEventListener('input', clearReweightPreview);
+$('reweight-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  clearReweightPreview();
+  const request = reweightRequest;
+  $('preview-reweight').disabled = true;
+  try {
+    const holdings = Object.fromEntries(Array.from($('reweight-constraints').rows, row => [
+      row.dataset.symbol, {
+        minimum: Number(row.querySelector('[name=minimum]').value) / 100,
+        maximum: Number(row.querySelector('[name=maximum]').value) / 100,
+        locked: row.querySelector('[name=lock]').checked,
+      },
+    ]));
+    const result = await api('/api/reweight', {portfolio: requestPayload(false), constraints: {
+      turnover_limit: Number($('turnover-limit').value) / 100, holdings,
+    }});
+    if (request === reweightRequest) showReweight(result);
+  } catch (error) {
+    if (request === reweightRequest) {
+      $('reweight-error').textContent = error.message;
+      $('reweight-error').hidden = false;
+    }
+  } finally {
+    $('preview-reweight').disabled = false;
+  }
+});
+$('use-reweight').addEventListener('click', () => {
+  if (!reweightScenario) return;
+  const weights = new Map(reweightScenario.holdings.map(row => [row.symbol, row.alternative_weight * 100]));
+  state.positions.forEach(position => {position.b = weights.get(position.symbol) ?? 0;});
+  $('name-b').value = 'Reweighted scenario';
+  state.compare = true;
+  state.alternativeInitialized = true;
+  renderPositions();
+  dirty();
+  runAnalysis();
+});
+
 $('portfolio-form').addEventListener('submit', runAnalysis);
 $('compare-mode').addEventListener('change', () => {
   state.compare = $('compare-mode').checked;
