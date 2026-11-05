@@ -224,3 +224,7 @@ UX-P01 compares a fixed numerical report with the same report plus a chart. Thre
 ## Implemented report experiment analysis — November 4, 2026
 
 The product brief connects portfolio risk comprehension to the decision about the default chart. The analysis plans sample size, checks cohort identity and allocation, and compares comprehension rates with a one-sided Fisher exact test and a score-based interval. The decision rule considers effect size, noncompletion, and observed critical misunderstandings. Temporary fixtures verify the checks. Real participant evaluation remains pending. See the [report experiment brief](REPORT_EXPERIMENT.md).
+
+## Implemented portfolio forecast development evaluation
+
+PF-001 combines fixed holding forecasts with a 60-session co-movement estimate and compares them with the trailing portfolio benchmark on the two preexisting demo portfolios. It reports matched annualized volatility error, QLIKE, and exploratory paired date-block intervals across 36 pre-2026 dates. The trained model's average MAE advantage over EWMA is 0.045 percentage points. The interval spans zero. The next model milestone is the final procedure freeze. [Portfolio forecast evaluation](PORTFOLIO_FORECAST_DEVELOPMENT.md)

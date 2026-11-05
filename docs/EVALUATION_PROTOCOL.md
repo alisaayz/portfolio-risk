@@ -62,7 +62,7 @@ At the November 3 snapshot cutoff, each instrument has ten completed primary tes
 | Forecast baselines | Known recurrence/metric fixtures, nonnegative forecasts with explicit QLIKE flooring, and common origins | Implemented; trailing twenty sessions and three EWMA candidates evaluated on development years |
 | Model evaluation | Rolling development years, per-instrument/group errors, fixed final test, reproducible seeds | Fixed-form benchmarks and purged trained-model development folds evaluated; final test reserved |
 | Robustness | Predeclared development slices and sensitivity | Exposure-group, realized-regime, EWMA-decay, fixed-grid-phase and omission-aggregation diagnostics implemented; feature-window sensitivity remains planned |
-| Portfolio forecasts | Evaluate portfolio predictions separately, including correlation estimation | Planned; descriptive portfolio baseline already reconciled |
+| Portfolio forecasts | Evaluate portfolio predictions separately, including co-movement estimation | PF-001 evaluates two demos on matched 2023–2025 dates |
 | Operation | Failed requests, stale data, interrupted jobs, and forward-recorded predictions | Acquisition controls and local application validation/stale-result handling implemented; automated refresh and forward recording planned |
 
 Stress slices and sensitivity experiments use development data to guide decisions. Test-period breakdowns are descriptive reporting after the recipe is frozen. No test-year slice may be used to choose a replacement model without retiring the holdout and labeling subsequent results exploratory.
@@ -101,3 +101,7 @@ Four declared grid offsets (0/5/10/15 sessions) reuse saved development forecast
 ## Proposed inference and user-measurement extension
 
 The [measurement plan](METRICS_AND_EXPERIMENTS.md) defines future paired forecast-loss inference that preserves shared date shocks and serial dependence; it does not claim significance from ticker-row counts or selection-year scores. Freeze the complete inference procedure before final 2026 scoring. A separate participant-randomized plain-report/dashboard comparison concerns user understanding, with real participants, declared outcomes/power/stopping rules and guardrails. No participant data or causal/significance results exist yet. Broader U.S. application discovery does not alter RU-001, DS-002, model selection, primary origins, or the reserved test.
+
+## Portfolio development evaluation
+
+PF-001 compares direct trailing portfolio variance with fixed EWMA and trained marginal forecasts combined using a 60-session co-movement estimate. It uses two fixed demo allocations and 36 common development dates. Paired date-block resampling quantifies exploratory uncertainty and accounts for the two portfolios' shared dates. The confirmatory procedure still requires a separate freeze before 2026 scoring. [Portfolio forecast evaluation](PORTFOLIO_FORECAST_DEVELOPMENT.md)

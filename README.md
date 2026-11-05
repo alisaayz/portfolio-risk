@@ -1,13 +1,13 @@
 # Personal Portfolio Risk Platform
 
-**Status:** Personal portfolio analysis, risk-preference guidance, model development, and a local workflow for planning and analyzing a report experiment are implemented. Participant evaluation and final model testing remain planned.
+**Status:** Personal portfolio analysis, risk-preference guidance, portfolio forecast development, and a local workflow for planning and analyzing a report experiment are implemented. Participant evaluation and final model testing remain planned.
 **Last updated:** November 4, 2026.
 
 ## 1. Executive summary
 
 The Personal Portfolio Risk Platform is a financial analytics project for evaluating existing investments and comparing hypothetical portfolios. Its local application starts with one portfolio, explains historical risk, and offers an optional alternative comparison. A short preference guide separates self-reported comfort with fluctuations from cash-access needs and puts historical drawdowns in context. U.S. symbol discovery and on-demand application histories are separate from the fixed research dataset. A local study workflow supports a product decision about whether a chart should appear by default in the portfolio risk report. A later suggestion layer will propose weight changes or replacement criteria relative to user-defined risk preferences, with optional candidate screening.
 
-The central research question is whether a trained model can forecast volatility over the next 20 trading days more accurately than historical estimates. The implemented foundation downloads and audits real market history, preserves evidence, and loads versioned observations into DuckDB and Parquet. SQL views enforce source-selection rules and calculate calendar-aligned returns and historical volatility inputs. A separate versioned modeling layer builds causal features and pre-2026 targets under the chronological evaluation contract. The baseline report compares dated portfolios using historical covariance, volatility, drawdown, and holding risk contributions. Historical benchmarks and pooled gradient-boosted models are evaluated on development years; a local application now provides historical portfolio analysis with optional comparison; final model testing remains reserved.
+The central research question is whether a trained model can forecast volatility over the next 20 trading days more accurately than historical estimates. The implemented foundation downloads and audits real market history, preserves evidence, and loads versioned observations into DuckDB and Parquet. SQL views enforce source-selection rules and calculate calendar-aligned returns and historical volatility inputs. A separate versioned modeling layer builds causal features and pre-2026 targets under the chronological evaluation contract. The baseline report compares dated portfolios using historical covariance, volatility, drawdown, and holding risk contributions. Development evaluation compares historical benchmarks and a gradient boosting model on both individual instruments and two complete portfolios. The local application provides historical risk analysis. Final model testing remains reserved.
 
 ## 2. Work completed
 
@@ -31,6 +31,8 @@ The [trained-model experiment](docs/MODEL_DEVELOPMENT_REPORT.md) fits three fixe
 
 The [development robustness review](docs/DEVELOPMENT_ROBUSTNESS.md) keeps every fitted model fixed while shifting the twenty-session grid by 0, 5, 10, and 15 sessions. In 2025 the selected model beats selected EWMA on MAE in **three of four phases**, and trailing variance in **all four**. The EWMA ranking reverses at the five-session offset. Offset zero exactly reproduces the original primary comparison; these dependent diagnostics do not change selection or the final-test grid. Leave-one-instrument-out aggregation is also recorded without refitting.
 
+The [portfolio forecast evaluation](docs/PORTFOLIO_FORECAST_DEVELOPMENT.md) combines holding predictions with a 60-session co-movement estimate. Across two fixed demo allocations and 36 development dates, annualized volatility MAE was **3.06 percentage points** for the trained model, **3.11** for EWMA, and **3.26** for the trailing benchmark. The paired model-minus-EWMA estimate was **−0.045 percentage points**, with an exploratory interval of **−0.490 to +0.360** using three-date blocks. The forecasts remain in research.
+
 A [local portfolio comparison application](docs/APPLICATION.md) now starts with one weight-based portfolio and offers an optional alternative comparison, selectable historical estimation windows, a five-question risk-preference guide, and an Advanced manual volatility reference, wealth/drawdown charts, holding risk shares, correlations, three fixed historical stress windows, and JSON export. It reads accepted data without changing the warehouse and keeps entries in memory. Browser tests confirm the demo results and input/error behavior; incomplete stress windows remain unavailable. It does not use trained-model forecasts or generate allocation suggestions.
 
 The [U.S. market expansion](docs/US_MARKET_EXPANSION.md) adds local ticker/company search over **11,806 stock/ETF candidates** from **13,237 active, non-test Nasdaq directory listings**. Listing records are not audited price histories. Additional histories are loaded through a queue, validated under separate **AP-001** controls, cached with hashes, and combined in memory for historical analysis. META, VOO, and BRK.B each pass structural/provider checks on 1,719 sessions; no independent price cross-check is claimed for those additions. The original research database remains unchanged.
@@ -43,7 +45,7 @@ The [UX-P01 study workflow](docs/COMPREHENSION_PILOT.md) uses three scored quest
 
 The [report experiment brief](docs/REPORT_EXPERIMENT.md) defines the user need, release decision, and evidence required at each step. The Python analysis estimates sample size and evaluates a separately registered cohort with a one-sided exact hypothesis test, effect sizes, confidence intervals, and guardrails. Temporary database fixtures verify cohort isolation and the decision logic. Participant outcomes are pending.
 
-**151 regression tests pass locally**, covering data integrity, portfolio calculations, chronological boundaries, and study consent, scoring, and record integrity. The [Python application workflow](.github/workflows/python-app.yml) runs fixture-based checks on pushes and pull requests. Final model testing and portfolio-forecast integration remain subsequent milestones; development results do not establish final-test or live performance. A [future adjustment roadmap](docs/PORTFOLIO_ADJUSTMENT_ROADMAP.md) records requested reweighting, replacement criteria, and optional candidate suggestions; none is implemented.
+**152 regression tests pass locally**, covering data integrity, portfolio calculations, chronological boundaries, and study consent, scoring, and record integrity. The [Python application workflow](.github/workflows/python-app.yml) runs fixture-based checks on pushes and pull requests. Final model testing and application integration remain subsequent milestones. A [future adjustment roadmap](docs/PORTFOLIO_ADJUSTMENT_ROADMAP.md) records requested reweighting, replacement criteria, and optional candidate suggestions; none is implemented.
 
 ## 3. Project composition and methodology
 
@@ -67,6 +69,7 @@ The [report experiment brief](docs/REPORT_EXPERIMENT.md) defines the user need, 
 | Modeling dataset | Twelve causal features, development-only 20-session targets, separate membership, and numerical/leakage checks | Implemented; [report](docs/MODELING_DATASET.md) and [feature dictionary](docs/06_MODELING_DATASET_WALKTHROUGH.md) |
 | Forecast benchmarks | Trailing variance and three EWMA candidates, matched primary/daily samples, per-instrument/group metrics, and versioned experiments | Implemented on development years; [results](docs/BASELINE_FORECAST_REPORT.md) |
 | Machine learning | Pooled positive-variance gradient boosting, purged chronological folds, fixed candidate grid, and independent score verification | Implemented on development years; [results](docs/MODEL_DEVELOPMENT_REPORT.md); final refit/test reserved |
+| Portfolio forecast development | Combine forecast holding variances with a shared 60-session co-movement matrix and evaluate two demos on a matched grid | [Development comparison](docs/PORTFOLIO_FORECAST_DEVELOPMENT.md) with paired error intervals |
 | Application | Assess one portfolio, optionally compare an alternative, reflect risk preferences, search U.S. candidates, and inspect historical/development metrics | Implemented for historical risk; [guide](docs/APPLICATION.md); portfolio forecasts/suggestions planned |
 | User measurement | Identical numerical facts, optional chart, three scored tasks, and consented random assignment | [Pilot and confirmatory analysis implemented](docs/REPORT_EXPERIMENT.md); participant evidence pending |
 
@@ -250,6 +253,12 @@ All candidate/fold model files, predictions, parameters, failures, hashes, and p
 
 [RB-001](config/development_robustness.json) tests sensitivity to forecast dates and instrument aggregation. Models and selected parameters are unchanged; overlapping grid phases are diagnostic rather than independent trials. Full results, all candidates, and reproduction commands are in the [robustness report](docs/DEVELOPMENT_ROBUSTNESS.md).
 
+### Portfolio forecast development
+
+![Annualized volatility error for the trailing, exponentially weighted, and trained forecasts across both demos](docs/assets/portfolio-forecast-development.svg)
+
+PF-001 projects the next 20 sessions of volatility for fixed-weight portfolios. It compares a trailing portfolio benchmark with forecasts that combine individual holding variances and past co-movement. The evaluation pairs all methods on the same 36 market dates. The full report documents the score calculations, uncertainty, and reproducible command. [Portfolio forecast evaluation](docs/PORTFOLIO_FORECAST_DEVELOPMENT.md)
+
 ### Proposed news extension
 
 The intended question is whether news adds information about risk beyond recent price behavior. The [feasibility report](docs/NEWS_FEASIBILITY.md) compares archived metadata, filing sources, financial-news datasets, and a candidate sentiment model. It records successful archive samples and unavailable API probes. Later market reactions are evaluation outcomes and must not become inputs to earlier forecasts. Historical availability, relevance, feed gaps, and duplicated stories require separate checks.
@@ -264,7 +273,7 @@ Each modeling row represents an instrument at a forecast date, with price inputs
 
 Training, validation, and final testing follow the declared 2020–2024 / 2025 / 2026 chronological contract, with earlier development folds. Training labels whose future windows reach the next evaluation period are excluded. The implemented benchmark report evaluates trailing and exponentially weighted variance forecasts using annualized-volatility mean absolute error and variance QLIKE. Trained candidates use the same development origins and benchmark definitions. Final model scores remain unopened until the complete modeling recipe is frozen.
 
-The local application supports daily, USD-denominated instruments in long-only, unleveraged portfolios. Fixed-weight historical scenarios explicitly assume daily rebalancing and represent hypothetical exposures rather than actual past investment performance. Portfolio forecasting will require a separate correlation estimate and separate evaluation. ETF look-through holdings, taxes, derivatives, and automated trading are outside the initial scope.
+The local application supports daily, USD-denominated instruments in long-only, unleveraged portfolios. Fixed-weight historical scenarios explicitly assume daily rebalancing and represent hypothetical exposures rather than actual past investment performance. Portfolio forecasts are evaluated separately on the development grid using a fixed co-movement estimator. ETF look-through holdings, taxes, derivatives, and automated trading are outside the initial scope.
 
 ### Later phase: explainable portfolio adjustments
 
@@ -291,7 +300,7 @@ The [adjustment roadmap](docs/PORTFOLIO_ADJUSTMENT_ROADMAP.md) defines proposed 
 
 The [source policy](docs/DATA_SOURCE_POLICY.md) accepts RU-001 under DS-002 for prototype work, selects FRED as the preferred price-index context source, and quarantines Yahoo ^GSPC. The underlying three discrepancies remain unresolved.
 
-The SQL views now enforce this source policy. Next: train and chronologically evaluate one documented positive-variance model against the completed trailing-variance and development-selected EWMA benchmarks. Freeze the full procedure before deriving final-test outcomes or opening 2026 model scores.
+The SQL views enforce this source policy. The next forecasting milestone is to freeze the final refit and scoring procedure before computing 2026 model outcomes.
 
 ### References
 
