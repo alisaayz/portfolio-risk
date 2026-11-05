@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="760" viewBox="0 0 1040 760" role="img" aria-labelledby="title desc">
+<title id="title">U.S. search and application data remain separate from model research</title>
+<desc id="desc">A versioned Nasdaq listing directory supports search. User-requested histories pass AP-001 identity, session, and adjustment checks and are cached separately. Additional histories combine with DS-002 data only in an in-memory application dataset. The sixteen-instrument warehouse and model universe stay unchanged.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10Z" fill="#52647a"/></marker></defs>
+<style>text{font-family:Arial,Helvetica,sans-serif;fill:#172b46}.title{font-size:25px;font-weight:700}.head{font-size:18px;font-weight:700}.body{font-size:15px}.small{font-size:13px;fill:#52647a}.box{fill:#e7f3ed;stroke:#85b69b;stroke-width:1.5}.line{fill:none;stroke:#52647a;stroke-width:2;marker-end:url(#arrow)}</style>
+<rect width="1040" height="760" rx="18" fill="#f4f7fb"/>
+<text x="40" y="48" class="title">Discover broadly; preserve evidence and evaluation boundaries.</text>
+<text x="40" y="78" class="body">Implemented U.S. listing search and on-demand historical application data</text>
+<rect x="40" y="110" width="510" height="95" rx="10" class="box"/>
+<text x="295" y="143" text-anchor="middle" class="head">Versioned Nasdaq directory</text>
+<text x="295" y="171" text-anchor="middle" class="body">13,237 listings; 11,806 stock/ETF candidates</text>
+<text x="295" y="193" text-anchor="middle" class="small">Listing discovery is not audited price coverage</text>
+<path d="M295 205 V236" class="line"/>
+<rect x="40" y="238" width="510" height="85" rx="10" class="box"/>
+<text x="295" y="269" text-anchor="middle" class="head">Search and select a symbol</text>
+<text x="295" y="298" text-anchor="middle" class="body">Queued provider request; reuse verified cached output</text>
+<path d="M295 323 V353" class="line"/>
+<rect x="40" y="355" width="510" height="110" rx="10" class="box"/>
+<text x="295" y="388" text-anchor="middle" class="head">AP-001 application evidence</text>
+<text x="295" y="416" text-anchor="middle" class="body">Identity, USD/type, sessions, actions, and hashes</text>
+<text x="295" y="443" text-anchor="middle" class="small">No independent price cross-check; failures retained</text>
+<rect x="600" y="238" width="400" height="135" rx="10" class="box"/>
+<text x="800" y="272" text-anchor="middle" class="head">DS-002 research warehouse</text>
+<text x="800" y="302" text-anchor="middle" class="body">16 accepted research instruments</text>
+<text x="800" y="329" text-anchor="middle" class="small">Read only; model universe remains fixed</text>
+<text x="800" y="353" text-anchor="middle" class="small">No 2026 model scores opened</text>
+<path d="M295 465 V493 H520 V520" class="line"/>
+<path d="M800 373 V493 H520" class="line"/>
+<rect x="180" y="523" width="680" height="88" rx="10" class="box"/>
+<text x="520" y="555" text-anchor="middle" class="head">Separate in-memory application composition</text>
+<text x="520" y="585" text-anchor="middle" class="body">Common history, source tiers, reconciled portfolio calculations</text>
+<path d="M520 611 V640" class="line"/>
+<rect x="180" y="642" width="680" height="77" rx="10" class="box"/>
+<text x="520" y="675" text-anchor="middle" class="head">Historical risk report with visible source status</text>
+<text x="520" y="701" text-anchor="middle" class="body">Portfolio weights stay local; no model forecasts or suggestions</text>
+<text x="40" y="745" class="small">Prices remain through November 3, 2026. Directory and provider availability do not guarantee usable history for every symbol.</text>
+</svg>

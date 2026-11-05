@@ -19,7 +19,7 @@
   <text class="subtitle" x="44" y="79">Green: data, SQL, historical app, and ML development implemented · final model test reserved</text>
   <rect class="box done" x="210" y="106" width="620" height="76" rx="12"/>
   <text class="heading" x="520" y="136" text-anchor="middle">Historical market data</text>
-  <text class="body" x="520" y="161" text-anchor="middle">Daily prices, adjusted prices, dividends, and splits</text>
+  <text class="body" x="520" y="161" text-anchor="middle">Fixed research history; broader application discovery follows AP-001</text>
   <path class="line" d="M520 182 V207"/>
   <rect class="box done" x="210" y="209" width="620" height="76" rx="12"/>
   <text class="heading" x="520" y="239" text-anchor="middle">Python acquisition and validation</text>
@@ -45,5 +45,5 @@
   <path class="line" d="M520 670 V695"/>
   <rect class="box done" x="210" y="697" width="620" height="76" rx="12"/>
   <text x="520" y="727" text-anchor="middle" class="heading">Local historical comparison application</text>
-  <text x="520" y="752" text-anchor="middle" class="body">Weight entry, charts, risk reference, and export; forecasts/suggestions planned</text>
+  <text x="520" y="752" text-anchor="middle" class="body">U.S. search, source audits, charts and metrics; forecasts/suggestions planned</text>
 </svg>

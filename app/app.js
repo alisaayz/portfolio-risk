@@ -2,6 +2,9 @@
 
 const $ = id => document.getElementById(id);
 const state = {context: null, positions: [], result: null, demo: true, metric: 'wealth', revision: 0};
+let searchSequence = 0;
+let searchTimer;
+let searchMatches = [];
 const percent = value => value === null || !Number.isFinite(value) ? 'Undefined' : `${(value * 100).toFixed(2)}%`;
 const shortDate = value => new Date(`${value}T12:00:00`).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'});
 function element(tag, text, className) {
@@ -51,15 +54,55 @@ function renderPositions() {
     remove.addEventListener('click', () => {state.positions = state.positions.filter(p => p !== position); renderPositions(); dirty();});
     cell.append(remove); row.append(cell); $('position-rows').append(row);
   });
-  $('add-symbol').replaceChildren();
-  state.context.instruments.filter(i => !state.positions.some(p => p.symbol === i.symbol)).forEach(instrument => {
-    const option = element('option', `${instrument.symbol} · ${instrument.label}`); option.value = instrument.symbol; $('add-symbol').append(option);
-  });
-  $('add-position').disabled = !$('add-symbol').options.length;
   totals();
+}
+async function searchSymbols() {
+  const sequence = ++searchSequence, query = $('add-symbol').value.trim();
+  if (!query) {$('symbol-matches').replaceChildren(); searchMatches = []; return;}
+  try {
+    const value = await api(`/api/symbols?q=${encodeURIComponent(query)}`);
+    if (sequence !== searchSequence) return;
+    searchMatches = value.matches;
+    $('symbol-matches').replaceChildren(...searchMatches.map(row => {
+      const option = element('option'); option.value = row.symbol;
+      option.label = `${row.security_name} · ${row.directory_type === 'ETF' ? 'ETF' : 'stock candidate'}`;
+      return option;
+    }));
+  } catch (error) {$('load-status').textContent = error.message;}
+}
+async function addSymbol() {
+  $('form-error').hidden = true;
+  const symbol = $('add-symbol').value.trim().toUpperCase();
+  if (!symbol) return;
+  if (state.positions.some(p => p.symbol === symbol)) {$('load-status').textContent = `${symbol} is already in the table.`; return;}
+  $('add-position').disabled = true;
+  try {
+    const known = state.context.instruments.find(i => i.symbol === symbol);
+    if (!known) {
+      const matches = await api(`/api/symbols?q=${encodeURIComponent(symbol)}`);
+      const record = matches.matches.find(row => row.symbol === symbol);
+      if (!record) throw new Error('Choose an exact ticker from the U.S. search results.');
+      let job = await api('/api/instruments/load', {symbol});
+      $('load-status').textContent = `Loading and auditing ${symbol} through the saved analysis cutoff…`;
+      for (let attempt = 0; attempt < 90 && !['complete', 'failed'].includes(job.status); attempt++) {
+        await new Promise(resolve => setTimeout(resolve, 800));
+        job = await api(`/api/jobs/${job.job_id}`);
+      }
+      if (job.status === 'failed') throw new Error(`${symbol} could not be admitted: ${job.error}`);
+      if (job.status !== 'complete') throw new Error(`${symbol} is still loading. Press Add later to check the same job; no duplicate download will be started.`);
+      state.context.instruments.push({symbol, label: record.security_name});
+      $('load-status').textContent = `${symbol}: structural checks passed. No independent price cross-check has been performed. ${job.warnings?.length || 0} review warning(s).`;
+    } else {$('load-status').textContent = `${symbol} is available in the loaded data.`;}
+    state.positions.push({symbol, a: 0, b: 0});
+    $('add-symbol').value = ''; $('symbol-matches').replaceChildren();
+    renderPositions(); dirty();
+  } catch (error) {$('form-error').textContent = error.message; $('form-error').hidden = false; $('load-status').textContent = '';}
+  finally {$('add-position').disabled = false;}
 }
 function loadDemo() {
   state.revision += 1;
+  $('load-status').textContent = '';
+  $('add-symbol').value = '';
   const config = state.context.demo_configuration;
   $('name-a').value = config.portfolios[0].name;
   $('name-b').value = config.portfolios[1].name;
@@ -172,6 +215,8 @@ function methods(value) {
   ]) notes.append(element('p', text));
   const identity = element('p', 'Dataset: '); identity.append(element('code', a.recipe.dataset_id)); notes.append(identity);
   const report = element('p', 'Analysis: '); report.append(element('code', a.report_id)); notes.append(report);
+  const provisional = (value.source_validation || []).filter(row => row.policy === 'AP-001');
+  if (provisional.length) notes.prepend(element('p', `On-demand sources: ${provisional.map(row => row.symbol).join(', ')} passed structural/provider-metadata checks under AP-001 but have not been independently price-cross-checked. Their saved evidence is separate from the fixed sixteen-instrument model dataset.`, 'notice error'));
 }
 async function runAnalysis(event) {
   if (event) event.preventDefault();
@@ -179,6 +224,9 @@ async function runAnalysis(event) {
   try {
     const revision = state.revision;
     const value = await api('/api/analyze', requestPayload()); state.result = value;
+    const provisional = (value.source_validation || []).filter(row => row.policy === 'AP-001');
+    $('source-status').hidden = !provisional.length;
+    $('source-status').textContent = provisional.length ? `${provisional.map(row => row.symbol).join(', ')}: provider identity and structural checks passed; independent price cross-checks have not been performed. Source warnings are retained in the exported report.` : '';
     $('results').classList.remove('stale'); $('result-content').hidden = false;
     $('result-title').textContent = value.is_demo ? 'Demonstration comparison' : 'Your portfolio comparison';
     $('result-context').textContent = `${value.analysis.risk_window_sessions}-session risk estimate ending ${shortDate(value.analysis.risk_window_end)} · historical, not a forecast`;
@@ -193,7 +241,9 @@ async function runAnalysis(event) {
 }
 $('portfolio-form').addEventListener('submit', runAnalysis);
 for (const id of ['name-a', 'name-b', 'as-of', 'risk-window', 'vol-reference']) $(id).addEventListener('input', dirty);
-$('add-position').addEventListener('click', () => {const symbol = $('add-symbol').value; if (symbol) {state.positions.push({symbol, a: 0, b: 0}); renderPositions(); dirty();}});
+$('add-position').addEventListener('click', addSymbol);
+$('add-symbol').addEventListener('input', () => {clearTimeout(searchTimer); searchTimer = setTimeout(searchSymbols, 180);});
+$('add-symbol').addEventListener('keydown', event => {if (event.key === 'Enter') {event.preventDefault(); addSymbol();}});
 $('load-demo').addEventListener('click', () => {loadDemo(); runAnalysis();});
 for (const metric of ['wealth', 'drawdown']) $(`${metric}-tab`).addEventListener('click', () => {state.metric = metric; drawChart();});
 $('download').addEventListener('click', () => {
@@ -204,7 +254,22 @@ $('download').addEventListener('click', () => {
 async function initialize() {
   try {
     state.context = await api('/api/context');
-    $('snapshot').textContent = `${state.context.instruments.length} accepted instruments · saved prices through ${shortDate(state.context.latest_common_close)} · USD`;
+    const catalog = state.context.symbol_catalog;
+    $('snapshot').textContent = `${catalog ? catalog.eligible_candidates.toLocaleString() + ' searchable U.S. stock/ETF candidates' : state.context.instruments.length + ' accepted instruments'} · saved analysis cutoff ${shortDate(state.context.latest_common_close)} · USD`;
+    const research = state.context.research_scorecard;
+    if (research) {
+      $('research-scorecard').hidden = false;
+      $('research-rows').replaceChildren(...[2023, 2024, 2025].map(year => {
+        const row = element('tr'); row.append(element('td', String(year)));
+        for (const method of [research.selected_model, research.selected_ewma, 'trailing_20']) {
+          const score = research.metrics.find(r => r.year === year && r.method === method);
+          row.append(element('td', score.volatility_mae_pp.toFixed(2)));
+        }
+        return row;
+      }));
+      const qlike = [research.selected_model, research.selected_ewma, 'trailing_20'].map(method => research.metrics.find(r => r.year === 2025 && r.method === method).variance_qlike.toFixed(4));
+      $('research-secondary').textContent = `MAE is annualized-volatility error in percentage points. Lower is better. 2025 secondary variance QLIKE: model ${qlike[0]}, EWMA ${qlike[1]}, trailing ${qlike[2]}. Each primary comparison uses 192 correlated instrument/window pairs.`;
+    }
     $('as-of').min = state.context.earliest_common_close; $('as-of').max = state.context.latest_common_close;
     $('workspace').hidden = false; loadDemo(); await runAnalysis();
   } catch (error) {$('fatal-error').textContent = error.message; $('fatal-error').hidden = false; $('snapshot').textContent = 'Local data is unavailable.';}

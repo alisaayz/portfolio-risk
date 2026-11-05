@@ -1,0 +1,12 @@
+{
+  "policy_id": "AP-001",
+  "scope": "on_demand_us_stock_etf_historical_application_only",
+  "currency": "USD",
+  "provider_types": ["EQUITY", "ETF"],
+  "require_complete_expected_sessions": true,
+  "require_matching_symbol_currency_type_timezone": true,
+  "adjustment_deviation_over_5bp": "block_for_review",
+  "large_real_price_moves": "retain_visible_warning",
+  "independent_crosscheck_performed": false,
+  "research_warehouse_or_model_universe_changed": false
+}

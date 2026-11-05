@@ -97,3 +97,7 @@ Selection uses 2025 primary volatility MAE, ties ascending method ID. All candid
 ## RB-001 sensitivity review
 
 Four declared grid offsets (0/5/10/15 sessions) reuse saved development forecasts without refitting or changing selection. Offset zero exactly matches primary predictions/targets/errors. Models share identical outcomes within each phase; phases overlap one another. Omission diagnostics remove one instrument only from metric aggregation, not model training. The selected model/EWMA ranking changes across phases; see [the review](DEVELOPMENT_ROBUSTNESS.md). No 2026 values are opened.
+
+## Proposed inference and user-measurement extension
+
+The [measurement plan](METRICS_AND_EXPERIMENTS.md) defines future paired forecast-loss inference that preserves shared date shocks and serial dependence; it does not claim significance from ticker-row counts or selection-year scores. Freeze the complete inference procedure before final 2026 scoring. A separate participant-randomized plain-report/dashboard comparison concerns user understanding, with real participants, declared outcomes/power/stopping rules and guardrails. No participant data or causal/significance results exist yet. Broader U.S. application discovery does not alter RU-001, DS-002, model selection, primary origins, or the reserved test.
