@@ -46,9 +46,9 @@ CREATE TABLE IF NOT EXISTS task_answers (
 
 
 class StudyPilot:
-    def __init__(self, database=None):
+    def __init__(self, database=None, definition_path=DEFINITION):
         self.database = database
-        raw = DEFINITION.read_bytes()
+        raw = definition_path.read_bytes()
         self.definition = json.loads(raw)
         self.definition_hash = hashlib.sha256(raw).hexdigest()
         self.study_id = self.definition['study_id']
@@ -160,16 +160,28 @@ class StudyPilot:
         return {'status': status, 'answers': results}
 
 
-def summarize(database):
+def summarize(database, *, study_id=None, window=None):
     """Read anonymous assignment and answer counts without modifying the pilot database."""
     with closing(sqlite3.connect(database.resolve().as_uri() + '?mode=ro', uri=True)) as connection:
+        connection.execute('BEGIN')
+        if window is not None:
+            outside = connection.execute('''SELECT count(*) FROM assignments
+                WHERE study_id = ? AND (started_at < ? OR started_at >= ? OR ended_at > ? OR ended_at < started_at)
+            ''', (study_id, *window, window[1])).fetchone()[0]
+            if outside:
+                raise ValueError('Study events fall outside the registered window or have invalid timing')
         rows = connection.execute('''
             SELECT a.study_id, a.variant, a.status, a.ended_at - a.started_at,
                    count(t.question_id), coalesce(sum(t.correct), 0), coalesce(max(t.critical), 0)
             FROM assignments AS a LEFT JOIN task_answers AS t USING (study_id, participant_id)
+            WHERE (? IS NULL OR a.study_id = ?)
             GROUP BY a.study_id, a.participant_id ORDER BY a.study_id, a.variant
-        ''').fetchall()
-        versions = connection.execute('SELECT study_id, definition_sha256 FROM experiment_definitions ORDER BY study_id').fetchall()
+        ''', (study_id, study_id)).fetchall()
+        versions = connection.execute('''SELECT study_id, definition_sha256 FROM experiment_definitions
+            WHERE (? IS NULL OR study_id = ?) ORDER BY study_id''', (study_id, study_id)).fetchall()
+    if window is not None and any((row[4] != 3 or row[3] is None) if row[2] == 'completed'
+                                  else row[4] != 0 for row in rows):
+        raise ValueError('Study completion and answer records disagree')
     results = []
     for study_id, definition_hash in versions:
         for variant in VARIANTS:

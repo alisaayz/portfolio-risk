@@ -1,11 +1,11 @@
 # Personal Portfolio Risk Platform
 
-**Status:** Personal portfolio analysis, risk-preference guidance, model development, and a local comprehension pilot workflow are implemented. Participant evaluation and final model testing remain planned.
+**Status:** Personal portfolio analysis, risk-preference guidance, model development, and a local workflow for planning and analyzing a report experiment are implemented. Participant evaluation and final model testing remain planned.
 **Last updated:** November 4, 2026.
 
 ## 1. Executive summary
 
-The Personal Portfolio Risk Platform is a financial analytics project for evaluating existing investments and comparing hypothetical portfolios. Its local application starts with one portfolio, explains historical risk, and offers an optional alternative comparison. A short preference guide separates self-reported comfort with fluctuations from cash-access needs and puts historical drawdowns in context. U.S. symbol discovery and on-demand application histories are separate from the fixed research dataset. A local study workflow prepares an evaluation of whether a chart helps readers interpret a portfolio risk report. A later suggestion layer will propose weight changes or replacement criteria relative to user-defined risk preferences, with optional candidate screening.
+The Personal Portfolio Risk Platform is a financial analytics project for evaluating existing investments and comparing hypothetical portfolios. Its local application starts with one portfolio, explains historical risk, and offers an optional alternative comparison. A short preference guide separates self-reported comfort with fluctuations from cash-access needs and puts historical drawdowns in context. U.S. symbol discovery and on-demand application histories are separate from the fixed research dataset. A local study workflow supports a product decision about whether a chart should appear by default in the portfolio risk report. A later suggestion layer will propose weight changes or replacement criteria relative to user-defined risk preferences, with optional candidate screening.
 
 The central research question is whether a trained model can forecast volatility over the next 20 trading days more accurately than historical estimates. The implemented foundation downloads and audits real market history, preserves evidence, and loads versioned observations into DuckDB and Parquet. SQL views enforce source-selection rules and calculate calendar-aligned returns and historical volatility inputs. A separate versioned modeling layer builds causal features and pre-2026 targets under the chronological evaluation contract. The baseline report compares dated portfolios using historical covariance, volatility, drawdown, and holding risk contributions. Historical benchmarks and pooled gradient-boosted models are evaluated on development years; a local application now provides historical portfolio analysis with optional comparison; final model testing remains reserved.
 
@@ -41,7 +41,9 @@ The [personal workflow and RQ-001 guide](docs/RISK_PREFERENCES.md) let users ass
 
 The [UX-P01 study workflow](docs/COMPREHENSION_PILOT.md) uses three scored questions and a fixed demonstration report calculated from accepted market data. The numerical and chart formats contain the same facts. Practice discards answers after scoring. Optional pilot mode requires consent, randomly assigns a format, and stores local anonymous records for a descriptive SQL summary. Verification covers practice and test fixtures. Participant evaluation is pending.
 
-**149 regression tests pass locally**, covering data integrity, portfolio calculations, chronological boundaries, and study consent, scoring, and record integrity. The [Python application workflow](.github/workflows/python-app.yml) runs fixture-based checks on pushes and pull requests. Final model testing and portfolio-forecast integration remain subsequent milestones; development results do not establish final-test or live performance. A [future adjustment roadmap](docs/PORTFOLIO_ADJUSTMENT_ROADMAP.md) records requested reweighting, replacement criteria, and optional candidate suggestions; none is implemented.
+The [report experiment brief](docs/REPORT_EXPERIMENT.md) defines the user need, release decision, and evidence required at each step. The Python analysis estimates sample size and evaluates a separately registered cohort with a one-sided exact hypothesis test, effect sizes, confidence intervals, and guardrails. Temporary database fixtures verify cohort isolation and the decision logic. Participant outcomes are pending.
+
+**151 regression tests pass locally**, covering data integrity, portfolio calculations, chronological boundaries, and study consent, scoring, and record integrity. The [Python application workflow](.github/workflows/python-app.yml) runs fixture-based checks on pushes and pull requests. Final model testing and portfolio-forecast integration remain subsequent milestones; development results do not establish final-test or live performance. A [future adjustment roadmap](docs/PORTFOLIO_ADJUSTMENT_ROADMAP.md) records requested reweighting, replacement criteria, and optional candidate suggestions; none is implemented.
 
 ## 3. Project composition and methodology
 
@@ -66,7 +68,7 @@ The [UX-P01 study workflow](docs/COMPREHENSION_PILOT.md) uses three scored quest
 | Forecast benchmarks | Trailing variance and three EWMA candidates, matched primary/daily samples, per-instrument/group metrics, and versioned experiments | Implemented on development years; [results](docs/BASELINE_FORECAST_REPORT.md) |
 | Machine learning | Pooled positive-variance gradient boosting, purged chronological folds, fixed candidate grid, and independent score verification | Implemented on development years; [results](docs/MODEL_DEVELOPMENT_REPORT.md); final refit/test reserved |
 | Application | Assess one portfolio, optionally compare an alternative, reflect risk preferences, search U.S. candidates, and inspect historical/development metrics | Implemented for historical risk; [guide](docs/APPLICATION.md); portfolio forecasts/suggestions planned |
-| User measurement | Identical numerical facts, optional chart, three scored tasks, and consented random assignment | [Practice and descriptive pilot implemented](docs/COMPREHENSION_PILOT.md); participant evidence and confirmatory inference planned |
+| User measurement | Identical numerical facts, optional chart, three scored tasks, and consented random assignment | [Pilot and confirmatory analysis implemented](docs/REPORT_EXPERIMENT.md); participant evidence pending |
 
 ### Local application
 
@@ -104,10 +106,14 @@ flowchart LR
     B --> D[Choose a format and receive feedback]
     C --> E[Consent and random assignment]
     E --> F[Local SQLite records]
-    F --> G[Descriptive metrics by format]
+    F --> G[Descriptive pilot metrics]
+    F --> H[Separate registered A/B cohort]
+    H --> I[Check sample, timing, and allocation]
+    I --> J[Test effect and assess guardrails]
+    J --> K[Review chart default]
 ```
 
-The primary pilot metric is the share of assigned participants who answer all three questions correctly. The summary also tracks completion, early exit, critical misunderstandings, and median completion time. A separate confirmatory study would require a frozen protocol and a justified sample size. See the [study guide](docs/COMPREHENSION_PILOT.md) and [measurement plan](docs/METRICS_AND_EXPERIMENTS.md).
+The primary pilot metric is the share of assigned participants who answer all three questions correctly. The summary also tracks completion, early exit, critical misunderstandings, and median completion time. The formal analysis uses a separate study version and a fixed recruitment window. The decision to consider showing the chart by default requires a statistically supported improvement of practical size and acceptable uncertainty about noncompletion and observed misunderstandings. See the [study guide](docs/COMPREHENSION_PILOT.md) and [report experiment brief](docs/REPORT_EXPERIMENT.md).
 
 ### Data quality findings
 

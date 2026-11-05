@@ -220,3 +220,7 @@ The user requested a single-portfolio default and a short questionnaire for peop
 ## Implemented comprehension pilot workflow — November 4, 2026
 
 UX-P01 compares a fixed numerical report with the same report plus a chart. Three questions assess interpretation with the report available. The default practice mode scores responses in memory. Explicit recording mode obtains consent, assigns a format at random, and stores anonymous responses and timing locally. A read-only SQL summary reports success among all assigned sessions, completion, early exit, critical misunderstandings, and completion time. The complete suite has 149 passing tests. Browser and software verification precede real participant evaluation. See [COMPREHENSION_PILOT.md](COMPREHENSION_PILOT.md).
+
+## Implemented report experiment analysis — November 4, 2026
+
+The product brief connects portfolio risk comprehension to the decision about the default chart. The analysis plans sample size, checks cohort identity and allocation, and compares comprehension rates with a one-sided Fisher exact test and a score-based interval. The decision rule considers effect size, noncompletion, and observed critical misunderstandings. Temporary fixtures verify the checks. Real participant evaluation remains pending. See the [report experiment brief](REPORT_EXPERIMENT.md).

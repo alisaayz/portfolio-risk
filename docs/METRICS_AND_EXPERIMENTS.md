@@ -1,6 +1,6 @@
 # Measurement and experimentation plan
 
-Updated November 4, 2026. This document distinguishes analytical metrics, the implemented UX-P01 pilot workflow, and planned confirmatory inference. Participant outcomes are pending.
+Updated November 4, 2026. This document covers analytical metrics, the UX-P01 pilot, and the implemented workflow for analyzing a separate confirmatory study. Participant outcomes are pending.
 
 ## The decisions measurement should support
 
@@ -57,7 +57,7 @@ The 2025 model and EWMA settings were selected using that year's scores. Its app
 
 The [UX-P01 study guide](COMPREHENSION_PILOT.md) documents both runnable modes. Practice lets the reader select a format and discards responses after scoring. Recording requires explicit launch configuration and participant consent. SQLite stores frozen definitions in `experiment_definitions`, anonymous format assignments and completion state in `assignments`, and scored responses in `task_answers`. A read-only SQL query groups records per assignment before computing descriptive metrics by format.
 
-The next measurement step is a facilitated pilot with real participants. Review task wording, scoring, and timing before freezing a confirmatory protocol. Use the pilot to identify usability issues and estimate design inputs.
+The [report experiment brief](REPORT_EXPERIMENT.md) documents the product decision, prioritized work, and executable analysis. The tool estimates the primary-test sample size, validates a closed confirmatory cohort, and calculates Fisher’s exact test, a confidence interval for the difference in rates, and decision guardrails. The next measurement step is a facilitated pilot with real participants. Review task wording, scoring, and timing before freezing the confirmatory protocol.
 
 Method references: [Microsoft's pre-experiment guidance](https://www.microsoft.com/en-us/research/articles/patterns-of-trustworthy-experimentation-pre-experiment-stage/), [properties of useful experimentation metrics](https://www.microsoft.com/en-us/research/articles/stedii-properties-of-a-good-metric/), and [Diebold and Mariano's forecast-accuracy comparison paper](https://www.nber.org/system/files/working_papers/t0169/t0169.pdf). These references motivate the proposed design; no external company's practices or project-specific causal results are inferred from them.
 

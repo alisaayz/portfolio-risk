@@ -25,7 +25,7 @@ from scripts.audit_market_data import ROOT, sha256
 from scripts.portfolio_baseline import analyze, drawdown_summary, serializable, validate_configuration
 from scripts import market_catalog, application_market_data
 from scripts import risk_preferences
-from scripts.study_pilot import PILOT_DATABASE, StudyPilot
+from scripts.study_pilot import DEFINITION, PILOT_DATABASE, StudyPilot
 
 ASSETS = {'/': ('index.html', 'text/html; charset=utf-8'),
           '/app.js': ('app.js', 'text/javascript; charset=utf-8'),
@@ -337,10 +337,14 @@ def main():
     parser.add_argument('--database', type=Path, default=ROOT / 'data/warehouse/portfolio-risk.duckdb')
     parser.add_argument('--port', type=int, default=8765)
     parser.add_argument('--record-pilot', action='store_true', help='Save consented study sessions in the private local pilot database')
+    parser.add_argument('--study-definition', type=Path, default=DEFINITION,
+                        help='Use a separately versioned definition in recorded mode')
     args = parser.parse_args()
+    if args.study_definition != DEFINITION and not args.record_pilot:
+        parser.error('--study-definition requires recording mode')
     if not args.database.is_file():
         parser.error('Build the local market warehouse first')
-    study = StudyPilot(PILOT_DATABASE if args.record_pilot else None)
+    study = StudyPilot(PILOT_DATABASE if args.record_pilot else None, args.study_definition)
     server = ThreadingHTTPServer(('127.0.0.1', args.port), handler_class(args.database, study))
     print(f'Portfolio Risk is available at http://127.0.0.1:{server.server_port}', flush=True)
     print('Analysis uses the saved warehouse. Inputs remain in memory; stop with Ctrl+C.', flush=True)

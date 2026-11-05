@@ -94,7 +94,7 @@ function showReceipt(receipt) {
   byId('study-start').hidden = true;
   const completed = receipt.status === 'completed';
   byId('done-title').textContent = completed ? 'Questions complete' : 'Session ended';
-  byId('done-detail').textContent = definition.recording ? 'Your pilot session has been recorded locally.' : 'Practice is complete.';
+  byId('done-detail').textContent = definition.recording ? 'Your study session has been recorded locally.' : 'Practice is complete.';
   if (receipt.answers?.length) {
     byId('done-detail').textContent += ` ${receipt.answers.filter(item => item.correct).length} of 3 correct.`;
     for (const item of receipt.answers) byId('study-feedback').append(node('li', item.explanation));
@@ -151,12 +151,12 @@ async function initializeStudy() {
     definition = await request('/api/study');
     const existing = definition.recording ? sessionStorage.getItem(definition.study_id) : null;
     participantId = existing || crypto.randomUUID().replaceAll('-', '');
-    byId('study-mode').textContent = definition.recording ? 'Recorded usability pilot' : 'Practice preview';
+    byId('study-mode').textContent = definition.recording ? 'Recorded report study' : 'Practice preview';
     byId('study-privacy').textContent = definition.recording
       ? 'If you choose to participate, the app randomly assigns a report format and saves an anonymous session ID, your answers, timing, and completion status to the local pilot database. You can end the session at any time.'
       : 'Choose either report format to try the same three questions. Practice responses are discarded after scoring.';
     byId('format-label').hidden = definition.recording;
-    byId('consent-text').textContent = definition.recording ? 'I agree to take part in this local pilot.' : 'I want to try the practice questions.';
+    byId('consent-text').textContent = definition.recording ? 'I agree to take part in this local study.' : 'I want to try the practice questions.';
     if (existing) await start();
     else byId('study-start').hidden = false;
   } catch (error) {
