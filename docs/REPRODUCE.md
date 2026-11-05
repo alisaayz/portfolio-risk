@@ -13,7 +13,7 @@ python3.13 -m venv .venv
 .venv/bin/python -m unittest discover -s tests -v
 ```
 
-The tests use local fixtures. The exact dashboard demo and research results depend on archived source inputs. The public repository includes code, figures, and aggregate reports. Provider captures and private artifacts are kept separately.
+The tests use local fixtures. On the Version 2 branch, `./scripts/run_demo.sh` starts a standalone synthetic dashboard. The exact market-data demo and research results depend on archived source inputs. The public repository includes code, figures, and aggregate reports. Provider captures and private artifacts are kept separately.
 
 ## Rebuild from saved evidence
 

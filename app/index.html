@@ -6,11 +6,12 @@
   <title>riskitnot · Local research preview</title>
   <link rel="stylesheet" href="/styles.css">
   <script src="/app.js" defer></script>
+  <script src="/portfolio_io.js" defer></script>
 </head>
 <body>
   <header class="topbar"><a class="brand" href="/">risk<span>itnot</span></a><span class="local-label"><span class="status-dot"></span>Local research preview</span><a class="research-link" href="https://github.com/alisaayz/portfolio-risk" target="_blank" rel="noopener noreferrer">Project &amp; research ↗</a></header>
   <main>
-    <section class="intro"><p class="eyebrow">PERSONAL PORTFOLIO ANALYSIS</p><h1>Understand the risk in your portfolio.</h1><p class="lede">See what drives your historical risk and how your holdings would have behaved in difficult periods. Compare an alternative when you want to explore a change.</p><div class="snapshot" id="snapshot">Loading accepted local data…</div></section>
+    <section class="intro"><p class="eyebrow">PERSONAL PORTFOLIO ANALYSIS</p><h1>Understand the risk in your portfolio.</h1><p class="lede">See what drives your historical risk and how your holdings would have behaved in difficult periods. Compare an alternative when you want to explore a change.</p><div class="snapshot" id="snapshot">Loading local data…</div></section>
     <div id="fatal-error" class="notice error" role="alert" hidden></div>
     <div class="workspace" id="workspace" hidden>
       <section class="card inputs" aria-labelledby="inputs-title">
@@ -24,21 +25,47 @@
           <div class="allocation-heading"><h3>Capital weights</h3><span>% of portfolio value</span></div>
           <p class="field-help" id="weight-help">Enter the share of your portfolio in each holding. The total must be 100%.</p>
           <table class="positions"><thead><tr><th scope="col">Instrument</th><th scope="col" id="weight-a-heading">Weight (%)</th><th scope="col" data-comparison-only hidden>Alternative (%)</th><th scope="col"><span class="sr-only">Remove</span></th></tr></thead><tbody id="position-rows"></tbody><tfoot><tr><th scope="row">Total</th><td id="total-a">100%</td><td id="total-b" data-comparison-only hidden>100%</td><td></td></tr></tfoot></table>
-          <div class="add-position"><label class="sr-only" for="add-symbol">Search U.S. stocks and ETFs</label><input id="add-symbol" list="symbol-matches" placeholder="Ticker or company name" autocomplete="off"><datalist id="symbol-matches"></datalist><button id="add-position" class="secondary-button" type="button">Add</button></div>
+          <div class="add-position" id="symbol-entry"><label class="sr-only" for="add-symbol">Search U.S. stocks and ETFs</label><input id="add-symbol" list="symbol-matches" placeholder="Ticker or company name" autocomplete="off"><datalist id="symbol-matches"></datalist><button id="add-position" class="secondary-button" type="button">Add</button></div>
           <p class="field-help" id="catalog-help">Search the U.S. directory. New price histories are loaded and checked before use.</p>
           <p class="field-help" id="load-status" role="status"></p>
+          <details class="risk-guide" id="import-controls">
+            <summary>Import holdings from CSV</summary>
+            <p class="field-help">Use ticker,weight with percentages totaling 100, or ticker,market_value with positive USD values. Include one row per ticker already loaded in this session.</p>
+            <label for="portfolio-csv">Choose a CSV file</label><input id="portfolio-csv" type="file" accept=".csv,text/csv">
+            <label for="csv-text">Or paste CSV text</label><textarea id="csv-text" rows="3" spellcheck="false" placeholder="ticker,weight"></textarea>
+            <button class="secondary-button" id="preview-import" type="button">Preview import</button>
+            <p id="import-error" class="notice error" role="alert" hidden></p>
+            <p id="import-status" class="field-help" role="status"></p>
+            <div id="import-preview" hidden>
+              <table class="data-table"><thead><tr><th scope="col">Ticker</th><th scope="col">Weight (%)</th></tr></thead><tbody id="import-rows"></tbody></table>
+              <p class="field-help">Applying replaces the current weights. An existing alternative keeps its own weights.</p>
+              <div class="button-row"><button class="secondary-button" id="apply-import" type="button">Apply imported weights</button><button class="secondary-button" id="cancel-import" type="button">Cancel</button></div>
+            </div>
+          </details>
+          <details class="risk-guide">
+            <summary>Save or reopen a local draft</summary>
+            <p class="field-help">Save stores tickers and current weights in this browser at this local address. Saving again replaces that draft. Other fields stay in the current page.</p>
+            <div class="button-row"><button class="secondary-button" id="save-draft" type="button">Save weights</button><button class="secondary-button" id="open-draft" type="button">Open saved weights</button><button class="secondary-button" id="delete-draft" type="button">Delete saved draft</button></div>
+            <p id="draft-status" class="field-help" role="status"></p>
+          </details>
           <details class="risk-guide" id="risk-guide"><summary>Not sure about risk? Answer five short questions</summary><p class="field-help">We’ll reflect your preferences and cash-access needs, then put historical declines in context. Skip anything you are unsure about.</p><div id="risk-questions"></div><p class="field-help">This is a self-reflection guide, not a validated risk score. It does not turn your answers into a volatility target or a safe loss limit.</p></details>
           <details class="advanced-settings" id="advanced-settings"><summary>Advanced: set a manual volatility reference</summary><label class="reference-label">Annualized volatility reference, % <span class="optional">optional</span><input id="vol-reference" type="number" min="0.01" max="200" step="0.01" placeholder="Leave blank if unsure"></label><p class="field-help">Volatility and a tolerable loss are different measures. This optional percentage is entered by you, not inferred from the questionnaire.</p></details>
           <div id="form-error" class="notice error" role="alert" hidden></div>
           <button id="analyze" class="primary-button" type="submit">Assess my portfolio <span aria-hidden="true">↗</span></button>
         </form>
-        <div class="privacy-note"><strong>Weights and questionnaire answers stay local.</strong> Entries stay in memory. Loading a new symbol requests its market data from Yahoo Finance; portfolio amounts and preferences are not sent.</div>
+        <div class="privacy-note"><strong>Weights and questionnaire answers stay local.</strong> Entries stay in memory unless you explicitly save a local weight draft. <span id="privacy-source">Loading a new symbol requests its market data from Yahoo Finance. Portfolio amounts and preferences stay on this device.</span></div>
       </section>
       <section id="results" class="results" aria-label="Analysis results" aria-live="polite">
         <div class="results-top"><div><p class="eyebrow">HISTORICAL RISK</p><h2 id="result-title">Your risk report</h2><p id="result-context" class="quiet">Enter your holdings to assess their historical risk.</p></div><button id="download" class="secondary-button" type="button" disabled>Export JSON ↓</button></div>
         <div id="result-content" hidden>
           <p id="source-status" class="notice source-notice" hidden></p>
           <div class="metric-grid" id="metrics"></div>
+          <section class="card decision-card" id="decision-card" hidden>
+            <h3>Choose what to compare</h3>
+            <p id="decision-settings" class="quiet"></p>
+            <div class="button-row"><button class="secondary-button" id="keep-current" type="button">Keep current portfolio</button><button class="secondary-button" id="explore-adjustment" type="button">Explore an adjustment</button></div>
+            <p id="decision-status" class="field-help" role="status"></p>
+          </section>
           <details class="card details" id="reweight-card" hidden>
             <summary>Explore lower-risk weights</summary>
             <p class="field-help">Use the current holdings and historical risk window. An entered volatility reference becomes the optional target.</p>
@@ -57,7 +84,7 @@
             <div id="reweight-preview" hidden>
               <p class="notice" id="reweight-summary" role="status"></p>
               <div class="table-scroll"><table class="data-table">
-                <thead><tr><th scope="col">Holding</th><th scope="col">Current</th><th scope="col">Scenario</th><th scope="col">Current risk share</th><th scope="col">Scenario risk share</th></tr></thead>
+                <thead><tr><th scope="col">Holding</th><th scope="col">Current</th><th scope="col">Scenario</th><th scope="col">Change (pp)</th><th scope="col">Current risk share</th><th scope="col">Scenario risk share</th></tr></thead>
                 <tbody id="reweight-rows"></tbody>
               </table></div>
               <p class="field-help">These estimates use saved historical returns and exclude trading costs and taxes.</p>
@@ -74,7 +101,7 @@
                 <button class="secondary-button" id="show-replacement" type="submit">Show replacement criteria</button>
                 <button class="secondary-button" id="screen-replacement" type="submit">Screen audited candidates</button>
               </form>
-              <p class="field-help">The screen checks the 16-instrument research list and skips holdings already in your portfolio.</p>
+              <p class="field-help" id="screen-help">The screen checks the 16-instrument research list and skips holdings already in your portfolio.</p>
               <p id="replacement-error" class="notice error" role="alert" hidden></p>
               <div id="replacement-result" hidden>
                 <p id="replacement-summary" class="notice" role="status"></p>
@@ -97,14 +124,14 @@
           <section class="card preference-card" id="preference-card" hidden><h3>Your risk preferences</h3><p class="quiet" id="preference-progress"></p><div id="preference-summary"></div><p class="field-help">The comparisons describe this saved history. Future losses may be larger or persist; no recommended allocation or numerical volatility target is inferred.</p></section>
           <section class="card chart-card"><div class="section-top"><div><h3>Historical replay</h3><p class="quiet">Fixed weights rebalanced daily · no costs or taxes</p></div><div class="chart-tabs" role="group" aria-label="Chart metric"><button type="button" id="wealth-tab" class="selected" aria-pressed="true">Wealth</button><button type="button" id="drawdown-tab" aria-pressed="false">Drawdown</button></div></div><div id="chart" class="chart" role="img" aria-label="Comparison of historical portfolio wealth"></div><div class="chart-footer"><span id="chart-start"></span><div id="chart-legend" class="legend"></div><span id="chart-end"></span></div><p id="chart-description" class="field-help"></p></section>
           <section class="card"><div class="section-top"><div><h3>Where risk comes from</h3><p class="quiet">Capital allocation can differ from contribution to volatility.</p></div></div><div class="table-scroll"><table class="data-table"><thead id="risk-heading"></thead><tbody id="risk-rows"></tbody></table></div><p class="field-help">Risk shares use historical sample covariance. Negative shares indicate a diversifying contribution; they are preserved.</p></section>
-          <section class="card"><div class="section-top"><div><h3>Historical stress windows</h3><p class="quiet">How these weights would have behaved, rather than your actual past returns.</p></div></div><div class="table-scroll"><table class="data-table"><thead id="stress-heading"></thead><tbody id="stress-rows"></tbody></table></div><p class="field-help">Replay starts at the named starting close. Drawdown is measured within that window. Incomplete windows remain unavailable.</p></section>
+          <section class="card" id="historical-stress"><div class="section-top"><div><h3>Historical stress windows</h3><p class="quiet">How these weights would have behaved, rather than your actual past returns.</p></div></div><div class="table-scroll"><table class="data-table"><thead id="stress-heading"></thead><tbody id="stress-rows"></tbody></table></div><p class="field-help">Replay starts at the named starting close. Drawdown is measured within that window. Incomplete windows remain unavailable.</p></section>
           <details class="card details"><summary>Methods, source status &amp; correlations</summary><div id="method-notes" class="method-notes"></div><div class="table-scroll"><table class="data-table correlation-table" id="correlation-table"></table></div></details>
         </div>
         <section class="card" id="research-scorecard" hidden><h3>Model research metrics · development only</h3><p class="quiet">Instrument forecast errors on the fixed 16-instrument research universe. These are separate from your portfolio's historical risk.</p><div class="table-scroll"><table class="data-table"><thead><tr><th>Year</th><th>Model MAE, pp</th><th>EWMA MAE, pp</th><th>Trailing MAE, pp</th></tr></thead><tbody id="research-rows"></tbody></table></div><p class="field-help" id="research-secondary"></p><p class="field-help">Model and EWMA settings were selected using 2025. Statistical significance and user benefit have not been established. The 2026 holdout is reported separately.</p></section>
         <aside class="research-note"><span class="research-icon" aria-hidden="true">↗</span><div><strong>A separate model research track.</strong><p>This page uses historical covariance. The forecast comparison and its uncertainty are in the <a href="https://github.com/alisaayz/portfolio-risk/blob/main/docs/FINAL_EVALUATION_REPORT.md" target="_blank" rel="noopener noreferrer">2026 holdout report</a>.</p></div></aside>
       </section>
     </div>
-    <footer>Daily USD stocks and ETFs · long-only portfolios · saved research data · <a href="/study" target="_blank" rel="noopener">Report comprehension study</a></footer>
+    <footer><span id="footer-source">Daily USD stocks and ETFs · long-only portfolios · saved research data</span> <a id="study-link" href="/study" target="_blank" rel="noopener">Report comprehension study</a></footer>
   </main>
 </body>
 </html>

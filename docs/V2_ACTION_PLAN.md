@@ -21,6 +21,8 @@ The cases, rubric, and 30-path scripted baseline are complete. The scripted find
 
 ## 2. Make the first useful decision easier
 
+**Technical checkpoint complete November 5, 2026.** The guided flow, two CSV formats, local draft, active settings, and standalone demo are implemented. All 30 archived decision paths match the Version 1 market-data results. The browser checks include keyboard interaction and a 390-pixel layout. Cross-window qualification and exposure filtering are part of checkpoint 3. [Guided workflow and verification](V2_GUIDED_WORKFLOW.md)
+
 **Weeks 3–4.** Put portfolio entry, historical risk, and comparison in one guided flow. Keep one portfolio as the starting point and give “keep current” equal prominence in the decision summary.
 
 - Add local CSV import for one documented format with ticker and weight, or ticker and market value. Preview the mapping, duplicate handling, totals, and unsupported holdings before applying it. Keep manual entry available. Test malformed files, partial imports, unknown symbols, totals, and cancellation.

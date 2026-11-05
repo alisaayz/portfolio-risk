@@ -14,6 +14,7 @@ import math
 from pathlib import Path
 import re
 import sqlite3
+from tempfile import TemporaryDirectory
 import threading
 from urllib.parse import urlsplit, parse_qs
 import uuid
@@ -28,9 +29,11 @@ from scripts import risk_preferences
 from scripts.portfolio_reweight import assess_reweight
 from scripts.portfolio_replacement import accepted_screen_universe, replacement_criteria
 from scripts.study_pilot import DEFINITION, PILOT_DATABASE, StudyPilot
+from scripts.synthetic_app_demo import SYMBOLS, build_demo
 
 ASSETS = {'/': ('index.html', 'text/html; charset=utf-8'),
           '/app.js': ('app.js', 'text/javascript; charset=utf-8'),
+          '/portfolio_io.js': ('portfolio_io.js', 'text/javascript; charset=utf-8'),
           '/styles.css': ('styles.css', 'text/css; charset=utf-8'),
           '/study': ('study.html', 'text/html; charset=utf-8'),
           '/study.js': ('study.js', 'text/javascript; charset=utf-8'),
@@ -115,7 +118,7 @@ def assess(connection, payload, registry=None):
     })
 
 
-def context(connection):
+def context(connection, synthetic=False):
     dataset = connection.execute('SELECT dataset_id FROM active_dataset').fetchall()[0][0]
     rows = connection.execute('''SELECT instrument_id, min(session_date), max(session_date), count(*)
                                  FROM accepted_prices_daily GROUP BY instrument_id ORDER BY instrument_id''').fetchall()
@@ -127,6 +130,14 @@ def context(connection):
     date_string = lambda value: str(pd.Timestamp(value).date())
     demo = json.loads((ROOT / 'config/demo_portfolios.json').read_text())
     demo['as_of_date'] = date_string(latest_common)
+    source = 'Saved Yahoo Finance history through yfinance; accepted under a versioned source policy'
+    if synthetic:
+        demo['portfolios'] = [{
+            'id': 'synthetic_demo', 'name': 'Fictional demonstration', 'input_type': 'weights',
+            'positions': [{'instrument_id': symbol, 'weight': weight}
+                          for symbol, weight in zip(SYMBOLS, (.30, .50, .20))],
+        }]
+        source = 'Deterministic generated prices for fictional instruments'
     tables = {row[0] for row in connection.execute('SHOW TABLES').fetchall()}
     issues = []
     if 'active_quality_issues' in tables:
@@ -138,7 +149,7 @@ def context(connection):
                              'start': date_string(row[1]), 'end': date_string(row[2]), 'sessions': row[3]} for row in rows],
             'price_rows': sum(row[3] for row in rows), 'source_issues': issues,
             'demo_configuration': demo, 'currency': 'USD',
-            'source': 'Saved Yahoo Finance history through yfinance; accepted under a versioned source policy',
+            'source': source, 'data_mode': 'synthetic' if synthetic else 'market',
             'downloaded_on_request': False, 'personal_inputs_saved': False,
             'final_test_scores_opened': False}
 
@@ -184,8 +195,10 @@ def allowed_request(host, origin, port, require_origin=False):
     return (not require_origin and origin is None) or origin == f'http://{host}'
 
 
-def handler_class(database, study=None):
+def handler_class(database, study=None, synthetic=False):
     study = study if study is not None else StudyPilot()
+    demo_routes = {'/', '/app.js', '/portfolio_io.js', '/styles.css', '/api/context', '/api/symbols',
+                   '/api/analyze', '/api/reweight', '/api/replacement-criteria'}
     executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix='price-audit')
     jobs, lock = {}, threading.Lock()
 
@@ -234,6 +247,9 @@ def handler_class(database, study=None):
             if not self.request_allowed():
                 self.send_json(403, {'error': 'Use this application from its local address'})
                 return
+            if synthetic and urlsplit(self.path).path not in demo_routes:
+                self.send_json(404, {'error': 'This route is unavailable in the synthetic demo'})
+                return
             if self.path in ASSETS:
                 name, content_type = ASSETS[self.path]
                 self.send_bytes(200, (ROOT / 'app' / name).read_bytes(), content_type)
@@ -245,7 +261,13 @@ def handler_class(database, study=None):
             if route.path == '/api/symbols':
                 try:
                     query = parse_qs(route.query).get('q', [''])[0]
-                    self.send_json(200, market_catalog.search(query))
+                    if synthetic:
+                        matches = [{'symbol': symbol, 'security_name': 'Fictional demo instrument',
+                                    'directory_type': 'synthetic'} for symbol in SYMBOLS
+                                   if query.strip().upper() in symbol]
+                        self.send_json(200, {'matches': matches})
+                    else:
+                        self.send_json(200, market_catalog.search(query))
                 except (FileNotFoundError, ValueError):
                     self.send_json(503, {'error': 'Build the US directory with python -m scripts.market_catalog first'})
                 return
@@ -260,7 +282,11 @@ def handler_class(database, study=None):
                 return
             try:
                 with duckdb.connect(str(database), read_only=True) as connection:
-                    value = context(connection)
+                    value = context(connection, synthetic)
+                value['risk_questionnaire'] = risk_preferences.questionnaire()
+                if synthetic:
+                    self.send_json(200, value)
+                    return
                 try:
                     catalog, _ = market_catalog.load()
                     value['symbol_catalog'] = {key: catalog[key] for key in
@@ -272,7 +298,6 @@ def handler_class(database, study=None):
                     value['research_scorecard'] = research_scorecard()
                 except (FileNotFoundError, ValueError, KeyError):
                     value['research_scorecard'] = None
-                value['risk_questionnaire'] = risk_preferences.questionnaire()
                 self.send_json(200, value)
             except (duckdb.Error, ValueError, IndexError):
                 self.send_json(503, {'error': 'Accepted local data is unavailable. Build the warehouse before starting the application.'})
@@ -280,6 +305,9 @@ def handler_class(database, study=None):
         def do_POST(self):
             if not self.request_allowed(require_origin=True):
                 self.send_json(403, {'error': 'Analysis requests must come from this local application'})
+                return
+            if synthetic and self.path not in demo_routes:
+                self.send_json(404, {'error': 'This route is unavailable in the synthetic demo'})
                 return
             if self.path not in {'/api/analyze', '/api/reweight', '/api/replacement-criteria', '/api/replacement-screen', '/api/instruments/load', '/api/study/start', '/api/study/finish'}:
                 self.send_json(404, {'error': 'Not found'})
@@ -329,7 +357,13 @@ def handler_class(database, study=None):
                 else:
                     config, _ = validate_request(payload)
                 symbols = sorted({p['instrument_id'] for portfolio in config['portfolios'] for p in portfolio['positions']})
-                connection, sources = application_market_data.application_connection(database, symbols)
+                if synthetic:
+                    if set(symbols) - set(SYMBOLS):
+                        raise ValueError('Use the fictional instruments available in the synthetic demo')
+                    connection = duckdb.connect(str(database), read_only=True)
+                    sources = [{'symbol': symbol, 'policy': 'synthetic_demo'} for symbol in symbols]
+                else:
+                    connection, sources = application_market_data.application_connection(database, symbols)
                 with connection:
                     if replacement:
                         universe = accepted_screen_universe(database) if screen else None
@@ -338,8 +372,12 @@ def handler_class(database, study=None):
                     elif reweight:
                         value = serializable(assess_reweight(connection, config, payload['constraints'], reference))
                     else:
-                        value = assess(connection, payload)
+                        registry = ({'schema_version': 1, 'convention': 'fixed_weights_daily_rebalanced',
+                                     'scenario_registry_id': 'synthetic-demo', 'scenarios': []}
+                                    if synthetic else None)
+                        value = assess(connection, payload, registry)
                 value['source_validation'] = sources
+                value['data_mode'] = 'synthetic' if synthetic else 'market'
                 self.send_json(200, value)
             except (ValueError, KeyError, TypeError, AttributeError, FileNotFoundError) as error:
                 self.send_json(422, {'error': str(error) or 'Invalid portfolio inputs'})
@@ -352,7 +390,9 @@ def handler_class(database, study=None):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--database', type=Path, default=ROOT / 'data/warehouse/portfolio-risk.duckdb')
+    data_mode = parser.add_mutually_exclusive_group()
+    data_mode.add_argument('--database', type=Path)
+    data_mode.add_argument('--synthetic-demo', action='store_true', help='Use temporary generated prices for fictional tickers')
     parser.add_argument('--port', type=int, default=8765)
     parser.add_argument('--record-pilot', action='store_true', help='Save consented study sessions in the private local pilot database')
     parser.add_argument('--study-definition', type=Path, default=DEFINITION,
@@ -360,12 +400,26 @@ def main():
     args = parser.parse_args()
     if args.study_definition != DEFINITION and not args.record_pilot:
         parser.error('--study-definition requires recording mode')
-    if not args.database.is_file():
+    if args.synthetic_demo:
+        if args.record_pilot:
+            parser.error('The synthetic demo does not record study sessions')
+        with TemporaryDirectory(prefix='riskitnot-demo-') as folder:
+            database = Path(folder) / 'synthetic.duckdb'
+            build_demo(database)
+            serve(database, args.port, synthetic=True)
+        return
+    database = args.database or ROOT / 'data/warehouse/portfolio-risk.duckdb'
+    if not database.is_file():
         parser.error('Build the local market warehouse first')
     study = StudyPilot(PILOT_DATABASE if args.record_pilot else None, args.study_definition)
-    server = ThreadingHTTPServer(('127.0.0.1', args.port), handler_class(args.database, study))
+    serve(database, args.port, study)
+
+
+def serve(database, port, study=None, synthetic=False):
+    server = ThreadingHTTPServer(('127.0.0.1', port), handler_class(database, study, synthetic))
     print(f'Portfolio Risk is available at http://127.0.0.1:{server.server_port}', flush=True)
-    print('Analysis uses the saved warehouse. Inputs remain in memory; stop with Ctrl+C.', flush=True)
+    source = 'synthetic demo prices' if synthetic else 'the saved market warehouse'
+    print(f'Analysis uses {source}. Stop with Ctrl+C.', flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:

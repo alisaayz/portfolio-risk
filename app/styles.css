@@ -21,3 +21,9 @@ main{max-width:1450px;margin:auto;padding:42px 5% 24px}.intro{max-width:800px;ma
 .replacement-guide { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
 #replacement-form { margin-top: 12px; }
 #replacement-summary { background: #eef5f5; color: #31515f; }
+
+.button-row{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+#import-controls label{margin-top:12px}
+#import-controls textarea{display:block;width:100%;max-width:100%;margin:7px 0 8px;padding:8px;border:1px solid #d9e2e5;border-radius:5px;font:inherit;resize:vertical}
+#import-controls textarea:focus-visible{outline:3px solid #77b9a4;outline-offset:3px}
+.decision-card{border-left:3px solid #85b69b}

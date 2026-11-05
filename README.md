@@ -1,12 +1,14 @@
 # riskitnot
 
-**Status:** Version 1 is released. Version 2 has a verified 30-path scripted rehearsal for checkpoint 1. Participant results are pending. [Technical baseline](docs/V1_SCRIPTED_REHEARSAL.md) [Version 2 action plan](docs/V2_ACTION_PLAN.md) · [Version 1 release](https://github.com/alisaayz/portfolio-risk/tree/v1.0.0)
+**Status:** Version 1 is released. The Version 2 technical preview completes guided entry and comparison. Participant results are pending. [Guided workflow](docs/V2_GUIDED_WORKFLOW.md) · [Technical baseline](docs/V1_SCRIPTED_REHEARSAL.md) [Version 2 action plan](docs/V2_ACTION_PLAN.md) · [Version 1 release](https://github.com/alisaayz/portfolio-risk/tree/v1.0.0)
 
 ## 1. Executive summary
 
-riskitnot helps a self-directed investor understand what drives portfolio risk and compare hypothetical changes. The local dashboard measures volatility, drawdown, and holding-level risk contributions from audited historical data. It can suggest reweighting within user constraints, describe what a substitute would need to contribute, and screen an audited list on the same dates. The user can load a scenario into the comparison without changing the current portfolio.
+riskitnot helps a self-directed investor understand what drives portfolio risk and compare hypothetical changes. The local dashboard measures volatility, drawdown, and holding-level risk contributions from audited historical data. It can suggest reweighting within user constraints, describe what a substitute would need to contribute, and screen an audited list on the same dates. The Version 2 workflow starts with one portfolio entered manually or imported from CSV. The user can save a local weight draft, compare a hypothetical allocation, or keep the current one.
 
 The research track asks whether machine learning improves next-20-session volatility estimates. In a retrospective 2026 holdout, the trained model had the lowest average error. The portfolio uncertainty intervals crossed zero, so the project kept forecast output in research under its predeclared decision rule. The dashboard uses historical estimates. [2026 holdout report](docs/FINAL_EVALUATION_REPORT.md)
+
+**Version 1 dashboard**
 
 ![Four dashboard screens showing risk assessment, a constrained reweighting, an audited candidate list, and a side-by-side replacement scenario](docs/assets/dashboard-demo.gif)
 
@@ -18,11 +20,12 @@ The research track asks whether machine learning improves next-20-session volati
 | SQL and historical risk | Built DuckDB views and Parquet exports with explicit dataset versions and exchange-session alignment. Independently reconciled 27,488 returns and 27,184 historical volatility windows. The dashboard compares fixed-weight portfolios with volatility, drawdown, risk contributions, correlations, and three historical stress windows. [Warehouse](docs/SQL_LAYER.md) · [Risk methodology](docs/BASELINE_PORTFOLIO_REPORT.md) |
 | Forecast development and evaluation | Built twelve causal price features, chronological training folds, benchmark comparisons, and a pooled gradient boosting model. Refit the selected model on **19,776 pre-2026 labels** and evaluated ten non-overlapping market windows under a frozen protocol. [Feature pipeline](docs/MODELING_DATASET.md) · [Development results](docs/MODEL_DEVELOPMENT_REPORT.md) · [Frozen protocol](docs/FINAL_EVALUATION_PROTOCOL.md) |
 | Local application and decisions | Built a five-question risk preference guide, constrained reweighting, portfolio-specific replacement criteria, and an audited candidate screen. The wider U.S. directory supports manual ticker discovery and separately audited on-demand histories. [Application](docs/APPLICATION.md) · [U.S. coverage](docs/US_MARKET_EXPANSION.md) |
+| Version 2 guided workflow | Added a local CSV preview for weights and USD market values, a browser-local weight draft, a keep-current decision, and a visible summary of the risk window, manual target, move cap, and locks. Built a standalone synthetic demo. Verified 30 matching real-data API decisions and exercised the guided flow in the browser. [Implementation and verification](docs/V2_GUIDED_WORKFLOW.md) |
 | Product evaluation | Defined a product decision about the default report chart, instrumented an opt-in local comprehension pilot, and built sample-size and confirmatory analysis tools. The facilitated pilot materials are ready. Participant outcomes are pending. [Experiment brief](docs/REPORT_EXPERIMENT.md) · [Facilitator guide](docs/USABILITY_PILOT.md) |
 
-The standard demo starts at **11.29%** annualized historical volatility. With a 10% move budget, constrained reweighting produces **9.58%**. With a 10% volatility target and a 10% swap out of AAPL, six of thirteen screened candidates qualify on the 252-session window. The IEF demonstration comparison yields **9.59%**. The screen matched 39 independent portfolio recalculations. [Reweighting evaluation](docs/PORTFOLIO_REWEIGHTING.md) · [Candidate screen](docs/PORTFOLIO_CANDIDATE_SCREEN.md)
+The Version 1 market-data demo starts at **11.29%** annualized historical volatility. With a 10% move budget, constrained reweighting produces **9.58%**. With a 10% volatility target and a 10% swap out of AAPL, six of thirteen screened candidates qualify on the 252-session window. The IEF demonstration comparison yields **9.59%**. The screen matched 39 independent portfolio recalculations. [Reweighting evaluation](docs/PORTFOLIO_REWEIGHTING.md) · [Candidate screen](docs/PORTFOLIO_CANDIDATE_SCREEN.md)
 
-A fresh checkout with independently installed pinned dependencies passed all **159 tests**. Using the preserved source evidence, it rebuilt the same warehouse dataset and reproduced the dashboard's demo assessment, reweighting, candidate screen, and practice study. [Reproduction guide](docs/REPRODUCE.md)
+The Version 1 release passed **159 tests** in a fresh checkout with independently installed pinned dependencies. The Version 2 checkpoint passes **161 tests**. Using the preserved source evidence, it rebuilt the same warehouse dataset and reproduced the dashboard's demo assessment, reweighting, candidate screen, and practice study. [Reproduction guide](docs/REPRODUCE.md)
 
 ## 3. Composition and methodology
 
@@ -32,7 +35,12 @@ flowchart LR
     C[U.S. symbol directory] --> D[Separate application source checks]
     B --> E[Historical covariance and stress replay]
     D --> E
+    L[Manual entry or validated CSV preview] --> M[Current weights]
+    M --> N[Optional browser draft]
+    M --> E
+    S[Standalone synthetic demo] --> E
     E --> F[Risk report and preference guide]
+    F --> P[Keep current or compare an adjustment]
     E --> G[Reweight and screen replacement scenarios]
     B --> H[Causal features and chronological folds]
     H --> I[Benchmarks and gradient boosting]
@@ -41,6 +49,8 @@ flowchart LR
 ```
 
 ### Historical analysis and adjustments
+
+CSV parsing runs in the browser. Weights must sum to 100%, while positive market values are converted into weights. Applying an import replaces current weights and preserves a prepared alternative. A saved draft stores only current tickers and weights in the browser. [CSV and draft specification](docs/V2_GUIDED_WORKFLOW.md)
 
 The app aligns returns to expected exchange sessions and estimates annualized sample covariance using 63, 126, or 252 returns. It calculates portfolio volatility from the covariance matrix and attributes risk to each holding. Historical wealth and stress replay assume fixed weights rebalanced daily. The preference questions provide context about willingness to accept losses and access to funds. A separate manual reference sets the optional volatility target. [Risk preference guide](docs/RISK_PREFERENCES.md)
 
@@ -64,18 +74,26 @@ Errors are percentage points of annualized volatility. The portfolio comparisons
 
 ### Run the project
 
-In the original project folder, start the dashboard with the existing local warehouse.
+On the Version 2 branch, run the standalone demo from the repository root with Python 3.13 installed.
+
+```bash
+./scripts/run_demo.sh
+```
+
+Open [the synthetic demo](http://127.0.0.1:8766/). The launcher installs pinned dependencies and generates prices for three fictional tickers. The demo exercises risk assessment and comparison.
+
+To run market analysis from the saved warehouse in the project folder:
 
 ```bash
 .venv/bin/python -m scripts.serve_portfolio_app
 ```
 
-Open [the local dashboard](http://127.0.0.1:8765/). A fresh checkout can install dependencies and run the software tests from tracked files. The exact historical demo requires the saved data captures, which are kept outside Git. The reproduction guide lists the input folders and offline rebuild commands. [Reproduction guide](docs/REPRODUCE.md)
+Open [the local dashboard](http://127.0.0.1:8765/). A fresh checkout can install dependencies and run the software tests from tracked files. Rebuilding the exact market-data demo requires the saved data captures, which are kept outside Git. The reproduction guide lists the input folders and offline rebuild commands. [Reproduction guide](docs/REPRODUCE.md)
 
 ### Limitations and follow-up
 
-The source snapshot ends November 3, 2026. The reference universe contains 16 current survivors, and price histories can be revised. The historical scenarios exclude transaction costs and taxes. Candidate ranking measures volatility on matched dates. Exposure, liquidity, fees, and investment objectives require separate review. Portfolio inputs stay local. [Source policy](docs/DATA_SOURCE_POLICY.md) · [Application guide](docs/APPLICATION.md)
+The source snapshot ends November 3, 2026. The reference universe contains 16 current survivors, and price histories can be revised. The historical scenarios exclude transaction costs and taxes. Candidate ranking measures volatility on matched dates. Exposure, liquidity, fees, and investment objectives require separate review. Optional weight drafts are stored in the current browser profile and local address. [Source policy](docs/DATA_SOURCE_POLICY.md) · [Application guide](docs/APPLICATION.md)
 
-The usability pilot needs real participants. A later forecast study could record predictions before new outcomes arrive. The news work established bounded metadata feasibility and documents what continuous coverage would require. [Facilitator guide](docs/USABILITY_PILOT.md) · [News audit](docs/NEWS_FEASIBILITY.md)
+The technical preview has no participant outcomes. The next development checkpoint covers downside risk, costs, exposure filters, and sensitivity across risk windows. A later forecast study could record predictions before new outcomes arrive. The news work established bounded metadata feasibility and documents what continuous coverage would require. [Facilitator guide](docs/USABILITY_PILOT.md) · [News audit](docs/NEWS_FEASIBILITY.md)
 
 Additional build details and experiment evidence are indexed in the [project plan](docs/PROJECT_PLAN.md) and [implementation checklist](docs/ACTION_PLAN.md).
