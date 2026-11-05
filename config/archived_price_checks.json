@@ -1,0 +1,370 @@
+{
+  "dataset_id": "80b5d80b266b0255f7c8de0310569de02f63a5ee0ff2a54e707ddfa2cd114166",
+  "primary_capture_id": "yahoo_prices:20261104T184106998030Z",
+  "external_manifest_sha256": "ec471622e81b5633c86d005e78e03afc4bff81cdb1f33144b3c977d2eea347ed",
+  "instruments": {
+    "AAPL": {
+      "quotes": {
+        "source": "Stock Analysis",
+        "source_url": "https://stockanalysis.com/stocks/aapl/history/",
+        "capture_id": "20261104T190642106948Z",
+        "compared": 5,
+        "required": 5,
+        "missing": [],
+        "mismatches": [],
+        "sessions": [
+          "2026-10-28",
+          "2026-10-29",
+          "2026-10-30",
+          "2026-11-02",
+          "2026-11-03"
+        ],
+        "retrieved_at": "2026-11-04T19:06:42.297597+00:00",
+        "upstream_independence": "unverified"
+      },
+      "issuer": [
+        {
+          "reference_id": "AAPL_SPLIT_2020",
+          "provider_date": "2020-08-31",
+          "scope": "Split ratio and first split-adjusted trading date",
+          "source_url": "https://www.apple.com/newsroom/2020/07/apple-reports-third-quarter-results/"
+        },
+        {
+          "reference_id": "AAPL_DIVIDEND_BASIS_2020",
+          "provider_date": "2020-08-07",
+          "scope": "Amount basis only: issuer 0.82 divided by four; provider ex-date is not independently verified by this announcement",
+          "source_url": "https://www.apple.com/newsroom/2020/07/apple-reports-third-quarter-results/"
+        }
+      ]
+    },
+    "BND": {
+      "quotes": {
+        "source": "Stock Analysis",
+        "source_url": "https://stockanalysis.com/etf/bnd/history/",
+        "capture_id": "20261104T190642106948Z",
+        "compared": 5,
+        "required": 5,
+        "missing": [],
+        "mismatches": [],
+        "sessions": [
+          "2026-10-28",
+          "2026-10-29",
+          "2026-10-30",
+          "2026-11-02",
+          "2026-11-03"
+        ],
+        "retrieved_at": "2026-11-04T19:06:42.906491+00:00",
+        "upstream_independence": "unverified"
+      },
+      "issuer": []
+    },
+    "EEM": {
+      "quotes": {
+        "source": "Stock Analysis",
+        "source_url": "https://stockanalysis.com/etf/eem/history/",
+        "capture_id": "20261104T190642106948Z",
+        "compared": 5,
+        "required": 5,
+        "missing": [],
+        "mismatches": [],
+        "sessions": [
+          "2026-10-28",
+          "2026-10-29",
+          "2026-10-30",
+          "2026-11-02",
+          "2026-11-03"
+        ],
+        "retrieved_at": "2026-11-04T19:06:42.857091+00:00",
+        "upstream_independence": "unverified"
+      },
+      "issuer": []
+    },
+    "EFA": {
+      "quotes": {
+        "source": "Stock Analysis",
+        "source_url": "https://stockanalysis.com/etf/efa/history/",
+        "capture_id": "20261104T190642106948Z",
+        "compared": 5,
+        "required": 5,
+        "missing": [],
+        "mismatches": [],
+        "sessions": [
+          "2026-10-28",
+          "2026-10-29",
+          "2026-10-30",
+          "2026-11-02",
+          "2026-11-03"
+        ],
+        "retrieved_at": "2026-11-04T19:06:42.802896+00:00",
+        "upstream_independence": "unverified"
+      },
+      "issuer": []
+    },
+    "GLD": {
+      "quotes": {
+        "source": "Stock Analysis",
+        "source_url": "https://stockanalysis.com/etf/gld/history/",
+        "capture_id": "20261104T190642106948Z",
+        "compared": 5,
+        "required": 5,
+        "missing": [],
+        "mismatches": [],
+        "sessions": [
+          "2026-10-28",
+          "2026-10-29",
+          "2026-10-30",
+          "2026-11-02",
+          "2026-11-03"
+        ],
+        "retrieved_at": "2026-11-04T19:06:43.210283+00:00",
+        "upstream_independence": "unverified"
+      },
+      "issuer": []
+    },
+    "HYG": {
+      "quotes": {
+        "source": "Stock Analysis",
+        "source_url": "https://stockanalysis.com/etf/hyg/history/",
+        "capture_id": "20261104T190642106948Z",
+        "compared": 5,
+        "required": 5,
+        "missing": [],
+        "mismatches": [],
+        "sessions": [
+          "2026-10-28",
+          "2026-10-29",
+          "2026-10-30",
+          "2026-11-02",
+          "2026-11-03"
+        ],
+        "retrieved_at": "2026-11-04T19:06:43.150600+00:00",
+        "upstream_independence": "unverified"
+      },
+      "issuer": []
+    },
+    "IEF": {
+      "quotes": {
+        "source": "Stock Analysis",
+        "source_url": "https://stockanalysis.com/etf/ief/history/",
+        "capture_id": "20261104T190642106948Z",
+        "compared": 5,
+        "required": 5,
+        "missing": [],
+        "mismatches": [],
+        "sessions": [
+          "2026-10-28",
+          "2026-10-29",
+          "2026-10-30",
+          "2026-11-02",
+          "2026-11-03"
+        ],
+        "retrieved_at": "2026-11-04T19:06:42.987354+00:00",
+        "upstream_independence": "unverified"
+      },
+      "issuer": []
+    },
+    "IWM": {
+      "quotes": {
+        "source": "Stock Analysis",
+        "source_url": "https://stockanalysis.com/etf/iwm/history/",
+        "capture_id": "20261104T190642106948Z",
+        "compared": 5,
+        "required": 5,
+        "missing": [],
+        "mismatches": [],
+        "sessions": [
+          "2026-10-28",
+          "2026-10-29",
+          "2026-10-30",
+          "2026-11-02",
+          "2026-11-03"
+        ],
+        "retrieved_at": "2026-11-04T19:06:42.735294+00:00",
+        "upstream_independence": "unverified"
+      },
+      "issuer": []
+    },
+    "JNJ": {
+      "quotes": {
+        "source": "Stock Analysis",
+        "source_url": "https://stockanalysis.com/stocks/jnj/history/",
+        "capture_id": "20261104T190642106948Z",
+        "compared": 5,
+        "required": 5,
+        "missing": [],
+        "mismatches": [],
+        "sessions": [
+          "2026-10-28",
+          "2026-10-29",
+          "2026-10-30",
+          "2026-11-02",
+          "2026-11-03"
+        ],
+        "retrieved_at": "2026-11-04T19:06:42.473859+00:00",
+        "upstream_independence": "unverified"
+      },
+      "issuer": [
+        {
+          "reference_id": "JNJ_DIVIDEND_2025",
+          "provider_date": "2025-05-27",
+          "scope": "Cash dividend amount and ex-dividend date",
+          "source_url": "https://www.investor.jnj.com/investor-news/news-details/2025/Johnson--Johnson-Announces-63rd-Consecutive-Year-of-Dividend-Increase-Raises-Quarterly-Dividend-by-4-8/default.aspx"
+        }
+      ]
+    },
+    "JPM": {
+      "quotes": {
+        "source": "Stock Analysis",
+        "source_url": "https://stockanalysis.com/stocks/jpm/history/",
+        "capture_id": "20261104T190642106948Z",
+        "compared": 5,
+        "required": 5,
+        "missing": [],
+        "mismatches": [],
+        "sessions": [
+          "2026-10-28",
+          "2026-10-29",
+          "2026-10-30",
+          "2026-11-02",
+          "2026-11-03"
+        ],
+        "retrieved_at": "2026-11-04T19:06:42.419941+00:00",
+        "upstream_independence": "unverified"
+      },
+      "issuer": []
+    },
+    "LQD": {
+      "quotes": {
+        "source": "Stock Analysis",
+        "source_url": "https://stockanalysis.com/etf/lqd/history/",
+        "capture_id": "20261104T190642106948Z",
+        "compared": 5,
+        "required": 5,
+        "missing": [],
+        "mismatches": [],
+        "sessions": [
+          "2026-10-28",
+          "2026-10-29",
+          "2026-10-30",
+          "2026-11-02",
+          "2026-11-03"
+        ],
+        "retrieved_at": "2026-11-04T19:06:43.096172+00:00",
+        "upstream_independence": "unverified"
+      },
+      "issuer": []
+    },
+    "MSFT": {
+      "quotes": {
+        "source": "Stock Analysis",
+        "source_url": "https://stockanalysis.com/stocks/msft/history/",
+        "capture_id": "20261104T190642106948Z",
+        "compared": 5,
+        "required": 5,
+        "missing": [],
+        "mismatches": [],
+        "sessions": [
+          "2026-10-28",
+          "2026-10-29",
+          "2026-10-30",
+          "2026-11-02",
+          "2026-11-03"
+        ],
+        "retrieved_at": "2026-11-04T19:06:42.361502+00:00",
+        "upstream_independence": "unverified"
+      },
+      "issuer": [
+        {
+          "reference_id": "MSFT_DIVIDEND_2025",
+          "provider_date": "2025-11-20",
+          "scope": "Cash dividend amount and ex-dividend date",
+          "source_url": "https://news.microsoft.com/source/2025/09/15/microsoft-announces-quarterly-dividend-increase-6/"
+        }
+      ]
+    },
+    "QQQ": {
+      "quotes": {
+        "source": "Stock Analysis",
+        "source_url": "https://stockanalysis.com/etf/qqq/history/",
+        "capture_id": "20261104T190642106948Z",
+        "compared": 5,
+        "required": 5,
+        "missing": [],
+        "mismatches": [],
+        "sessions": [
+          "2026-10-28",
+          "2026-10-29",
+          "2026-10-30",
+          "2026-11-02",
+          "2026-11-03"
+        ],
+        "retrieved_at": "2026-11-04T19:06:42.665510+00:00",
+        "upstream_independence": "unverified"
+      },
+      "issuer": []
+    },
+    "SPY": {
+      "quotes": {
+        "source": "Stock Analysis",
+        "source_url": "https://stockanalysis.com/etf/spy/history/",
+        "capture_id": "20261104T190642106948Z",
+        "compared": 5,
+        "required": 5,
+        "missing": [],
+        "mismatches": [],
+        "sessions": [
+          "2026-10-28",
+          "2026-10-29",
+          "2026-10-30",
+          "2026-11-02",
+          "2026-11-03"
+        ],
+        "retrieved_at": "2026-11-04T19:06:42.625413+00:00",
+        "upstream_independence": "unverified"
+      },
+      "issuer": []
+    },
+    "TLT": {
+      "quotes": {
+        "source": "Stock Analysis",
+        "source_url": "https://stockanalysis.com/etf/tlt/history/",
+        "capture_id": "20261104T190642106948Z",
+        "compared": 5,
+        "required": 5,
+        "missing": [],
+        "mismatches": [],
+        "sessions": [
+          "2026-10-28",
+          "2026-10-29",
+          "2026-10-30",
+          "2026-11-02",
+          "2026-11-03"
+        ],
+        "retrieved_at": "2026-11-04T19:06:43.038568+00:00",
+        "upstream_independence": "unverified"
+      },
+      "issuer": []
+    },
+    "XOM": {
+      "quotes": {
+        "source": "Stock Analysis",
+        "source_url": "https://stockanalysis.com/stocks/xom/history/",
+        "capture_id": "20261104T190642106948Z",
+        "compared": 5,
+        "required": 5,
+        "missing": [],
+        "mismatches": [],
+        "sessions": [
+          "2026-10-28",
+          "2026-10-29",
+          "2026-10-30",
+          "2026-11-02",
+          "2026-11-03"
+        ],
+        "retrieved_at": "2026-11-04T19:06:42.567542+00:00",
+        "upstream_independence": "unverified"
+      },
+      "issuer": []
+    }
+  }
+}

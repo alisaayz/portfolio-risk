@@ -47,6 +47,8 @@ The cases, rubric, and 30-path scripted baseline are complete. The scripted find
 
 ## 4. Strengthen provenance and publish the results
 
+**Technical preview published November 5, 2026.** The release includes the provenance display, refresh dry run, clean-clone verification, a data inventory, and a prospective forecast protocol and recorder. Participant and prospective outcome evidence remain pending. [Release readout](V2_RELEASE_READOUT.md)
+
 **Weeks 7–8.** Complete the comparison, audit the data contract, and publish a release readout.
 
 - **Data integrity and freshness.** Distinguish searchable, price-available, structurally checked, spot-checked, and screen-eligible records. Replace the binary independent-check flag with counts, dates, source IDs, and gaps. Add a refresh dry run, snapshot age indicator, and provider-failure tests. Preserve quarantined observations. Require a second source with documented rights and independence where claims depend on it.

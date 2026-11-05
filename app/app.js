@@ -95,11 +95,19 @@ function renderPositions() {
 }
 async function searchSymbols() {
   const sequence = ++searchSequence, query = $('add-symbol').value.trim();
-  if (!query) {$('symbol-matches').replaceChildren(); searchMatches = []; return;}
+  if (!query) {
+    $('symbol-matches').replaceChildren();
+    $('search-evidence').hidden = true;
+    searchMatches = [];
+    return;
+  }
   try {
     const value = await api(`/api/symbols?q=${encodeURIComponent(query)}`);
     if (sequence !== searchSequence) return;
     searchMatches = value.matches;
+    $('search-evidence').replaceChildren(...searchMatches.slice(0, 5).filter(row => row.evidence).map(row =>
+      element('li', `${row.symbol} · ${describePriceEvidence(row.evidence)}`)));
+    $('search-evidence').hidden = !$('search-evidence').children.length;
     $('symbol-matches').replaceChildren(...searchMatches.map(row => {
       const option = element('option'); option.value = row.symbol;
       option.label = `${row.security_name} · ${row.directory_type === 'ETF' ? 'ETF' : 'stock candidate'}`;
@@ -119,6 +127,12 @@ async function addSymbol() {
       const matches = await api(`/api/symbols?q=${encodeURIComponent(symbol)}`);
       const record = matches.matches.find(row => row.symbol === symbol);
       if (!record) throw new Error('Choose an exact ticker from the U.S. search results.');
+      if (record.evidence?.price_status === 'directory_only' && !state.context.provider_downloads_enabled) {
+        throw new Error(`${symbol} is searchable. Its price history is unavailable in this preview.`);
+      }
+      if (record.evidence?.price_status === 'cache_requires_review') {
+        throw new Error(`${symbol}'s saved price history requires review before use.`);
+      }
       let job = await api('/api/instruments/load', {symbol});
       $('load-status').textContent = `Loading and auditing ${symbol} through the saved analysis cutoff…`;
       for (let attempt = 0; attempt < 90 && !['complete', 'failed'].includes(job.status); attempt++) {
@@ -128,10 +142,13 @@ async function addSymbol() {
       if (job.status === 'failed') throw new Error(`${symbol} could not be admitted: ${job.error}`);
       if (job.status !== 'complete') throw new Error(`${symbol} is still loading. Press Add later to check the same job; no duplicate download will be started.`);
       state.context.instruments.push({symbol, label: record.security_name});
-      $('load-status').textContent = `${symbol}: structural checks passed. No independent price cross-check has been performed. ${job.warnings?.length || 0} review warning(s).`;
-    } else {$('load-status').textContent = `${symbol} is available in the loaded data.`;}
+      $('load-status').textContent = `${symbol} · ${describePriceEvidence(job.evidence)}`;
+    } else {
+      const evidence = state.context.price_evidence?.[symbol];
+      $('load-status').textContent = evidence ? `${symbol} · ${describePriceEvidence(evidence)}` : `${symbol} is available in the loaded data.`;
+    }
     state.positions.push({symbol, a: 0, b: 0});
-    $('add-symbol').value = ''; $('symbol-matches').replaceChildren();
+    $('add-symbol').value = ''; $('symbol-matches').replaceChildren(); $('search-evidence').hidden = true;
     renderPositions(); dirty();
   } catch (error) {$('form-error').textContent = error.message; $('form-error').hidden = false; $('load-status').textContent = '';}
   finally {$('add-position').disabled = false;}
@@ -148,6 +165,7 @@ function loadDemo() {
   $('reweight-constraints').replaceChildren();
   $('load-status').textContent = '';
   $('add-symbol').value = '';
+  $('search-evidence').hidden = true;
   const config = state.context.demo_configuration;
   $('name-a').value = config.portfolios[0].name;
   $('name-b').value = 'Alternative portfolio';
@@ -321,12 +339,20 @@ function evidenceLink(url, label) {
   return link;
 }
 
+function describePriceEvidence(row) {
+  if (row.price_status === 'directory_only') return 'Directory listing only · no local prices';
+  if (row.price_status === 'cache_requires_review') return 'Saved prices require review';
+  const status = row.price_status === 'structurally_checked' ? 'Structure checked' : 'Prices available';
+  const checks = row.spot_checks ? `${row.spot_checks.compared}/${row.spot_checks.required} closes spot-checked` : 'No documented price spot checks';
+  return `Prices through ${shortDate(row.coverage_end)} · ${status} · ${checks} · ${row.screen_member ? 'In screening universe' : 'Outside screening universe'}`;
+}
+
 function methods(value) {
   const a = value.analysis, notes = $('method-notes'); notes.replaceChildren();
   for (const text of [
     `Volatility and correlations use sample covariance (N−1), annualized by 252, over ${a.risk_window_sessions} common returns: ${a.risk_window_start} through ${a.risk_window_end}.`,
     `Full-history drawdown and the replay chart cover ${a.history_start} through ${a.history_end}. ${a.scenarios.length === 1 ? 'All displayed historical calculations use this portfolio snapshot.' : 'Both portfolios share these dates.'} Reported holdings are ${value.is_demo ? 'explicit demonstrations' : 'your entered scenarios'}, not evidence of actual historical investment performance.`,
-    'Inputs are daily USD stocks and ETFs. Cash, leverage, taxes, transaction costs, currency conversion, and underlying ETF holdings overlap are not modeled.',
+    'The main risk metrics use daily USD prices. Trading-cost assumptions appear in a separate replay. The model excludes cash, leverage, taxes, currency conversion, and underlying issuer overlap.',
     `${state.context.source_issues.length} retained index-source exceptions remain outside portfolio calculations. Neither FRED context nor the quarantined Yahoo index is used to calculate these portfolio results.`,
     'Saved adjusted price histories may be revised. This page uses a stored research snapshot and does not download live prices or use trained-model forecasts.'
   ]) notes.append(element('p', text));
@@ -335,8 +361,28 @@ function methods(value) {
   }
   const identity = element('p', 'Dataset: '); identity.append(element('code', a.recipe.dataset_id)); notes.append(identity);
   const report = element('p', 'Analysis: '); report.append(element('code', a.report_id)); notes.append(report);
-  const provisional = (value.source_validation || []).filter(row => row.policy === 'AP-001');
-  if (provisional.length) notes.prepend(element('p', `On-demand sources: ${provisional.map(row => row.symbol).join(', ')} passed structural/provider-metadata checks under AP-001 but have not been independently price-cross-checked. Their saved evidence is separate from the fixed sixteen-instrument model dataset.`, 'notice error'));
+  if (value.data_mode === 'market') {
+    for (const row of value.source_validation) {
+      notes.append(element('p', `${row.symbol} · ${describePriceEvidence(row)} · ${row.sessions} saved sessions.`));
+      if (row.primary_capture_id) {
+        const capture = element('p', 'Price capture ');
+        capture.append(element('code', row.primary_capture_id));
+        notes.append(capture);
+      }
+      const checks = row.spot_checks;
+      if (checks) {
+        const evidence = element('p', `${checks.sessions.join(', ')} · ${checks.missing.length} missing and ${checks.mismatches.length} mismatched selected closes · upstream vendor independence unverified · `);
+        evidence.append(evidenceLink(checks.source_url, checks.source), document.createTextNode(` · audit ${checks.capture_id}`));
+        notes.append(evidence);
+      }
+      for (const check of row.issuer_checks || []) {
+        const evidence = element('p', `Issuer check · ${check.provider_date} · ${check.scope} · `);
+        evidence.append(evidenceLink(check.source_url, check.reference_id));
+        notes.append(evidence);
+      }
+      for (const warning of row.warnings || []) notes.append(element('p', warning));
+    }
+  }
 }
 async function runAnalysis(event) {
   if (event) event.preventDefault();
@@ -348,7 +394,7 @@ async function runAnalysis(event) {
     state.result = value;
     const provisional = (value.source_validation || []).filter(row => row.policy === 'AP-001');
     $('source-status').hidden = !provisional.length && value.data_mode !== 'synthetic';
-    $('source-status').textContent = value.data_mode === 'synthetic' ? 'Synthetic demo · fictional tickers and generated prices.' : provisional.length ? `${provisional.map(row => row.symbol).join(', ')}: provider identity and structural checks passed; independent price cross-checks have not been performed. Source warnings are retained in the exported report.` : '';
+    $('source-status').textContent = value.data_mode === 'synthetic' ? 'Synthetic demo · fictional tickers and generated prices.' : provisional.length ? `${provisional.map(row => row.symbol).join(', ')}: provider identity and structure checked. The report lists the saved capture, available checks, and warnings.` : '';
     $('results').classList.remove('stale'); $('result-content').hidden = false;
     const single = value.analysis.scenarios.length === 1;
     $('result-title').textContent = value.is_demo ? (single ? 'Demonstration risk report' : 'Demonstration comparison') : (single ? 'Your risk report' : 'Portfolio comparison');
@@ -668,7 +714,15 @@ async function initialize() {
   try {
     state.context = await api('/api/context');
     const catalog = state.context.symbol_catalog;
-    $('snapshot').textContent = `${catalog ? catalog.eligible_candidates.toLocaleString() + ' searchable U.S. stock/ETF candidates' : state.context.instruments.length + ' accepted instruments'} · saved analysis cutoff ${shortDate(state.context.latest_common_close)} · USD`;
+    if (state.context.data_mode === 'market') {
+      const discovery = catalog ? `${catalog.eligible_candidates.toLocaleString()} directory candidates` : 'Directory unavailable';
+      const days = state.context.snapshot_age_calendar_days;
+      $('snapshot').textContent = `${discovery} · ${state.context.instruments.length} with accepted prices · ${state.context.screen_universe_count} in screening universe · through ${shortDate(state.context.latest_common_close)} · ${days} calendar day${days === 1 ? '' : 's'} old`;
+      if (!state.context.provider_downloads_enabled) {
+        $('catalog-help').textContent = 'Search the saved U.S. directory. Portfolio analysis uses audited local histories.';
+        $('privacy-source').textContent = 'This preview uses saved prices. Portfolio amounts and preferences stay on this device.';
+      }
+    }
     if (state.context.data_mode === 'synthetic') {
       $('snapshot').textContent = 'Synthetic demo · three fictional instruments · generated weekday observations';
       for (const id of ['screen-replacement', 'screen-help', 'screen-filters', 'historical-stress', 'study-link']) $(id).hidden = true;

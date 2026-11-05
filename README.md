@@ -1,12 +1,12 @@
 # riskitnot
 
-**Status:** Version 1 is released. The Version 2 technical preview includes guided entry, downside and cost replay, and exposure-aware replacement screening. [Checkpoint 3 evidence](docs/V2_RISK_EVIDENCE.md) Participant results are pending. [Guided workflow](docs/V2_GUIDED_WORKFLOW.md) · [Technical baseline](docs/V1_SCRIPTED_REHEARSAL.md) [Version 2 action plan](docs/V2_ACTION_PLAN.md) · [Version 1 release](https://github.com/alisaayz/portfolio-risk/tree/v1.0.0)
+**Status:** Version 2 technical preview published November 5, 2026. [Release readout](docs/V2_RELEASE_READOUT.md) · [Data and release manifest](docs/V2_DATA_AND_RELEASE_MANIFEST.md) · Version 1 is preserved. [Checkpoint 3 evidence](docs/V2_RISK_EVIDENCE.md) Participant results are pending. [Guided workflow](docs/V2_GUIDED_WORKFLOW.md) · [Technical baseline](docs/V1_SCRIPTED_REHEARSAL.md) [Version 2 action plan](docs/V2_ACTION_PLAN.md) · [Version 1 release](https://github.com/alisaayz/portfolio-risk/tree/v1.0.0)
 
 ## 1. Executive summary
 
 riskitnot helps a self-directed investor understand what drives portfolio risk and compare hypothetical changes. The local dashboard measures volatility, drawdown, and holding-level risk contributions from audited historical data. It can suggest reweighting within user constraints, describe what a substitute would need to contribute, and screen an audited list on the same dates. The Version 2 workflow starts with one portfolio entered manually or imported from CSV. The user can save a local weight draft, compare a hypothetical allocation, or keep the current one. The comparison shows historical downside, simulated trading costs, and whether a replacement meets a volatility target across multiple windows and estimators.
 
-The research track asks whether machine learning improves next-20-session volatility estimates. In a retrospective 2026 holdout, the trained model had the lowest average error. The portfolio uncertainty intervals crossed zero, so the project kept forecast output in research under its predeclared decision rule. The dashboard uses historical estimates. [2026 holdout report](docs/FINAL_EVALUATION_REPORT.md)
+The research track asks whether machine learning improves next-20-session volatility estimates. In a retrospective 2026 holdout, the trained model had the lowest average error. The portfolio uncertainty intervals crossed zero, so the project kept forecast output in research under its predeclared decision rule. The dashboard uses historical estimates. The prospective protocol fixes the comparison before new forecasts and outcomes arrive. [2026 holdout report](docs/FINAL_EVALUATION_REPORT.md) · [Prospective protocol](docs/PROSPECTIVE_FORECAST_PROTOCOL.md)
 
 **Version 1 dashboard**
 
@@ -22,17 +22,20 @@ The research track asks whether machine learning improves next-20-session volati
 | Local application and decisions | Built a five-question risk preference guide, constrained reweighting, portfolio-specific replacement criteria, and an audited candidate screen. The wider U.S. directory supports manual ticker discovery and separately audited on-demand histories. [Application](docs/APPLICATION.md) · [U.S. coverage](docs/US_MARKET_EXPANSION.md) |
 | Version 2 guided workflow | Added a local CSV preview for weights and USD market values, a browser-local weight draft, a keep-current decision, and a visible summary of the risk window, manual target, move cap, and locks. Built a standalone synthetic demo. Verified 30 matching real-data API decisions and exercised the guided flow in the browser. [Implementation and verification](docs/V2_GUIDED_WORKFLOW.md) |
 | Version 2 risk and decision evidence | Built a self-financing cost ledger for daily and monthly schedules, downside measures, dated exposure and fee evidence, and a six-setting replacement screen. Evaluated three adjustment policies on four portfolios and 36 shared dates. The simple shift is the default under the predeclared decision rule. [Risk evidence](docs/V2_RISK_EVIDENCE.md) |
+| Version 2 provenance and release | Added price coverage and check details, a snapshot age indicator, and a refresh preview that stages changes outside the active warehouse. Verified the public synthetic demo from a fresh clone and prepared a write-once forward forecast recorder. [Release checks](docs/V2_RELEASE_READOUT.md) |
 | Product evaluation | Defined a product decision about the default report chart, instrumented an opt-in local comprehension pilot, and built sample-size and confirmatory analysis tools. The facilitated pilot materials are ready. Participant outcomes are pending. [Experiment brief](docs/REPORT_EXPERIMENT.md) · [Facilitator guide](docs/USABILITY_PILOT.md) |
 
 The Version 1 market-data demo starts at **11.29%** annualized historical volatility. With a 10% move budget, constrained reweighting produces **9.58%**. With a 10% volatility target and a 10% swap out of AAPL, six of thirteen screened candidates qualify on the 252-session window. The IEF demonstration comparison yields **9.59%**. The screen matched 39 independent portfolio recalculations. [Reweighting evaluation](docs/PORTFOLIO_REWEIGHTING.md) · [Candidate screen](docs/PORTFOLIO_CANDIDATE_SCREEN.md)
 
-The Version 1 release passed **159 tests** in a fresh checkout with independently installed pinned dependencies. The Version 2 checkpoint passes **169 tests**. Using the preserved source evidence, it rebuilt the same warehouse dataset and reproduced the dashboard's demo assessment, reweighting, candidate screen, and practice study. [Reproduction guide](docs/REPRODUCE.md)
+The Version 1 release passed **159 tests** in a fresh checkout with independently installed pinned dependencies. The Version 2 preview passes **173 tests**. Using the preserved source evidence, it rebuilt the same warehouse dataset and reproduced the dashboard's demo assessment, reweighting, candidate screen, and practice study. [Reproduction guide](docs/REPRODUCE.md)
 
 ## 3. Composition and methodology
 
 ```mermaid
 flowchart LR
     A[Market history and external checks] --> B[Audited DuckDB and Parquet]
+    A --> V[Refresh dry run]
+    B --> W[Coverage, freshness, and check status]
     C[U.S. symbol directory] --> D[Separate application source checks]
     B --> E[Historical covariance and stress replay]
     D --> E
@@ -49,6 +52,7 @@ flowchart LR
     B --> H[Causal features and chronological folds]
     H --> I[Benchmarks and gradient boosting]
     I --> J[Frozen 2026 holdout]
+    I --> X[Prospective forecast protocol]
     F --> K[Optional report comprehension study]
 ```
 
@@ -63,6 +67,10 @@ Reweighting minimizes historical variance while respecting locked positions, wei
 Version 2 reports downside deviation and a dated worst session. Its trade ledger compares zero cost, 5 basis points per buy or sell dollar, and a 25 basis point wider-spread scenario. The simple shift remained the default after the optimizer improved mean annualized downside deviation by 0.034 percentage points against a 0.25-point threshold. [Risk evidence and policy replay](docs/V2_RISK_EVIDENCE.md)
 
 For replacement, the selected weight moves from one holding into one new instrument. The guide solves for feasible standalone volatility at several assumed correlations with what remains. The screen checks actual matched returns for unheld instruments in the 16-instrument research list, reports the resulting portfolio estimate, and compares the candidate across three windows with sample and shrinkage covariance. Optional eligibility filters cover instrument role, the largest resulting weight, dollar volume, and available dated annual fund fees. Only a stable result that passes the filters can populate an alternative. [Replacement criteria](docs/PORTFOLIO_REPLACEMENT_CRITERIA.md) · [Screening method](docs/PORTFOLIO_CANDIDATE_SCREEN.md)
+
+### Price provenance
+
+The dashboard reports directory discovery, accepted prices, screening membership, and the age of the saved data separately. The detailed report identifies the primary capture and the five selected quote checks per audited instrument, with source dates and issuer checks. A refresh can be replayed against a disposable warehouse copy. [Release readout and dry run](docs/V2_RELEASE_READOUT.md)
 
 ### Retrospective model holdout
 
@@ -100,6 +108,6 @@ Open [the local dashboard](http://127.0.0.1:8765/). A fresh checkout can install
 
 The source snapshot ends November 3, 2026. The reference universe contains 16 current survivors, and price histories can be revised. The original stress replay excludes transaction costs and taxes. The Version 2 cost ledger uses explicitly assumed per-trade charges. Issuer-level overlap is unknown, and the screen uses limited dated fund evidence and a dollar-volume proxy. Optional weight drafts are stored in the current browser profile and local address. [Source policy](docs/DATA_SOURCE_POLICY.md) · [Application guide](docs/APPLICATION.md)
 
-The technical preview has no participant outcomes. The next checkpoint covers provenance, the prospective forecast protocol, and the release readout. A later forecast study could record predictions before new outcomes arrive. The news work established bounded metadata feasibility and documents what continuous coverage would require. [Facilitator guide](docs/USABILITY_PILOT.md) · [News audit](docs/NEWS_FEASIBILITY.md)
+The technical preview has no participant outcomes. Live prospective forecasts require a new audited price vintage and independent timestamp receipts. The release manifest records the local data and permission boundaries. A later forecast study could record predictions before new outcomes arrive. The news work established bounded metadata feasibility and documents what continuous coverage would require. [Facilitator guide](docs/USABILITY_PILOT.md) · [News audit](docs/NEWS_FEASIBILITY.md)
 
 Additional build details and experiment evidence are indexed in the [project plan](docs/PROJECT_PLAN.md) and [implementation checklist](docs/ACTION_PLAN.md).

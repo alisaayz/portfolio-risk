@@ -29,7 +29,9 @@ In the original project folder, the accepted warehouse and symbol directory are 
 .venv/bin/python -m scripts.verify_warehouse
 ```
 
-The saved build selects dataset `80b5d80b266b0255f7c8de0310569de02f63a5ee0ff2a54e707ddfa2cd114166`. A new acquisition produces a separate capture and may differ when vendors revise their histories. To build new evidence, use the explicit RU-001 registry and exclusive end date with the audit command, then apply the cross-source checks and acceptance policy. [Acquisition and source verification](UNIVERSE_VALIDATION.md) · [Warehouse build](SQL_LAYER.md)
+The saved build selects dataset `80b5d80b266b0255f7c8de0310569de02f63a5ee0ff2a54e707ddfa2cd114166`. A new acquisition produces a separate capture and may differ when vendors revise their histories. Use the explicit RU-001 registry, exclusive end date, and cross-source acceptance policy when preparing a new capture with documented provider access. The Version 2 server defaults to saved data. [Data and release manifest](V2_DATA_AND_RELEASE_MANIFEST.md) [Acquisition and source verification](UNIVERSE_VALIDATION.md) · [Warehouse build](SQL_LAYER.md)
+
+For a refresh dry run, use `scripts.preview_market_refresh` with the same saved inputs and an explicit `--database` path to the active warehouse. The command stages a copy, reconciles returns, and reports changed histories or rejected evidence without promoting the candidate.
 
 The symbol directory is optional for the 16-instrument demo. For offline directory replay, pass an existing Nasdaq Trader text snapshot to the catalog command.
 
@@ -44,6 +46,6 @@ The symbol directory is optional for the 16-instrument demo. For offline directo
 .venv/bin/python -m scripts.serve_portfolio_app
 ```
 
-Open [the local dashboard](http://127.0.0.1:8765/). The demo shows 11.29% historical volatility at the 252-session setting. For reweighting, the default 10% move limit gives 9.58% on the same dates. With a 10% manual target and a 10% replacement out of AAPL, the screen shows six qualifying scenarios. The practice study opens at [the local study page](http://127.0.0.1:8765/study).
+Open [the local dashboard](http://127.0.0.1:8765/). The demo shows 11.29% historical volatility at the 252-session setting. The constrained optimizer gives 9.58% at a 10% move limit on the same dates. Version 2 defaults to the simple shift. With a 10% manual target and a 10% replacement out of AAPL, the screen shows six qualifying scenarios. The practice study opens at [the local study page](http://127.0.0.1:8765/study).
 
 The 2026 model scores were computed from the published freeze commit, the pinned environment, and the preserved warehouse and development artifacts. See the holdout report for the exact replay command and inputs. [2026 holdout reproduction](FINAL_EVALUATION_REPORT.md)

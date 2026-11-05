@@ -1,0 +1,23 @@
+{
+  "protocol": "PF-002",
+  "first_origin": "2026-11-06",
+  "calendar": "XNYS",
+  "stride_sessions": 20,
+  "horizon_sessions": 20,
+  "enrollment_slots": 72,
+  "minimum_completed_origins": 60,
+  "training_rows": 19776,
+  "training_sample_sha256": "f9567119d64bb13a3b3251687671e3ac30cdada9b71551289e4085c4f8f4c7d6",
+  "portfolio_weights": [
+    {"id": "equity_heavy", "positions": {"AAPL": 0.30, "SPY": 0.50, "BND": 0.20}},
+    {"id": "higher_bond", "positions": {"AAPL": 0.10, "SPY": 0.40, "BND": 0.50}},
+    {"id": "equity_bond_gold", "positions": {"QQQ": 0.35, "IWM": 0.25, "IEF": 0.25, "GLD": 0.15}},
+    {"id": "stock_fund_credit", "positions": {"MSFT": 0.25, "JPM": 0.15, "EFA": 0.25, "LQD": 0.25, "HYG": 0.10}}
+  ],
+  "training_cutoff_exclusive": "2026-01-01",
+  "minimum_improvement_pp": 0.5,
+  "primary_block_origins": 3,
+  "sensitivity_block_origins": [2, 6],
+  "bootstrap_draws": 20000,
+  "bootstrap_seed": 42
+}

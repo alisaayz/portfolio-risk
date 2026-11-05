@@ -25,7 +25,7 @@ import pandas as pd
 from scripts.audit_market_data import ROOT, sha256
 from scripts.portfolio_baseline import analyze, drawdown_summary, serializable, validate_configuration
 from scripts import market_catalog, application_market_data
-from scripts import risk_preferences
+from scripts import market_provenance, risk_preferences
 from scripts.portfolio_reweight import assess_reweight
 from scripts.portfolio_replacement import accepted_screen_universe, replacement_criteria
 from scripts.study_pilot import DEFINITION, PILOT_DATABASE, StudyPilot
@@ -197,22 +197,53 @@ def allowed_request(host, origin, port, require_origin=False):
     return (not require_origin and origin is None) or origin == f'http://{host}'
 
 
-def handler_class(database, study=None, synthetic=False):
+def handler_class(database, study=None, synthetic=False, allow_provider_downloads=False):
     study = study if study is not None else StudyPilot()
     demo_routes = {'/', '/app.js', '/portfolio_io.js', '/styles.css', '/api/context', '/api/symbols',
                    '/api/analyze', '/api/reweight', '/api/replacement-criteria'}
     executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix='price-audit')
     jobs, lock = {}, threading.Lock()
 
+    def market_status():
+        try:
+            universe = accepted_screen_universe(database)
+        except (ValueError, duckdb.CatalogException):
+            universe = None
+        with duckdb.connect(str(database), read_only=True) as connection:
+            value = context(connection)
+            records = market_provenance.accepted_evidence(
+                connection, value['instruments'], value['dataset_id'], universe)
+        return value, records
+
+    def end_exclusive(cutoff):
+        return str((pd.Timestamp(cutoff) + pd.Timedelta(days=1)).date())
+
+    def price_evidence(symbol, accepted, end):
+        if symbol in accepted:
+            return accepted[symbol]
+        if not application_market_data.STORE.is_dir():
+            return market_provenance.unavailable(symbol)
+        try:
+            manifest, _ = application_market_data.read(symbol, end)
+        except FileNotFoundError:
+            return market_provenance.unavailable(symbol)
+        except (ValueError, KeyError, TypeError):
+            return market_provenance.unavailable(symbol, 'cache_requires_review')
+        return market_provenance.on_demand(symbol, manifest)
+
     def load_job(job_id, symbol, end):
         with lock:
             jobs[job_id]['status'] = 'running'
         try:
-            manifest = application_market_data.acquire(symbol, end)
+            if allow_provider_downloads:
+                manifest = application_market_data.acquire(symbol, end)
+            else:
+                try:
+                    manifest, _ = application_market_data.read(symbol, end)
+                except FileNotFoundError:
+                    raise ValueError('No audited local capture. Provider downloads are disabled in this preview.') from None
             with lock:
-                jobs[job_id].update(status='complete', source_status=manifest['status'],
-                                    independently_crosschecked=False,
-                                    warnings=manifest['warnings'])
+                jobs[job_id].update(status='complete', evidence=market_provenance.on_demand(symbol, manifest))
         except Exception as error:
             with lock:
                 jobs[job_id].update(status='failed', error=f'{type(error).__name__}: {str(error)[:300]}')
@@ -269,7 +300,12 @@ def handler_class(database, study=None, synthetic=False):
                                    if query.strip().upper() in symbol]
                         self.send_json(200, {'matches': matches})
                     else:
-                        self.send_json(200, market_catalog.search(query))
+                        matches = market_catalog.search(query)
+                        snapshot, records = market_status()
+                        end = end_exclusive(snapshot['latest_common_close'])
+                        for row in matches['matches']:
+                            row['evidence'] = price_evidence(row['symbol'], records, end)
+                        self.send_json(200, matches)
                 except (FileNotFoundError, ValueError):
                     self.send_json(503, {'error': 'Build the US directory with python -m scripts.market_catalog first'})
                 return
@@ -283,12 +319,18 @@ def handler_class(database, study=None, synthetic=False):
                 self.send_json(404, {'error': 'Not found'})
                 return
             try:
-                with duckdb.connect(str(database), read_only=True) as connection:
-                    value = context(connection, synthetic)
-                value['risk_questionnaire'] = risk_preferences.questionnaire()
                 if synthetic:
+                    with duckdb.connect(str(database), read_only=True) as connection:
+                        value = context(connection, synthetic)
+                    value['risk_questionnaire'] = risk_preferences.questionnaire()
                     self.send_json(200, value)
                     return
+                value, records = market_status()
+                value['risk_questionnaire'] = risk_preferences.questionnaire()
+                value['price_evidence'] = records
+                value['screen_universe_count'] = sum(row['screen_member'] for row in records.values())
+                value['snapshot_age_calendar_days'] = market_provenance.snapshot_age(value['latest_common_close'])
+                value['provider_downloads_enabled'] = allow_provider_downloads
                 try:
                     catalog, _ = market_catalog.load()
                     value['symbol_catalog'] = {key: catalog[key] for key in
@@ -334,7 +376,7 @@ def handler_class(database, study=None, synthetic=False):
                     symbol = instrument['symbol']
                     with duckdb.connect(str(database), read_only=True) as connection:
                         latest = context(connection)['latest_common_close']
-                    end = str((pd.Timestamp(latest) + pd.Timedelta(days=1)).date())
+                    end = end_exclusive(latest)
                     with lock:
                         previous = next((dict(job) for job in jobs.values() if job['symbol'] == symbol and job['end_exclusive'] == end), None)
                         if previous:
@@ -383,6 +425,10 @@ def handler_class(database, study=None, synthetic=False):
                                      'scenario_registry_id': 'synthetic-demo', 'scenarios': []}
                                     if synthetic else None)
                         value = assess(connection, payload, registry, include_evidence=True, synthetic=synthetic)
+                if not synthetic:
+                    snapshot, records = market_status()
+                    end = end_exclusive(snapshot['latest_common_close'])
+                    sources = [price_evidence(symbol, records, end) for symbol in symbols]
                 value['source_validation'] = sources
                 value['data_mode'] = 'synthetic' if synthetic else 'market'
                 self.send_json(200, value)
@@ -401,6 +447,8 @@ def main():
     data_mode.add_argument('--database', type=Path)
     data_mode.add_argument('--synthetic-demo', action='store_true', help='Use temporary generated prices for fictional tickers')
     parser.add_argument('--port', type=int, default=8765)
+    parser.add_argument('--allow-provider-downloads', action='store_true',
+                        help='Enable provider requests only where the operator has documented access permission')
     parser.add_argument('--record-pilot', action='store_true', help='Save consented study sessions in the private local pilot database')
     parser.add_argument('--study-definition', type=Path, default=DEFINITION,
                         help='Use a separately versioned definition in recorded mode')
@@ -419,11 +467,11 @@ def main():
     if not database.is_file():
         parser.error('Build the local market warehouse first')
     study = StudyPilot(PILOT_DATABASE if args.record_pilot else None, args.study_definition)
-    serve(database, args.port, study)
+    serve(database, args.port, study, allow_provider_downloads=args.allow_provider_downloads)
 
 
-def serve(database, port, study=None, synthetic=False):
-    server = ThreadingHTTPServer(('127.0.0.1', port), handler_class(database, study, synthetic))
+def serve(database, port, study=None, synthetic=False, allow_provider_downloads=False):
+    server = ThreadingHTTPServer(('127.0.0.1', port), handler_class(database, study, synthetic, allow_provider_downloads))
     print(f'Portfolio Risk is available at http://127.0.0.1:{server.server_port}', flush=True)
     source = 'synthetic demo prices' if synthetic else 'the saved market warehouse'
     print(f'Analysis uses {source}. Stop with Ctrl+C.', flush=True)
