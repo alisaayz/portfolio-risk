@@ -1,336 +1,81 @@
 # Personal Portfolio Risk Platform
 
-**Status:** Historical portfolio analysis, constrained reweighting, replacement criteria, risk-preference guidance, report experiment tooling, and the retrospective 2026 volatility holdout are implemented. Participant evaluation remains planned.
-**Last updated:** November 5, 2026.
+**Status:** Portfolio release complete as of November 5, 2026. The local dashboard, historical evaluation, and technical documentation are available. The usability pilot is ready for facilitation.
 
 ## 1. Executive summary
 
-The Personal Portfolio Risk Platform is a financial analytics project for evaluating existing investments and comparing hypothetical portfolios. Its local application starts with one portfolio, explains historical risk, and offers an optional alternative comparison. A short preference guide separates self-reported comfort with fluctuations from cash-access needs and puts historical drawdowns in context. U.S. symbol discovery and on-demand application histories are separate from the fixed research dataset. A local study workflow supports a product decision about whether a chart should appear by default in the portfolio risk report. The dashboard can propose a hypothetical reweighting of current holdings within user-defined limits. The replacement guide explains what volatility and correlation a substitute would need to meet a historical risk target. Candidate screening remains planned.
+The platform helps a self-directed investor understand what drives portfolio risk and compare hypothetical changes. The local dashboard measures volatility, drawdown, and holding-level risk contributions from audited historical data. It can suggest reweighting within user constraints, describe what a substitute would need to contribute, and screen an audited list on the same dates. The user can load a scenario into the comparison without changing the current portfolio.
 
-The central research question is whether a trained model can forecast volatility over the next 20 trading days more accurately than historical estimates. The implemented foundation downloads and audits real market history, preserves evidence, and loads versioned observations into DuckDB and Parquet. SQL views enforce source-selection rules and calculate calendar-aligned returns and historical volatility inputs. A separate versioned modeling layer builds causal features and pre-2026 targets under the chronological evaluation contract. The baseline report compares dated portfolios using historical covariance, volatility, drawdown, and holding risk contributions. Development evaluation compares historical benchmarks and a gradient boosting model on both individual instruments and two complete portfolios. The local application provides historical risk analysis. The retrospective 2026 holdout completed the model comparison on ten shared market dates.
+The research track asks whether machine learning improves next-20-session volatility estimates. In a retrospective 2026 holdout, the trained model had the lowest average error. The portfolio uncertainty intervals crossed zero, so the project kept forecast output in research under its predeclared decision rule. The dashboard uses historical estimates. [2026 holdout report](docs/FINAL_EVALUATION_REPORT.md)
+
+![Four dashboard screens showing risk assessment, a constrained reweighting, an audited candidate list, and a side-by-side replacement scenario](docs/assets/dashboard-demo.gif)
 
 ## 2. Work completed
 
-The implementation includes an isolated Python environment, pinned dependencies, reproducible market-data acquisition, structural audits, cross-source comparisons, versioned SQL/Parquet storage, and an explainable historical portfolio report. The accepted research capture contains **27,504 daily observations across 16 instruments**, covering January 2, 2020–November 3, 2026. Each instrument has all **1,719 expected sessions**, with no structural failures or adjustment-threshold review flags. Provider action records include 645 dividends and one split.
+| Workstream | Implemented and verified |
+| --- | --- |
+| Data and source quality | Built a Python acquisition and audit pipeline, then promoted **27,504 adjusted price observations** across **16 instruments** into the versioned DS-002 warehouse. Each instrument has 1,719 expected sessions through November 3, 2026. Eighty selected close pairs and four issuer checks passed. Three unresolved benchmark discrepancies remain quarantined. [Audit and source checks](docs/UNIVERSE_VALIDATION.md) |
+| SQL and historical risk | Built DuckDB views and Parquet exports with explicit dataset versions and exchange-session alignment. Independently reconciled 27,488 returns and 27,184 historical volatility windows. The dashboard compares fixed-weight portfolios with volatility, drawdown, risk contributions, correlations, and three historical stress windows. [Warehouse](docs/SQL_LAYER.md) · [Risk methodology](docs/BASELINE_PORTFOLIO_REPORT.md) |
+| Forecast development and evaluation | Built twelve causal price features, chronological training folds, benchmark comparisons, and a pooled gradient boosting model. Refit the selected model on **19,776 pre-2026 labels** and evaluated ten non-overlapping market windows under a frozen protocol. [Feature pipeline](docs/MODELING_DATASET.md) · [Development results](docs/MODEL_DEVELOPMENT_REPORT.md) · [Frozen protocol](docs/FINAL_EVALUATION_PROTOCOL.md) |
+| Local application and decisions | Built a five-question risk preference guide, constrained reweighting, portfolio-specific replacement criteria, and an audited candidate screen. The wider U.S. directory supports manual ticker discovery and separately audited on-demand histories. [Application](docs/APPLICATION.md) · [U.S. coverage](docs/US_MARKET_EXPANSION.md) |
+| Product evaluation | Defined a product decision about the default report chart, instrumented an opt-in local comprehension pilot, and built sample-size and confirmatory analysis tools. The facilitated pilot materials are ready. Participant outcomes are pending. [Experiment brief](docs/REPORT_EXPERIMENT.md) · [Facilitator guide](docs/USABILITY_PILOT.md) |
 
-**Eighty selected closing-price pairs match** a separate finance website. Four narrowly scoped issuer checks cover Apple's split and dividend amount basis and selected Microsoft and Johnson & Johnson dividends. These checks do not certify every price or action. FRED SP500 versus Yahoo ^GSPC retains **three unresolved benchmark discrepancies**; original observations are preserved, FRED remains context-only, and the Yahoo comparator stays quarantined.
+The standard demo starts at **11.29%** annualized historical volatility. With a 10% move budget, constrained reweighting produces **9.58%**. With a 10% volatility target and a 10% swap out of AAPL, six of thirteen screened candidates qualify on the 252-session window. The IEF demonstration comparison yields **9.59%**. The screen matched 39 independent portfolio recalculations. [Reweighting evaluation](docs/PORTFOLIO_REWEIGHTING.md) · [Candidate screen](docs/PORTFOLIO_CANDIDATE_SCREEN.md)
 
-Under versioned policy **DS-002**, the warehouse retains **37,818 price rows across three captures** and selects **27,504 observations** for analytical use. Seven source runs, two dataset versions, and five Parquet exports are retained. Repeated loading preserves the dataset, counts, and export hashes. All **27,488 daily returns** and **27,184 complete 20-return volatility windows** reconcile with independent NumPy calculations.
+A fresh checkout with independently installed pinned dependencies passed all **159 tests**. Using the preserved source evidence, it rebuilt the same warehouse dataset and reproduced the dashboard's demo assessment, reweighting, candidate screen, and practice study. [Reproduction guide](docs/REPRODUCE.md)
 
-The historical portfolio engine accepts validated weights or latest-close quantities, aligns common history, and independently reconciles SQL and Python calculations. Two explicitly labeled AAPL/SPY/BND demonstrations have annualized sample volatility of **11.29%** and **7.24%** over the 252 returns ending November 3, 2026. Their maximum drawdowns are **−26.94%** and **−19.46%** over the full 2020–2026 replay. These assume daily rebalancing without costs or taxes. Small adjusted-price differences across captures change unrounded metrics slightly; displayed results are unchanged and report versions remain distinct.
+## 3. Composition and methodology
 
-The [evaluation protocol](docs/EVALUATION_PROTOCOL.md) reserves **2026 for final historical model testing**, with main validation in 2025 and earlier development folds. A date-only pipeline enforces warmup, target boundaries, incomplete-outcome exclusions, and non-overlapping primary origins. It computes no model scores. The [Qlib walkthrough](docs/01_QLIB_WALKTHROUGH.md) documents the workflow reference; Qlib has not been executed.
+```mermaid
+flowchart LR
+    A[Market history and external checks] --> B[Audited DuckDB and Parquet]
+    C[U.S. symbol directory] --> D[Separate application source checks]
+    B --> E[Historical covariance and stress replay]
+    D --> E
+    E --> F[Risk report and preference guide]
+    E --> G[Reweight and screen replacement scenarios]
+    B --> H[Causal features and chronological folds]
+    H --> I[Benchmarks and gradient boosting]
+    I --> J[Frozen 2026 holdout]
+    F --> K[Optional report comprehension study]
+```
 
-The [modeling dataset](docs/MODELING_DATASET.md) implements **12 price-based predictors**, separate future-target and date-membership tables, and explicit development views. All **330,048 feature cells** and **24,128 pre-2026 target rows** reconcile with independent NumPy calculations, including null positions and incomplete horizons. The current sample supplies **15,776 initial-training examples** and **3,680 main-validation examples**. Future-value perturbation and target-boundary checks pass; this development dataset keeps 2026 targets outside its training views. The market database remains read-only, and repeated modeling builds verify the stored database and four Parquet exports.
+### Historical analysis and adjustments
 
-A bounded [news feasibility audit](docs/NEWS_FEASIBILITY.md) inspects **5,944 records** from three historical GDELT archive batches. Titles appear in 5,942 records; precise publication fields appear in 2,778, with 90 later-than-batch timestamps flagged for review. This demonstrates sample metadata access, not continuous news coverage or forecast usefulness. An offline auditor verifies saved hashes and reports schema, timing, duplicates, and candidate company mentions. No news model, live collector, or event-return calculation is implemented.
+The app aligns returns to expected exchange sessions and estimates annualized sample covariance using 63, 126, or 252 returns. It calculates portfolio volatility from the covariance matrix and attributes risk to each holding. Historical wealth and stress replay assume fixed weights rebalanced daily. The preference questions provide context about willingness to accept losses and access to funds. A separate manual reference sets the optional volatility target. [Risk preference guide](docs/RISK_PREFERENCES.md)
 
-The [forecast benchmark experiment](docs/BASELINE_FORECAST_REPORT.md) compares trailing-20-session variance with EWMA decays 0.90, 0.94, and 0.97 on identical 2023–2025 development dates. Each primary year has **192 matched pairs per method**: twelve non-overlapping target windows per instrument. In 2025, the development-selected EWMA 0.90 has annualized-volatility MAE of **5.91 percentage points**, versus **6.30** for trailing variance. Trailing variance has lower QLIKE in that year, and the best EWMA decay varies across earlier years. All candidates, origins, errors, parameters, code/data versions, and output hashes are saved locally. These are development results, not final-test or portfolio-forecast accuracy claims.
+Reweighting minimizes historical variance while respecting locked positions, weight bounds, and a cap on the share of value moved. A 36-date development replay found that a simple shift from the highest to the lowest standalone volatility matched the optimizer's mean result at 252 sessions for both demos. The optimizer adds the ability to respect user constraints. [Reweighting report](docs/PORTFOLIO_REWEIGHTING.md)
 
-The [trained-model experiment](docs/MODEL_DEVELOPMENT_REPORT.md) fits three fixed histogram gradient-boosting candidates on earlier outcomes for each 2023–2025 validation year. The selected seven-leaf model has 2025 primary volatility MAE of **5.56 percentage points**, versus **5.91** for selected EWMA and **6.30** for trailing variance, with lower QLIKE in that year. It performs worse than both selected benchmarks on 2023 MAE; this is mixed development evidence. All nine candidate/fold models reproduce their predictions on repeat fitting and after serialization. A separate verifier reconciles **81,536 per-origin errors** and **42 aggregate comparisons** without loading model files or calling the training evaluator. The later EV-002 holdout uses this experiment’s frozen selection.
+For replacement, the selected weight moves from one holding into one new instrument. The guide solves for feasible standalone volatility at several assumed correlations with what remains. The screen checks actual matched returns for unheld instruments in the 16-instrument research list, reports the resulting portfolio estimate, and lets the user load a qualifying scenario. [Replacement criteria](docs/PORTFOLIO_REPLACEMENT_CRITERIA.md) · [Screening method](docs/PORTFOLIO_CANDIDATE_SCREEN.md)
 
-The [development robustness review](docs/DEVELOPMENT_ROBUSTNESS.md) keeps every fitted model fixed while shifting the twenty-session grid by 0, 5, 10, and 15 sessions. In 2025 the selected model beats selected EWMA on MAE in **three of four phases**, and trailing variance in **all four**. The EWMA ranking reverses at the five-session offset. Offset zero exactly reproduces the original primary comparison; these dependent diagnostics do not change selection or the final-test grid. Leave-one-instrument-out aggregation is also recorded without refitting.
+### Retrospective model holdout
 
-The [portfolio forecast evaluation](docs/PORTFOLIO_FORECAST_DEVELOPMENT.md) combines holding predictions with a 60-session co-movement estimate. Across two fixed demo allocations and 36 development dates, annualized volatility MAE was **3.06 percentage points** for the trained model, **3.11** for EWMA, and **3.26** for the trailing benchmark. The paired model-minus-EWMA estimate was **−0.045 percentage points**, with an exploratory interval of **−0.490 to +0.360** using three-date blocks. The forecasts remain in research.
+The trained model estimates realized volatility over the next 20 sessions. The portfolio forecasts combine holding-level variance forecasts with 60 sessions of observed co-movement. The comparison uses the same windows for the trained forecast, an exponentially weighted baseline, and a trailing baseline.
 
-The [2026 holdout](docs/FINAL_EVALUATION_REPORT.md) refit the selected model using **19,776 pre-2026 labels** and evaluated ten non-overlapping market windows. For the two demo portfolios, volatility MAE was **1.63 percentage points** for the trained model, **2.23** for EWMA, and **2.20** for trailing 20. Both portfolio uncertainty intervals include zero. Under the frozen decision rule, the forecast stays in research.
+| Forecast | Holding MAE | Demo portfolio MAE |
+| --- | ---: | ---: |
+| Trained model | **4.43** | **1.63** |
+| Exponentially weighted baseline | 4.80 | 2.23 |
+| Trailing 20-session baseline | 4.76 | 2.20 |
 
-A [local portfolio comparison application](docs/APPLICATION.md) now starts with one weight-based portfolio and offers an optional alternative comparison, selectable historical estimation windows, a five-question risk-preference guide, and an Advanced manual volatility reference, wealth/drawdown charts, holding risk shares, correlations, three fixed historical stress windows, and JSON export. It reads accepted data without changing the warehouse and keeps entries in memory. Browser tests confirm the demo results and input/error behavior; incomplete stress windows remain unavailable. The reweighting preview uses the dashboard’s historical covariance estimates.
+Errors are percentage points of annualized volatility. The portfolio comparisons use two fixed demos on ten shared market dates. Resampling dates in blocks accounts for shared market shocks. Both nominal portfolio intervals include zero. The full report includes holding-level errors, overlapping daily diagnostics, and independent SQL reconciliation of 10,854 score rows. [Holdout results and uncertainty](docs/FINAL_EVALUATION_REPORT.md)
 
-The [U.S. market expansion](docs/US_MARKET_EXPANSION.md) adds local ticker/company search over **11,806 stock/ETF candidates** from **13,237 active, non-test Nasdaq directory listings**. Listing records are not audited price histories. Additional histories are loaded through a queue, validated under separate **AP-001** controls, cached with hashes, and combined in memory for historical analysis. META, VOO, and BRK.B each pass structural/provider checks on 1,719 sessions; no independent price cross-check is claimed for those additions. The original research database remains unchanged.
+![Paired 2026 forecast error differences and nominal intervals across ten market dates](docs/assets/final-forecast-uncertainty.svg)
 
-The dashboard displays verified **development MAE and QLIKE** separately from portfolio risk. The [measurement plan](docs/METRICS_AND_EXPERIMENTS.md) specifies separate metrics for model accuracy, application reliability, and reader comprehension.
+### Run the project
 
-The [personal workflow and RQ-001 guide](docs/RISK_PREFERENCES.md) let users assess one portfolio without supplying a second allocation or choosing a volatility target. Five optional questions cover horizon, unexpected-expense flexibility, stability/growth preference, reaction to a decline, and explicit loss comfort. Uncertain answers remain unspecified. The report separates willingness and access needs and compares an explicitly stated decline comfort with historical drawdown. It produces no validated risk score, inferred volatility target, or allocation recommendation. Comparison starts from copied current weights and stays optional.
-
-The [UX-P01 study workflow](docs/COMPREHENSION_PILOT.md) uses three scored questions and a fixed demonstration report calculated from accepted market data. The numerical and chart formats contain the same facts. Practice discards answers after scoring. Optional pilot mode requires consent, randomly assigns a format, and stores local anonymous records for a descriptive SQL summary. Verification covers practice and test fixtures. Participant evaluation is pending.
-
-The [report experiment brief](docs/REPORT_EXPERIMENT.md) defines the user need, release decision, and evidence required at each step. The Python analysis estimates sample size and evaluates a separately registered cohort with a one-sided exact hypothesis test, effect sizes, confidence intervals, and guardrails. Temporary database fixtures verify cohort isolation and the decision logic. Participant outcomes are pending.
-
-The dashboard can preview weight changes while respecting a move budget, holding limits, and locked weights. In the equity-heavy demo, moving ten percentage points from AAPL to BND lowers estimated historical volatility from **11.29% to 9.58%**. A 36-date development replay compares future realized volatility with unchanged weights and simpler rules. A direct risk-based shift matches the optimizer’s mean at the 252-session setting for both demos. [Reweighting method and replay](docs/PORTFOLIO_REWEIGHTING.md)
-
-The replacement guide shows feasible volatility ranges for a single hypothetical swap. It accounts for correlation with the remaining holdings and respects the move budget, holding minimums, and locks. Its result matched direct portfolio calculations in **39 historical comparisons**. [Replacement method and verification](docs/PORTFOLIO_REPLACEMENT_CRITERIA.md)
-
-**158 regression tests pass locally**, covering data integrity, portfolio calculations, chronological boundaries, and study consent, scoring, and record integrity. The [Python application workflow](.github/workflows/python-app.yml) runs fixture-based checks on pushes and pull requests. A forward-recorded forecast evaluation remains a future research milestone. The adjustment roadmap records the planned candidate screening stage. [Adjustment roadmap](docs/PORTFOLIO_ADJUSTMENT_ROADMAP.md)
-
-## 3. Project composition and methodology
-
-### Architecture and implementation status
-
-![Architecture showing implemented acquisition, SQL storage, historical risk analysis and portfolio comparisons; development model forecasts, historical stress replay, and a local comparison application; portfolio forecasts remain planned](docs/assets/project-workflow.svg)
-
-*Green components are implemented for the initial sample. Remaining components describe the planned platform.*
-
-| Component | Method | Current state |
-| --- | --- | --- |
-| Acquisition | Yahoo Finance history through yfinance; separate requested-symbol cache and evidence | 16 research instruments under DS-002; additional application histories under AP-001 without independent price cross-checks |
-| Evidence | Timestamped CSV snapshots, structured metadata, request settings, package versions, and SHA-256 hashes | Implemented; downloaded prices remain local |
-| Quality control | Exchange-session coverage, duplicates, missing/invalid values, OHLC consistency, volume, and adjustment diagnostics | Implemented; see the [expanded audit](docs/UNIVERSE_AUDIT.md) |
-| Verification | Regression tests, issuer cross-check, separate website spot checks, FRED benchmark reconciliation, and offline replay | 80 quote pairs and four issuer checks pass; three benchmark exceptions remain quarantined |
-| SQL foundation | Transactional loading, explicit dataset versions, normalized Parquet, and policy-controlled views | Implemented; see the [SQL report](docs/SQL_LAYER.md) |
-| Historical inputs | Calendar-aligned daily returns and complete trailing 20-return volatility windows | Returns used in portfolio analysis; trailing variance used in development forecasts |
-| Portfolio baseline | Sample covariance, annualized volatility, full-history drawdown, correlations, and Euler holding contributions | Implemented; see the [demonstration report](docs/BASELINE_PORTFOLIO_REPORT.md) |
-| Evaluation membership | Versioned chronological folds, horizon-end exclusions, warmup, and a fixed 2026 primary grid | Implemented; [eligibility counts](docs/EVALUATION_SPLITS.md) |
-| News feasibility | Bounded historical metadata probes and offline schema/timestamp/relevance diagnostics | Audit implemented; [findings](docs/NEWS_FEASIBILITY.md); production collection/NLP planned |
-| Modeling dataset | Twelve causal features, development-only 20-session targets, separate membership, and numerical/leakage checks | Implemented; [report](docs/MODELING_DATASET.md) and [feature dictionary](docs/06_MODELING_DATASET_WALKTHROUGH.md) |
-| Forecast benchmarks | Trailing variance and three EWMA candidates, matched primary/daily samples, per-instrument/group metrics, and versioned experiments | Implemented on development years; [results](docs/BASELINE_FORECAST_REPORT.md) |
-| Machine learning | Pooled positive-variance gradient boosting, purged chronological folds, fixed candidate grid, and independent score verification | Implemented through the [retrospective 2026 holdout](docs/FINAL_EVALUATION_REPORT.md) |
-| Portfolio forecast development | Combine forecast holding variances with a shared 60-session co-movement matrix and evaluate two demos on a matched grid | [Development comparison](docs/PORTFOLIO_FORECAST_DEVELOPMENT.md) with paired error intervals |
-| Application | Assess one portfolio, optionally compare an alternative, reflect risk preferences, search U.S. candidates, and inspect historical/development metrics | Implemented for historical risk; [guide](docs/APPLICATION.md); portfolio forecasts/suggestions planned |
-| Reweighting | Minimize estimated historical variance within holding and move limits, then compare on the same data | [Implemented for existing holdings](docs/PORTFOLIO_REWEIGHTING.md) |
-| Replacement criteria | Solve for the substitute’s volatility range at selected correlations with retained holdings | [Implemented for a user-defined swap](docs/PORTFOLIO_REPLACEMENT_CRITERIA.md) |
-| User measurement | Identical numerical facts, optional chart, three scored tasks, and consented random assignment | [Pilot and confirmatory analysis implemented](docs/REPORT_EXPERIMENT.md); participant evidence pending |
-
-### Local application
-
-![Single-portfolio application with optional comparison and unanswered risk-preference questions](docs/assets/application-preview.png)
-
-After building the accepted warehouse, create or replay the U.S. directory and launch:
+In the original project folder, start the dashboard with the existing local warehouse.
 
 ```bash
-.venv/bin/python -m scripts.market_catalog
 .venv/bin/python -m scripts.serve_portfolio_app
 ```
 
-Open [http://127.0.0.1:8765](http://127.0.0.1:8765). The interface compares historical portfolio risk, not predicted investment returns. Portfolio weights stay in memory; requested symbols are sent to the provider for market history and that evidence is cached locally. Export is user triggered. The [application guide](docs/APPLICATION.md) explains calculations, the fixed historical scenario registry, local operation, verified behavior, and remaining limitations. The application links to the separate 2026 research report.
+Open [the local dashboard](http://127.0.0.1:8765/). A fresh checkout can install dependencies and run the software tests from tracked files. The exact historical demo requires the saved data captures, which are kept outside Git. The reproduction guide lists the input folders and offline rebuild commands. [Reproduction guide](docs/REPRODUCE.md)
 
-### Personal risk preferences
+### Limitations and follow-up
 
-Start with one portfolio and use the optional five-question guide if risk preferences are unclear. It summarizes expressed priorities and access needs separately. Only an explicitly selected decline-comfort value is compared with historical drawdown; missing or uncertain answers do not generate a numerical threshold. Manual annualized-volatility references remain under Advanced. The guide is a self-reflection prototype, not a validated investor score or a forecast of a safe loss limit. See [its methodology and limits](docs/RISK_PREFERENCES.md).
+The source snapshot ends November 3, 2026. The reference universe contains 16 current survivors, and price histories can be revised. The historical scenarios exclude transaction costs and taxes. Candidate ranking measures volatility on matched dates. Exposure, liquidity, fees, and investment objectives require separate review. Portfolio inputs stay local. [Source policy](docs/DATA_SOURCE_POLICY.md) · [Application guide](docs/APPLICATION.md)
 
-The optional alternative starts with copied current weights and can be edited independently. Disabling comparison excludes it from validation and calculation while preserving its entries in browser memory. This supports a single-portfolio routine and a separate exploration workflow.
+The usability pilot needs real participants. A later forecast study could record predictions before new outcomes arrive. The news work established bounded metadata feasibility and documents what continuous coverage would require. [Facilitator guide](docs/USABILITY_PILOT.md) · [News audit](docs/NEWS_FEASIBILITY.md)
 
-### Broader application coverage and measurement
-
-![U.S. listing discovery and application data remain separate from the fixed model universe](docs/assets/us-market-expansion.svg)
-
-The three starting holdings are a demonstration. Search can discover the broader U.S. directory; an additional instrument enters analysis only after its provider identity, currency/type/timezone, sessions, and adjustments pass AP-001 checks. Source-tier notices distinguish this evidence from the research sample's limited independent checks. Up to 100 positions per portfolio are supported, subject to usable common history. The current saved analysis cutoff remains November 3, 2026; this is not a live feed. New listings, unavailable histories, unsupported types, and review failures stay visible.
-
-### Report comprehension study
-
-The [local practice page](http://127.0.0.1:8765/study) lets readers try both report formats using the same demonstration holdings, risk figures, and three questions. One format adds a chart that switches between capital weight and share of volatility.
-
-```mermaid
-flowchart LR
-    A[Fixed real-data demonstration] --> B[Default practice]
-    A --> C[Explicit pilot mode]
-    B --> D[Choose a format and receive feedback]
-    C --> E[Consent and random assignment]
-    E --> F[Local SQLite records]
-    F --> G[Descriptive pilot metrics]
-    F --> H[Separate registered A/B cohort]
-    H --> I[Check sample, timing, and allocation]
-    I --> J[Test effect and assess guardrails]
-    J --> K[Review chart default]
-```
-
-The primary pilot metric is the share of assigned participants who answer all three questions correctly. The summary also tracks completion, early exit, critical misunderstandings, and median completion time. The formal analysis uses a separate study version and a fixed recruitment window. The decision to consider showing the chart by default requires a statistically supported improvement of practical size and acceptable uncertainty about noncompletion and observed misunderstandings. See the [study guide](docs/COMPREHENSION_PILOT.md) and [report experiment brief](docs/REPORT_EXPERIMENT.md).
-
-### Data quality findings
-
-![Complete expected coverage across sixteen instruments](docs/assets/universe-coverage.svg)
-
-The audit compares observed dates with configured exchange-session calendars, retains missing observations, and does not repair prices or fill gaps. It records dividend and split events and checks changes in the adjusted-close/close ratio. Threshold breaches produce review flags rather than automatic corrections.
-
-A material finding is that the provider's Close field must not be assumed to be split-unadjusted. Around Apple's August 2020 split, applying the split ratio again would introduce an artificial return exceeding 300%. The [audit report](docs/DATA_AUDIT.md) documents this diagnostic, its issuer reference, and the limits of the verification.
-
-The [cross-source report](docs/CROSS_SOURCE_VALIDATION.md) separates individual-instrument spot checks from same-index benchmark reconciliation. Yahoo ^GSPC remains excluded from model features and benchmark calculations until its source exceptions are resolved or formally dispositioned. No observed value is silently replaced.
-
-yfinance is an unofficial interface to Yahoo Finance. The downloaded snapshots preserve library output rather than original HTTP payloads. Current adjusted histories can be revised and do not establish what was known at each historical forecast date. Downloaded prices, credentials, personal holdings, caches, and model artifacts remain outside version control.
-
-### Run the implemented milestone
-
-Tested with **Python 3.13.7**. Direct dependencies are listed in [requirements.in](requirements.in); exact installed versions are recorded in [requirements.txt](requirements.txt).
-
-```bash
-python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt
-.venv/bin/python scripts/audit_market_data.py --start 2020-01-01 --end 2026-11-04
-.venv/bin/python -m unittest discover -s tests -v
-```
-
-The end date is exclusive. Each download creates a new local snapshot. To reproduce the audit from existing evidence without a new request:
-
-```bash
-.venv/bin/python scripts/audit_market_data.py --snapshot data/audit/<run-id>
-```
-
-The audit script generates `docs/DATA_AUDIT.md`, a coverage figure, and detailed local audit JSON. A structural failure produces a nonzero exit status. Unit tests use small synthetic fixtures to test failures; reported project findings come from downloaded market data.
-
-To acquire external references and check a saved baseline:
-
-```bash
-.venv/bin/python -m scripts.cross_validate_sources --snapshot data/audit/<run-id>
-```
-
-This comparison generates `docs/CROSS_SOURCE_VALIDATION.md` and returns exit status 2 while unresolved comparisons remain. That is a data-quality finding, not a failed regression test. Offline replay instructions are in the report.
-
-### Build and inspect the SQL warehouse
-
-```bash
-.venv/bin/python -m scripts.build_warehouse --snapshot data/audit/<selected-run-id> --historical-snapshot data/audit/<earlier-run-id> --external-snapshot data/validation/<external-run-id> --policy config/expanded_source_policy.json
-.venv/bin/python -m scripts.verify_warehouse
-```
-
-The earlier capture is optional and may contain a supported subset of the primary universe. DS-002 requires exact universe/reference bindings, all sixteen quote checks, and the selected issuer checks. DS-001 remains available for its original three-instrument scope. The command verifies saved inputs, loads DuckDB, selects the explicit dataset, exports Parquet, and generates `docs/SQL_LAYER.md`. Repeat the same command to check idempotence. Dataset identity includes source manifests, policy, transformation code, SQL definitions, and the DuckDB version. Queries are in [sql/diagnostics.sql](sql/diagnostics.sql); the [SQL walkthrough](docs/03_SQL_WALKTHROUGH.md) explains their purpose.
-
-The Python application workflow installs the pinned environment and runs the regression suite on pushes and pull requests. It uses test fixtures rather than private/local market-data files. This project is not distributed as a PyPI package.
-
-### Historical portfolio risk methodology
-
-The [demonstration report](docs/BASELINE_PORTFOLIO_REPORT.md) compares the allocations in [demo_portfolios.json](config/demo_portfolios.json). SQL computes weighted daily returns and sample covariance; NumPy independently reconciles both. Covariance uses the most recent 252 common returns, denominator N−1, and annualization by 252. Portfolio volatility is `sqrt(wᵀΣw)`. Euler contributions allocate that volatility to holdings and sum to the total; negative contributions are preserved.
-
-![Capital allocation and estimated risk shares for two demonstration portfolios](docs/assets/portfolio-risk-contributions.svg)
-
-In the equity-heavy demonstration, AAPL represents **30% of capital but 52.91% of estimated volatility risk**. Capital weights alone do not explain portfolio risk. This is an instrument-level result; it does not measure underlying ETF holdings overlap.
-
-Drawdown uses all common closing history, including initial capital. Both portfolios assume fixed weights rebalanced daily; today's allocation is replayed retrospectively. Risk estimates and drawdowns therefore cover different periods and are historical measurements rather than forecasts. The demeaned sample-covariance estimator is distinct from the existing squared-return/RMS historical input and implemented development forward-variance target.
-
-After building the warehouse, reproduce the public demonstration with:
-
-```bash
-.venv/bin/python -m scripts.portfolio_baseline --input config/demo_portfolios.json --publish-demo
-```
-
-Reports record the dataset, configuration, input hash, and calculation-code hashes. Downloaded histories and detailed replay outputs remain local. Personal inputs should be saved in `private/`; configurations labeled `is_demo: false` produce only private outputs and cannot use `--publish-demo`. Quantity valuation uses provider Close and supports only the latest common close. The [baseline walkthrough](docs/04_PORTFOLIO_BASELINE_WALKTHROUGH.md) explains validation, formulas, and limitations.
-
-### Research universe and evaluation design
-
-The [reference configuration](config/reference_universe.json) contains five individual stocks, five equity ETFs, five bond ETFs, and one gold trust. Selection targets varied exposures, not 2026 model performance. All observations pass structural checks, 80 quote pairs match, and four selected issuer checks pass. DS-002 now promotes the expanded capture to accepted SQL inputs. Earlier three-instrument captures and the original dataset remain retained. The [promotion walkthrough](docs/05_EXPANDED_SQL_WALKTHROUGH.md) explains source gates, a maintenance-page failure, cross-capture differences, and independent reconciliation.
-
-![Evidence gates and accepted SQL data with the index comparator quarantined](docs/assets/source-acceptance.svg)
-
-![Chronological development and reserved 2026 model evaluation](docs/assets/evaluation-timeline.svg)
-
-[EV-001](config/evaluation_protocol.json) declares initial training on eligible 2020–2024 origins, main validation in 2025, and final testing in 2026. After recipe selection, final refitting can use eligible pre-2026 labels. The 252-return warmup means the first eligible training origin is December 31, 2020. Outcomes reaching a later partition are excluded; the newest 20 origins lack completed labels. As of November 3, each instrument has only ten completed non-overlapping primary test windows. Correlated instruments do not multiply the number of independent market episodes.
-
-The date-only manifest defines the holdout origins. The modeling layer verifies feature readiness and computes development targets. The separate EV-002 evaluator checks the frozen commit and data hashes, saves forecasts, then computes the matching realized outcomes. The 2026 holdout is retrospective because the price history had already been inspected for source quality and historical risk. [Evaluation protocol](docs/EVALUATION_PROTOCOL.md)
-
-```bash
-.venv/bin/python -m scripts.audit_market_data --universe config/reference_universe.json --start 2020-01-01 --end 2026-11-04
-.venv/bin/python -m scripts.audit_market_data --snapshot data/audit/<expanded-run-id>
-.venv/bin/python -m scripts.evaluation_splits --snapshot data/audit/<expanded-run-id>
-```
-
-### Modeling dataset and verified timing
-
-![Separate historical features, pre-2026 future targets, and chronological development artifacts](docs/assets/modeling-data-flow.svg)
-
-SQL derives past returns, realized variance, downside variation, negative-return frequency, current drawdown, and extreme daily moves. A 252-return warmup determines feature readiness. Forward targets cover exactly t+1 through t+20; their source is clipped before 2026 before the future window is calculated. Target values crossing into the reserved year remain null, while feature and date rows are retained.
-
-The [walkthrough and dictionary](docs/06_MODELING_DATASET_WALKTHROUGH.md) explain all twelve columns, examples around a stock split and year boundaries, and the distinction between inputs and outcomes. Future-price changes leave earlier features unchanged. Dedicated training/validation views enforce membership, and training code must select the predictor whitelist rather than infer inputs from all numeric columns.
-
-```bash
-.venv/bin/python -m scripts.build_modeling_dataset
-```
-
-This command writes a separate local DuckDB dataset, four Parquet tables, a versioned manifest, and a public aggregate report. It reconciles SQL against independent NumPy calculations and verifies existing artifacts on rerun. It performs no preprocessing fitting, model training, or scoring.
-
-### Development forecast benchmarks
-
-The baseline comparison uses the same future-twenty-session variance target as the trained model. Trailing variance assumes recent twenty-session risk persists. EWMA recursively gives newer squared returns more weight; three decays are recorded under [BL-001](config/forecast_baselines.json). The selected EWMA minimizes the declared primary 2025 validation MAE, with deterministic ties. Earlier years and the secondary QLIKE metric remain visible.
-
-![Development-year volatility forecast error for every benchmark candidate](docs/assets/baseline-development-mae.svg)
-
-MAE is measured in annualized-volatility percentage points, not investment returns. Scores average each instrument first, then instruments equally. Primary target windows do not overlap within an instrument; the sixteen instruments still share market events. Daily overlapping results are secondary. Missing predictions fail the comparison rather than changing a method's sample. The [walkthrough](docs/07_FORECAST_BASELINES_WALKTHROUGH.md) explains recurrence, metrics, development selection, and uncertainty.
-
-```bash
-.venv/bin/python -m scripts.evaluate_baselines --modeling-dataset data/modeling/ecc468b9aef284824e22c7c1cb47f0f89517ff583061cc72ef0eff4d37d23d83
-```
-
-This experiment uses file-based tracking; MLflow is not installed. Source/modeling artifacts are verified, every candidate and output is preserved, and repeated runs must match saved hashes. No machine-learning model or 2026 forecast/target/score is produced.
-
-### Trained-model development evaluation
-
-![Chronological trained-model development results alongside historical benchmarks](docs/assets/model-development-comparison.svg)
-
-[ML-001](config/model_training.json) fixes three histogram gradient-boosted candidates before their first real-data fit. Poisson deviance with a log link produces positive variance estimates for the continuous nonnegative target. Models use only the explicit twelve price features, equal total training weight per instrument, and no fitted preprocessing. Early stopping is disabled to prevent an automatic random internal validation split. Each model stays fixed throughout its validation year.
-
-The [report](docs/MODEL_DEVELOPMENT_REPORT.md) contains all candidate scores, secondary daily comparisons, instrument-level errors, and realized-volatility diagnostics. The [walkthrough](docs/08_MODEL_TRAINING_WALKTHROUGH.md) explains feature isolation, target purging, positive outputs, repeat fitting, and artifact verification. Selection uses 2025 primary MAE, so the selected score is development evidence. No final-refit or 2026 predictions are generated. This estimates instrument variance; portfolio forecasts require a separate correlation estimator and evaluation.
-
-```bash
-.venv/bin/python -m scripts.train_risk_model --modeling-dataset data/modeling/<modeling-dataset-id>
-.venv/bin/python -m scripts.verify_training_experiment --experiment data/experiments/trained_models/<experiment-id>
-```
-
-All candidate/fold model files, predictions, parameters, failures, hashes, and package versions remain in local experiment records. Tracking is file based; MLflow is not installed. Repeated successful runs must preserve experiment identity and every saved output hash. Raw market observations and models remain outside Git.
-
-### Development robustness
-
-![Fixed development model errors under four forecast-grid offsets](docs/assets/development-grid-sensitivity.svg)
-
-[RB-001](config/development_robustness.json) tests sensitivity to forecast dates and instrument aggregation. Models and selected parameters are unchanged; overlapping grid phases are diagnostic rather than independent trials. Full results, all candidates, and reproduction commands are in the [robustness report](docs/DEVELOPMENT_ROBUSTNESS.md).
-
-### Portfolio forecast development
-
-![Annualized volatility error for the trailing, exponentially weighted, and trained forecasts across both demos](docs/assets/portfolio-forecast-development.svg)
-
-PF-001 projects the next 20 sessions of volatility for fixed-weight portfolios. It compares a trailing portfolio benchmark with forecasts that combine individual holding variances and past co-movement. The evaluation pairs all methods on the same 36 market dates. The full report documents the score calculations, uncertainty, and reproducible command. [Portfolio forecast evaluation](docs/PORTFOLIO_FORECAST_DEVELOPMENT.md)
-
-### Retrospective 2026 holdout
-
-![Paired forecast error differences with uncertainty across ten dates for holdings and both demo portfolios](docs/assets/final-forecast-uncertainty.svg)
-
-EV-002 compares the selected trained model with two benchmarks on the fixed sample. Date-block resampling retains shared market shocks across entities. Independent SQL reconciles 3,438 outcomes, 10,854 score rows, and 12 aggregate scores. The portfolio intervals cross zero, so the forecast stays in research. [Frozen protocol](docs/FINAL_EVALUATION_PROTOCOL.md) · [Results](docs/FINAL_EVALUATION_REPORT.md)
-
-### Proposed news extension
-
-The intended question is whether news adds information about risk beyond recent price behavior. The [feasibility report](docs/NEWS_FEASIBILITY.md) compares archived metadata, filing sources, financial-news datasets, and a candidate sentiment model. It records successful archive samples and unavailable API probes. Later market reactions are evaluation outcomes and must not become inputs to earlier forecasts. Historical availability, relevance, feed gaps, and duplicated stories require separate checks.
-
-![Implemented price foundation and news audit with proposed collection, text features, and comparison experiment](docs/assets/news-extension.svg)
-
-The proposed first application is an after-close company-news context layer. A future prediction comparison would use identical origins for prices-only and prices-plus-news models after compatible historical coverage is established. Current samples do not justify filling missing feeds with zero sentiment, claiming exact historical availability, or inferring ETF holdings exposure from a company mention. The price-only feature/target pipeline is now implemented. Historical forecast benchmarks and development evaluation are now implemented. Price-only trained-model development evaluation is implemented; news collection and NLP remain proposed extensions.
-
-### Trained-model development and application boundaries
-
-Each modeling row represents an instrument at a forecast date, with price inputs through that day's close. The implemented development target is realized variance over the following 20 trading sessions, annualized using a 252-session convention. Displayed volatility is the square root of variance. EV-002 computes the held-out outcomes in a separate experiment.
-
-Training, validation, and final testing follow the declared 2020–2024 / 2025 / 2026 chronological contract, with earlier development folds. Training labels whose future windows reach the next evaluation period are excluded. The implemented benchmark report evaluates trailing and exponentially weighted variance forecasts using annualized-volatility mean absolute error and variance QLIKE. Trained candidates use the same development origins and benchmark definitions. EV-002 records the final model scores against the frozen recipe and sample.
-
-The local application supports daily, USD-denominated instruments in long-only, unleveraged portfolios. Fixed-weight historical scenarios explicitly assume daily rebalancing and represent hypothetical exposures rather than actual past investment performance. Portfolio forecasts are evaluated separately on the development grid using a fixed co-movement estimator. ETF look-through holdings, taxes, derivatives, and automated trading are outside the initial scope.
-
-### Reweight existing holdings
-
-```mermaid
-flowchart LR
-    A[Current holdings and historical covariance] --> C[Constrained variance minimization]
-    B[Move budget, holding limits, locks, and optional target] --> C
-    C --> D[Compare risk, concentration, and weights]
-    D --> E[User can load the scenario as an alternative]
-    A --> F[Choose a holding and swap size]
-    F --> G[Show feasible substitute volatility by correlation]
-```
-
-Open **Explore lower-risk weights** after assessing a portfolio. Review the suggested weights, estimated volatility, historical drawdown, largest weight, and risk shares. The preview reports whether an entered target is achievable under the given limits. An explicit action loads the proposed weights for comparison and stress replay. [Reweighting method and replay](docs/PORTFOLIO_REWEIGHTING.md)
-
-Open **What to look for in a replacement** to choose an existing holding and the share of the portfolio to swap. The guide uses the manual target if supplied, or the current estimate as the ceiling. It shows the candidate volatility ranges that fit at different correlations with the remaining portfolio. [Replacement criteria](docs/PORTFOLIO_REPLACEMENT_CRITERIA.md) · [Adjustment roadmap](docs/PORTFOLIO_ADJUSTMENT_ROADMAP.md)
-
-### Documentation and next milestone
-
-- [Reference universe](docs/REFERENCE_UNIVERSE.md), [expanded audit](docs/UNIVERSE_AUDIT.md), and [source validation](docs/UNIVERSE_VALIDATION.md): selection, evidence, and acceptance limits.
-- [Expanded SQL walkthrough](docs/05_EXPANDED_SQL_WALKTHROUGH.md): policy gates, archived failures, numerical checks, and capture differences.
-- [Portfolio adjustment roadmap](docs/PORTFOLIO_ADJUSTMENT_ROADMAP.md): implemented reweighting and replacement criteria, with candidate screening planned.
-- [Forecast benchmark report](docs/BASELINE_FORECAST_REPORT.md) and [walkthrough](docs/07_FORECAST_BASELINES_WALKTHROUGH.md): measured development errors, method tradeoffs, and experiment records.
-- [Modeling dataset](docs/MODELING_DATASET.md) and [walkthrough/dictionary](docs/06_MODELING_DATASET_WALKTHROUGH.md): features, development outcomes, timing checks, and reproducible artifacts.
-- [News feasibility](docs/NEWS_FEASIBILITY.md): observed archive metadata, timing limitations, candidate sources, and proposed implementation sequence.
-- [Evaluation protocol](docs/EVALUATION_PROTOCOL.md) and [date eligibility](docs/EVALUATION_SPLITS.md): testing contract, implemented boundaries, and planned model checks.
-- [Data audit](docs/DATA_AUDIT.md): observed findings, provenance, methods, and limitations.
-- [Cross-source validation](docs/CROSS_SOURCE_VALIDATION.md): website quote checks and unresolved FRED/Yahoo benchmark differences.
-- [SQL milestone report](docs/SQL_LAYER.md) and [walkthrough](docs/03_SQL_WALKTHROUGH.md): database composition, observed counts, and SQL interpretation.
-- [Portfolio baseline report](docs/BASELINE_PORTFOLIO_REPORT.md) and [walkthrough](docs/04_PORTFOLIO_BASELINE_WALKTHROUGH.md): measured comparisons, assumptions, and calculation checks.
-- [Data-audit walkthrough](docs/02_DATA_AUDIT_WALKTHROUGH.md): how to read and explain the implementation.
-- [Action checklist](docs/ACTION_PLAN.md): tasks and completion criteria.
-- [Project plan](docs/PROJECT_PLAN.md): the broader technical specifications.
-
-The [source policy](docs/DATA_SOURCE_POLICY.md) accepts RU-001 under DS-002 for prototype work, selects FRED as the preferred price-index context source, and quarantines Yahoo ^GSPC. The underlying three discrepancies remain unresolved.
-
-The SQL views enforce this source policy. The retrospective holdout is complete, and a forward study would record forecasts before outcomes occur.
-
-### References
-
-- [yfinance source and usage notes](https://github.com/ranaroussi/yfinance)
-- [Exchange calendars](https://github.com/gerrymanoim/exchange_calendars)
-- [Apple issuer announcement](https://www.apple.com/newsroom/2020/07/apple-reports-third-quarter-results/)
-- [Microsoft Qlib workflow](https://qlib.readthedocs.io/en/latest/component/workflow.html)
-- [FRED API and historical vintages](https://fred.stlouisfed.org/docs/api/fred/realtime_period.html)
-- [MLflow experiment tracking](https://mlflow.org/docs/latest/ml/tracking/)
+Additional build details and experiment evidence are indexed in the [project plan](docs/PROJECT_PLAN.md) and [implementation checklist](docs/ACTION_PLAN.md).

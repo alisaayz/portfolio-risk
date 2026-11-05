@@ -1,6 +1,6 @@
 # Portfolio adjustment roadmap
 
-Updated November 5, 2026. Stages 1 and 2 are implemented. Stage 3 is planned. [Reweighting method](PORTFOLIO_REWEIGHTING.md) · [Replacement criteria](PORTFOLIO_REPLACEMENT_CRITERIA.md)
+Updated November 5, 2026. All three stages are implemented as historical scenario tools. [Reweighting method](PORTFOLIO_REWEIGHTING.md) · [Replacement criteria](PORTFOLIO_REPLACEMENT_CRITERIA.md)
 
 ## Executive summary
 
@@ -16,7 +16,7 @@ The intended question is: **What feasible changes could bring my portfolio close
 | 2. Describe replacement criteria | Characteristics that could improve the portfolio, for the user to research | Portfolio-relative correlation and risk contribution, volatility, liquidity, usable history, and desired exposures |
 | 3. Screen replacement candidates | Named candidates from an explicitly defined, accepted universe, with supporting metrics | Audited candidate data, dated universe, consistent comparisons, and a documented ranking procedure |
 
-Reweighting and replacement criteria are available in the local dashboard. A low-volatility instrument is not automatically a good replacement: its co-movement with the remaining holdings matters. Company mentions or sentiment do not establish investment suitability. Sector, fundamental, liquidity, or ETF look-through claims require their own appropriately dated data.
+Reweighting, replacement criteria, and the audited candidate screen are available in the local dashboard. A low-volatility instrument is not automatically a good replacement: its co-movement with the remaining holdings matters. Company mentions or sentiment do not establish investment suitability. Sector, fundamental, liquidity, or ETF look-through claims require their own appropriately dated data.
 
 ```mermaid
 flowchart TD
@@ -24,14 +24,14 @@ flowchart TD
     B --> C{Outside chosen risk limits?}
     C -->|Yes| D[Suggest feasible weight changes]
     D --> E[Describe replacement criteria if useful]
-    E --> F[Optionally screen approved candidates]
+    E --> F[Screen the audited reference list]
     D --> G[Compare risk, allocation changes, and assumptions]
     F --> G
     C -->|No| H[Explain current exposure and remaining uncertainty]
     G --> I[User reviews and chooses]
 ```
 
-The diagram includes the implemented reweighting preview and replacement guide, and the planned candidate screen.
+The candidate screen uses the matched historical risk window and the audited RU-001 list. [Candidate screen](PORTFOLIO_CANDIDATE_SCREEN.md)
 
 ## Inputs and decision rules
 
@@ -68,4 +68,4 @@ Method references: [PyPortfolioOpt objectives and constraints](https://pyportfol
 
 ## Preference-reflection foundation now available
 
-RQ-001 now elicits self-reported preferences and access needs, and the interface supports one portfolio with an optional manually edited alternative. The reweighting tool accepts the separately entered manual volatility reference as an optional target. Questionnaire responses remain separate from the optimizer. Read [RISK_PREFERENCES.md](RISK_PREFERENCES.md). The next planned stage is candidate screening against the replacement criteria.
+RQ-001 now elicits self-reported preferences and access needs, and the interface supports one portfolio with an optional manually edited alternative. The reweighting tool accepts the separately entered manual volatility reference as an optional target. Questionnaire responses remain separate from the optimizer. Read [RISK_PREFERENCES.md](RISK_PREFERENCES.md). The candidate screen evaluates the same historical risk target on matched dates.

@@ -39,4 +39,4 @@ Values are means across the 36 realized windows per portfolio and setting. The o
 .venv/bin/python -m scripts.evaluate_reweight
 ```
 
-The command verifies the saved warehouse hash and development calendar, then emits matched observations and aggregate metrics. Repeated runs produced identical output. Replacement criteria and candidate screening are later stages. [Adjustment roadmap](PORTFOLIO_ADJUSTMENT_ROADMAP.md)
+The command verifies the saved warehouse hash and development calendar, then emits matched observations and aggregate metrics. Repeated runs produced identical output. A separate guide defines replacement criteria and screens the audited research list. [Candidate screen](PORTFOLIO_CANDIDATE_SCREEN.md)

@@ -24,4 +24,4 @@ The 252-session demo ending November 3, 2026 reduces AAPL from 30% to 20%, leavi
 
 The bounds were checked against 39 direct recalculations using 13 other DS-002 instruments and the 63-, 126-, and 252-session windows. The variance identity reconciled to within 1e-12 in volatility units, and all 39 target classifications agreed. Fixtures cover a negative-correlation band, an infeasible band, a zero-risk remainder, and a locked holding. Browser verification exercised the live demo and lock enforcement.
 
-The guide addresses historical volatility. A candidate assessment also needs complete matched history, documented asset exposure, liquidity evidence, and costs. Candidate screening and ranking are planned separately. [Adjustment roadmap](PORTFOLIO_ADJUSTMENT_ROADMAP.md)
+The guide addresses historical volatility. A candidate assessment also needs complete matched history, documented asset exposure, liquidity evidence, and costs. The audited candidate screen uses this guide’s target and swap constraints on matched histories. [Candidate screen](PORTFOLIO_CANDIDATE_SCREEN.md)

@@ -240,3 +240,7 @@ RW-001 proposes a constrained historical-risk alternative using only existing ho
 ## Implemented replacement criteria — November 5, 2026
 
 RP-001 solves for a hypothetical substitute’s standalone volatility range at five assumed correlations with the remaining holdings. It preserves the move budget and protected holding weights. The criterion matched 39 direct historical risk calculations. Screening named candidates remains planned. [Method and evidence](PORTFOLIO_REPLACEMENT_CRITERIA.md)
+
+## Portfolio release — November 5, 2026
+
+The candidate screen evaluates named instruments from the audited research list over matched dates. The new release passed 159 tests, reproduced the warehouse and dashboard in a clean checkout, and includes a four-step demo. The facilitator guide is ready for real participant sessions. [Candidate screen](PORTFOLIO_CANDIDATE_SCREEN.md) · [Reproduction guide](REPRODUCE.md) · [Pilot guide](USABILITY_PILOT.md)
