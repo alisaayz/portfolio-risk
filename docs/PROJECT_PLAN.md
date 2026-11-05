@@ -1,6 +1,6 @@
 # Portfolio risk project plan
 
-Working plan established November 3, 2026; implementation status updated November 4, 2026. Allocate approximately five to six weeks at 12–20 hours per week, using two-week demonstrations to adjust scope. Data access and the user's learning pace may change the schedule.
+Working plan established November 3, 2026; implementation status updated November 5, 2026. Allocate approximately five to six weeks at 12–20 hours per week, using two-week demonstrations to adjust scope. Data access and the user's learning pace may change the schedule.
 
 ## Product and research scope
 
@@ -46,7 +46,7 @@ A first portfolio forecast can combine predicted instrument volatilities with a 
 
 ### Evaluation
 
-- Follow [EV-001](EVALUATION_PROTOCOL.md): 2020–2024 initial training, 2025 main validation, and reserved 2026 historical model test. Earlier folds validate on 2023 and 2024; final refitting may use eligible pre-2026 labels after recipe selection. Development benchmark and trained-model scores are recorded in the later implementation checkpoints; final-test scores remain unopened.
+- Follow [EV-001](EVALUATION_PROTOCOL.md): 2020–2024 initial training, 2025 main validation, and reserved 2026 historical model test. Earlier folds validate on 2023 and 2024; final refitting may use eligible pre-2026 labels after recipe selection. Development and final holdout scores are recorded in the later implementation checkpoints.
 - Remove training examples whose forward target windows cross into validation or test periods. Apply the same rule within rolling evaluation folds.
 - Begin with non-overlapping 20-day forecast origins for the main comparison to reduce dependence between targets. Any daily overlapping evaluation must be identified as dependent and not treated as independent samples.
 - Primary metric: equal-instrument mean of annualized-volatility MAE. Secondary: equal-instrument mean of variance QLIKE. Positive-forecast evaluation conventions and floor reporting are fixed in EV-001.
@@ -228,3 +228,7 @@ The product brief connects portfolio risk comprehension to the decision about th
 ## Implemented portfolio forecast development evaluation
 
 PF-001 combines fixed holding forecasts with a 60-session co-movement estimate and compares them with the trailing portfolio benchmark on the two preexisting demo portfolios. It reports matched annualized volatility error, QLIKE, and exploratory paired date-block intervals across 36 pre-2026 dates. The trained model's average MAE advantage over EWMA is 0.045 percentage points. The interval spans zero. The next model milestone is the final procedure freeze. [Portfolio forecast evaluation](PORTFOLIO_FORECAST_DEVELOPMENT.md)
+
+## Completed 2026 model holdout — November 5, 2026
+
+EV-002 freezes the model, forecasts, metrics, and decision rule before scoring the ten complete primary windows. The model improves demo portfolio MAE by 0.60 percentage points versus EWMA and 0.57 versus trailing 20. Both nominal two-date intervals include zero. The dashboard continues to present historical risk, with the forecast results available in the research report. [Holdout report](FINAL_EVALUATION_REPORT.md)

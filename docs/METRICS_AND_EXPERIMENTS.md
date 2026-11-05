@@ -43,7 +43,7 @@ Before a confirmatory test, define one primary comparison, significance level (p
 
 Report each group's denominators, success rates, the absolute percentage-point difference, an appropriate confidence interval, the prespecified hypothesis-test result, and guardrails. Use a method suitable for the actual binary counts, including small-sample behavior. A p-value below 0.05 is not a measure of effect size, practical value, or the probability that the null hypothesis is true. An inconclusive result should be reported as inconclusive. Adjust for multiplicity if making confirmatory claims about several outcomes or variants; label exploratory subgroup results accordingly.
 
-## Proposed forecast-comparison inference
+## Forecast-comparison inference
 
 **Question:** Does the frozen trained procedure reduce average volatility-forecast error relative to the frozen selected EWMA benchmark?
 
@@ -51,7 +51,7 @@ For each common forecast date, calculate the paired error difference between mod
 
 Ticker rows share market shocks and adjacent periods can remain dependent. A naive independent-row t-test would overstate effective sample size. Investigate date-block paired resampling or an appropriately justified forecast-comparison test that accounts for temporal dependence, retaining the whole cross-instrument vector for each date. Prespecify block choices and sensitivity, report sample limitations, and do not present a fragile small-sample p-value as decisive evidence.
 
-The 2025 model and EWMA settings were selected using that year's scores. Its apparent improvement is development evidence and does not provide an unbiased confirmatory test of the selected winner. Existing grid-phase and omission diagnostics are not independent trials. Freeze the complete model, comparator, metric, inference procedure, and evaluation sample before opening final 2026 outcomes. The currently available final-test grid has only ten completed market windows per instrument; adding tickers does not create independent market periods. Forward-recorded forecasts can later extend evidence.
+The 2025 model and EWMA settings were selected using that year's scores. Its apparent improvement is development evidence and does not provide an unbiased confirmatory test of the selected winner. Existing grid-phase and omission diagnostics are not independent trials. EV-002 froze the model, comparators, metrics, and sample before scoring. It averages paired losses by market date and reports nominal date-block intervals for ten shared windows. [Holdout report](FINAL_EVALUATION_REPORT.md) Forward-recorded forecasts can later extend evidence.
 
 ## Local pilot and SQL composition
 

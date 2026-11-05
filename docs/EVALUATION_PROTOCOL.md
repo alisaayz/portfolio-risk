@@ -22,7 +22,7 @@ The 2025 fold is the main validation year, not an additional independent holdout
 
 The reference dataset starts in 2020. A maximum 252-return feature window consumes its first 252 origins as warmup. Thus the nominal 2020–2024 training period does not provide eligible forecasts throughout the 2020 market shock. Extending pre-2020 context would require a versioned data/protocol review before model selection, rather than a performance-driven change after testing.
 
-We have already inspected 2026 for data quality and descriptive portfolio risk. This is a **retrospective model holdout**, not a blinded or prospective experiment. Its model scores remain unopened. A later forward-recorded experiment will preserve forecasts before their outcomes occur.
+We have already inspected 2026 for data quality and descriptive portfolio risk. This is a **retrospective model holdout**, not a blinded or prospective experiment. The 2026 results are recorded under EV-002. A later forward-recorded experiment will preserve forecasts before their outcomes occur. [Holdout results](FINAL_EVALUATION_REPORT.md)
 
 ## Targets and leakage controls
 
@@ -60,7 +60,7 @@ At the November 3 snapshot cutoff, each instrument has ten completed primary tes
 | Date membership | Warmup, fold purging, horizon completeness, year-end exclusions, stable primary grid | Implemented and regression-tested |
 | Feature/target correctness | SQL versus NumPy, complete session endpoints, future-price perturbation, and split/year-boundary examples | Implemented for twelve price features and pre-2026 targets; final-test values withheld |
 | Forecast baselines | Known recurrence/metric fixtures, nonnegative forecasts with explicit QLIKE flooring, and common origins | Implemented; trailing twenty sessions and three EWMA candidates evaluated on development years |
-| Model evaluation | Rolling development years, per-instrument/group errors, fixed final test, reproducible seeds | Fixed-form benchmarks and purged trained-model development folds evaluated; final test reserved |
+| Model evaluation | Rolling development years, per-instrument/group errors, fixed final test, reproducible seeds | Development evaluation and retrospective EV-002 holdout complete |
 | Robustness | Predeclared development slices and sensitivity | Exposure-group, realized-regime, EWMA-decay, fixed-grid-phase and omission-aggregation diagnostics implemented; feature-window sensitivity remains planned |
 | Portfolio forecasts | Evaluate portfolio predictions separately, including co-movement estimation | PF-001 evaluates two demos on matched 2023–2025 dates |
 | Operation | Failed requests, stale data, interrupted jobs, and forward-recorded predictions | Acquisition controls and local application validation/stale-result handling implemented; automated refresh and forward recording planned |
@@ -104,4 +104,8 @@ The [measurement plan](METRICS_AND_EXPERIMENTS.md) defines future paired forecas
 
 ## Portfolio development evaluation
 
-PF-001 compares direct trailing portfolio variance with fixed EWMA and trained marginal forecasts combined using a 60-session co-movement estimate. It uses two fixed demo allocations and 36 common development dates. Paired date-block resampling quantifies exploratory uncertainty and accounts for the two portfolios' shared dates. The confirmatory procedure still requires a separate freeze before 2026 scoring. [Portfolio forecast evaluation](PORTFOLIO_FORECAST_DEVELOPMENT.md)
+PF-001 compares direct trailing portfolio variance with fixed EWMA and trained marginal forecasts combined using a 60-session co-movement estimate. It uses two fixed demo allocations and 36 common development dates. Paired date-block resampling quantifies exploratory uncertainty and accounts for the two portfolios' shared dates. The later EV-002 protocol freezes the holdout procedure and reports results separately. [Portfolio forecast evaluation](PORTFOLIO_FORECAST_DEVELOPMENT.md)
+
+## Completed retrospective holdout
+
+EV-002 was committed before the test outcomes and scores were computed. The frozen evaluator refits the selected model on eligible pre-2026 labels and reports the 2026 test results for all 16 instruments and the two demo portfolios. The nominal portfolio intervals include zero, so the model stays in research under the frozen decision rule. [Frozen protocol](FINAL_EVALUATION_PROTOCOL.md) · [Holdout report](FINAL_EVALUATION_REPORT.md)
