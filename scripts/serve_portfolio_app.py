@@ -30,6 +30,7 @@ from scripts.portfolio_reweight import assess_reweight
 from scripts.portfolio_replacement import accepted_screen_universe, replacement_criteria
 from scripts.study_pilot import DEFINITION, PILOT_DATABASE, StudyPilot
 from scripts.synthetic_app_demo import SYMBOLS, build_demo
+from scripts.portfolio_risk_evidence import historical_evidence
 
 ASSETS = {'/': ('index.html', 'text/html; charset=utf-8'),
           '/app.js': ('app.js', 'text/javascript; charset=utf-8'),
@@ -91,7 +92,7 @@ def historical_scenarios(result, daily, registry):
     return records
 
 
-def assess(connection, payload, registry=None):
+def assess(connection, payload, registry=None, include_evidence=False, synthetic=False):
     config, reference = validate_request(payload)
     result, daily = analyze(connection, config)
     if registry is None:
@@ -115,6 +116,7 @@ def assess(connection, payload, registry=None):
         'scenario_registry_id': registry['scenario_registry_id'],
         'scenario_registry_sha256': hashlib.sha256(json.dumps(registry, sort_keys=True).encode()).hexdigest(),
         'application_sha256': sha256(Path(__file__)),
+        **({'risk_evidence': historical_evidence(connection, result, daily.index, synthetic)} if include_evidence else {}),
     })
 
 
@@ -351,8 +353,11 @@ def handler_class(database, study=None, synthetic=False):
                 reweight = self.path == '/api/reweight'
                 if replacement or reweight:
                     fields = {'portfolio', 'constraints', 'replacement'} if replacement else {'portfolio', 'constraints'}
-                    if not isinstance(payload, dict) or set(payload) != fields:
+                    optional = {'filters'} if screen else {'rule'} if reweight else set()
+                    if not isinstance(payload, dict) or not fields <= set(payload) or set(payload) - (fields | optional):
                         raise ValueError('Provide a current portfolio and allocation constraints')
+                    if 'filters' in payload and not isinstance(payload['filters'], dict):
+                        raise ValueError('Provide supported replacement filters')
                     config, reference = validate_request(payload['portfolio'])
                 else:
                     config, _ = validate_request(payload)
@@ -368,14 +373,16 @@ def handler_class(database, study=None, synthetic=False):
                     if replacement:
                         universe = accepted_screen_universe(database) if screen else None
                         value = serializable(replacement_criteria(
-                            connection, config, payload['constraints'], payload['replacement'], reference, universe))
+                            connection, config, payload['constraints'], payload['replacement'], reference,
+                            universe, payload.get('filters'), database))
                     elif reweight:
-                        value = serializable(assess_reweight(connection, config, payload['constraints'], reference))
+                        value = serializable(assess_reweight(connection, config, payload['constraints'], reference,
+                                                             payload.get('rule', 'optimizer')))
                     else:
                         registry = ({'schema_version': 1, 'convention': 'fixed_weights_daily_rebalanced',
                                      'scenario_registry_id': 'synthetic-demo', 'scenarios': []}
                                     if synthetic else None)
-                        value = assess(connection, payload, registry)
+                        value = assess(connection, payload, registry, include_evidence=True, synthetic=synthetic)
                 value['source_validation'] = sources
                 value['data_mode'] = 'synthetic' if synthetic else 'market'
                 self.send_json(200, value)

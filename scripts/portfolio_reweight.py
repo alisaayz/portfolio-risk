@@ -45,10 +45,7 @@ def bounds_for_holdings(constraints, symbols, current):
 
 def propose(covariance, current, lower, upper, limit, target):
     """Minimize estimated variance, then stop at the target along that path."""
-    def volatility(weights):
-        return math.sqrt(max(0.0, float(weights @ covariance @ weights)))
-
-    before = volatility(current)
+    before = portfolio_volatility(covariance, current)
     if target is not None and before <= target + RISK_TOLERANCE:
         return current, 'already_within_target'
     buy_limit = upper - current
@@ -84,7 +81,24 @@ def propose(covariance, current, lower, upper, limit, target):
     if not solution.success:
         raise ValueError('Could not verify a solution for these constraints. Review the limits and try again.')
     candidate = np.clip(weights_for(solution.x), lower, upper)
-    after = volatility(candidate)
+    if (not np.isfinite(candidate).all()
+            or abs(float(candidate.sum()) - 1) > WEIGHT_TOLERANCE
+            or (candidate < lower - WEIGHT_TOLERANCE).any()
+            or (candidate > upper + WEIGHT_TOLERANCE).any()
+            or np.abs(candidate - current).sum() / 2 > limit + WEIGHT_TOLERANCE):
+        raise ValueError('The calculated scenario did not satisfy the weight constraints')
+    return finish_path(covariance, current, candidate, target)
+
+
+def portfolio_volatility(covariance, weights):
+    return math.sqrt(max(0.0, float(weights @ covariance @ weights)))
+
+
+def finish_path(covariance, current, candidate, target):
+    before = portfolio_volatility(covariance, current)
+    if target is not None and before <= target + RISK_TOLERANCE:
+        return current, 'already_within_target'
+    after = portfolio_volatility(covariance, candidate)
     if after >= before - RISK_TOLERANCE:
         return current, 'no_improvement'
     status = 'lower_risk' if target is None else 'target_unreachable'
@@ -94,29 +108,40 @@ def propose(covariance, current, lower, upper, limit, target):
         left, right = 0.0, 1.0
         for _ in range(48):
             mid = (left + right) / 2
-            if volatility(current + mid * (candidate - current)) <= target:
+            if portfolio_volatility(covariance, current + mid * (candidate - current)) <= target:
                 right = mid
             else:
                 left = mid
         candidate = current + right * (candidate - current)
         status = 'target_met'
-    if (not np.isfinite(candidate).all()
-            or abs(float(candidate.sum()) - 1) > WEIGHT_TOLERANCE
-            or (candidate < lower - WEIGHT_TOLERANCE).any()
-            or (candidate > upper + WEIGHT_TOLERANCE).any()
-            or np.abs(candidate - current).sum() / 2 > limit + WEIGHT_TOLERANCE):
-        raise ValueError('The calculated scenario did not satisfy the weight constraints')
     return candidate, status
 
 
-def assess_reweight(connection, config, constraints, target):
+def simple_shift(covariance, current, lower, upper, limit, target):
+    order = np.argsort(np.diag(covariance), kind='stable')
+    sellers = [i for i in order[::-1] if current[i] - lower[i] > WEIGHT_TOLERANCE]
+    buyers = [i for i in order if upper[i] - current[i] > WEIGHT_TOLERANCE]
+    candidate = current.copy()
+    if sellers and buyers:
+        sell, buy = sellers[0], buyers[0]
+        if sell != buy:
+            move = min(limit, current[sell] - lower[sell], upper[buy] - current[buy])
+            candidate[sell] -= move
+            candidate[buy] += move
+    return finish_path(covariance, current, candidate, target)
+
+
+def assess_reweight(connection, config, constraints, target, rule='optimizer'):
     if len(config['portfolios']) != 1 or config['portfolios'][0]['input_type'] != 'weights':
         raise ValueError('Reweighting requires one current portfolio entered as weights')
     report, _ = analyze(connection, config)
     current = report['scenarios'][0]
     symbols, original = report['symbols'], current['weights']
     lower, upper, limit = bounds_for_holdings(constraints, symbols, original)
-    candidate, status = propose(report['annualized_covariance'], original, lower, upper, limit, target)
+    rules = {'simple': simple_shift, 'optimizer': propose}
+    if not isinstance(rule, str) or rule not in rules:
+        raise ValueError('Choose simple shift or constrained optimizer')
+    candidate, status = rules[rule](report['annualized_covariance'], original, lower, upper, limit, target)
     moved = np.abs(candidate - original).sum() / 2
     alternative = current
     if moved > 0:
@@ -134,7 +159,7 @@ def assess_reweight(connection, config, constraints, target):
         expected_risk = math.sqrt(max(0.0, float(candidate @ report['annualized_covariance'] @ candidate)))
         np.testing.assert_allclose(alternative['annualized_sample_volatility'], expected_risk, rtol=0, atol=RISK_TOLERANCE)
     return {
-        'method': 'RW-001', 'status': status, 'turnover': moved, 'target': target, 'turnover_limit': limit,
+        'method': 'RW-001' if rule == 'optimizer' else 'RW-002-simple', 'status': status, 'turnover': moved, 'target': target, 'turnover_limit': limit,
         'as_of_date': report['risk_window_end'], 'risk_window_sessions': report['risk_window_sessions'],
         'current_volatility': current['annualized_sample_volatility'],
         'alternative_volatility': alternative['annualized_sample_volatility'],

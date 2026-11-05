@@ -28,7 +28,7 @@ DEMOC,25
 
 The report displays the selected window and its actual session dates. The default is 252 sessions. Use the existing 63- or 126-session controls to review a shorter estimate. The decision panel keeps the numerical target source, move limit, and locked holdings visible. Weight changes use percentage points, so a move from 30% to 25% is a decrease of 5 percentage points.
 
-Choose **Keep current portfolio** to close the adjustment and return to the current allocation. Choose **Explore an adjustment** to preview a constrained reweighting or review replacement criteria. Loading an alternative leaves the current weights in place. Replacement results distinguish a manually entered target from the current portfolio estimate and show the move limit and locks used. The market-data screen qualifies candidates on historical volatility. Exposure eligibility and side-by-side window sensitivity are scheduled for checkpoint 3.
+Choose **Keep current portfolio** to close the adjustment and return to the current allocation. Choose **Explore an adjustment** to preview a constrained reweighting or review replacement criteria. Loading an alternative leaves the current weights in place. Replacement results distinguish a manually entered target from the current portfolio estimate and show the move limit and locks used. The market-data screen qualifies candidates on historical volatility. Checkpoint 3 adds exposure eligibility and side-by-side window sensitivity. [Risk and replacement evidence](V2_RISK_EVIDENCE.md)
 
 ```mermaid
 flowchart LR

@@ -27,3 +27,11 @@ main{max-width:1450px;margin:auto;padding:42px 5% 24px}.intro{max-width:800px;ma
 #import-controls textarea{display:block;width:100%;max-width:100%;margin:7px 0 8px;padding:8px;border:1px solid #d9e2e5;border-radius:5px;font:inherit;resize:vertical}
 #import-controls textarea:focus-visible{outline:3px solid #77b9a4;outline-offset:3px}
 .decision-card{border-left:3px solid #85b69b}
+
+#screen-filters{margin:12px 0}
+#screen-filters .paired{margin:10px 0}
+.candidate-evidence{white-space:normal;min-width:165px}
+.candidate-evidence details{margin:5px 0}
+.evidence-block h4{font-size:12px;margin:14px 0 4px}
+#replacement-screen .data-table th,#replacement-screen .data-table td{white-space:normal}
+#replacement-screen .data-table{min-width:640px}

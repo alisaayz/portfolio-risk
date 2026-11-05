@@ -144,6 +144,7 @@ function loadDemo() {
   state.revision += 1;
   resetImport();
   $('turnover-limit').value = '10';
+  $('reweight-rule').value = 'simple';
   $('reweight-constraints').replaceChildren();
   $('load-status').textContent = '';
   $('add-symbol').value = '';
@@ -284,6 +285,42 @@ function tables(value) {
     body.append(row);
   }); table.append(body);
 }
+function renderRiskEvidence(value) {
+  const evidence = value.risk_evidence;
+  const names = new Map(value.analysis.scenarios.map(row => [row.id, row.name]));
+  const details = $('risk-evidence-details');
+  details.replaceChildren(...evidence.portfolios.map(row => {
+    const block = element('div', undefined, 'evidence-block');
+    block.append(element('h4', names.get(row.portfolio_id)),
+                 element('p', `Annualized downside deviation ${percent(row.downside_deviation)} · Worst observed session ${percent(row.worst_return)} on ${shortDate(row.worst_session)}`, 'quiet'),
+                 element('p', Object.entries(row.exposures).map(([role, weight]) => `${role} ${percent(weight)}`).join(' · '), 'field-help'));
+    for (const fund of row.fund_snapshots) {
+      const allocations = Object.entries(fund.selected_fund_weights).map(([name, weight]) => `${name} ${percent(weight)}`).join(' · ');
+      const note = element('p', `${fund.symbol} selected fund categories as of ${shortDate(fund.date)} · ${allocations} · `, 'field-help');
+      note.append(evidenceLink(fund.source, 'Issuer fact sheet'));
+      block.append(note);
+    }
+    return block;
+  }));
+  details.append(element('p', evidence.lookthrough, 'field-help'));
+  $('cost-rows').replaceChildren(...evidence.portfolios.flatMap(row => row.replay.map(replay => {
+    const tr = element('tr');
+    for (const value of [names.get(row.portfolio_id), replay.schedule, replay.cost_bps,
+      percent(replay.terminal_return), `$${(100 * replay.fees_per_initial_dollar).toFixed(2)}`, replay.trades]) {
+      tr.append(element('td', String(value)));
+    }
+    return tr;
+  })));
+}
+
+function evidenceLink(url, label) {
+  const link = element('a', label);
+  link.href = url;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  return link;
+}
+
 function methods(value) {
   const a = value.analysis, notes = $('method-notes'); notes.replaceChildren();
   for (const text of [
@@ -316,7 +353,7 @@ async function runAnalysis(event) {
     const single = value.analysis.scenarios.length === 1;
     $('result-title').textContent = value.is_demo ? (single ? 'Demonstration risk report' : 'Demonstration comparison') : (single ? 'Your risk report' : 'Portfolio comparison');
     $('result-context').textContent = `${value.analysis.risk_window_sessions}-session risk window · ${shortDate(value.analysis.risk_window_start)} to ${shortDate(value.analysis.risk_window_end)}`;
-    metricCards(value); preferenceSummary(value); drawChart(); tables(value); methods(value); $('download').disabled = false;
+    metricCards(value); preferenceSummary(value); drawChart(); tables(value); methods(value); renderRiskEvidence(value); $('download').disabled = false;
     renderReweightControls(value);
     $('decision-card').hidden = false;
     renderDecisionSettings();
@@ -375,7 +412,9 @@ function showReweight(value, constraints) {
     already_within_target: 'The current estimate is already within your target.',
     no_improvement: 'The allowed changes do not materially lower the estimate.',
     lower_risk: 'This scenario lowers estimated historical volatility.',
-    target_unreachable: 'The target is out of reach under these limits. Here is the lowest estimated risk found.',
+    target_unreachable: value.method === 'RW-002-simple'
+      ? 'The simple shift falls short of your target under these limits.'
+      : 'The target is out of reach under these limits. Here is the lowest estimated risk found.',
     target_met: 'This scenario reaches your historical volatility target.',
   };
   $('reweight-summary').textContent = `${status[value.status]} Historical volatility ${percent(value.current_volatility)} → ${percent(value.alternative_volatility)}. Maximum drawdown ${percent(value.current_drawdown)} → ${percent(value.alternative_drawdown)}. Largest weight ${percent(value.current_largest_weight)} → ${percent(value.alternative_largest_weight)}. Portfolio value moved ${percent(value.turnover)} of ${percent(value.turnover_limit)} allowed. Volatility change ${percentagePointChange(value.current_volatility, value.alternative_volatility)}. ${describeConstraints(constraints)}.`;
@@ -418,7 +457,7 @@ function renderDecisionSettings() {
   const analysis = state.result.analysis;
   const target = reference === null ? 'No manual volatility target' : `Your volatility target ${percent(reference)}`;
   const settings = $('reweight-form').checkValidity() ? describeConstraints(allocationConstraints()) : 'Review the adjustment limits';
-  $('decision-settings').textContent = `${analysis.risk_window_sessions} sessions · ${target} · ${settings}`;
+  $('decision-settings').textContent = `${analysis.risk_window_sessions} sessions · ${target} · ${settings} · ${$('reweight-rule').selectedOptions[0].textContent}`;
 }
 
 let replacementRequest = 0;
@@ -442,10 +481,14 @@ $('replacement-form').addEventListener('submit', async event => {
     const reweightForm = $('reweight-form');
     if (!reweightForm.reportValidity()) return;
     const constraints = allocationConstraints();
+    const optional = (id, scale = 1) => $(id).value === '' ? null : Number($(id).value) / scale;
+    const filters = {role: $('replacement-role').value || null, max_position: optional('replacement-cap', 100),
+      min_dollar_volume: optional('replacement-volume'), max_fund_fee: optional('replacement-fee', 100)};
     const result = await api(screen ? '/api/replacement-screen' : '/api/replacement-criteria', {
       portfolio: requestPayload(false),
       constraints,
       replacement: {symbol: $('replace-symbol').value, weight: Number($('replace-weight').value) / 100},
+      ...(screen ? {filters} : {}),
     });
     if (request !== replacementRequest) return;
     const basis = result.target_source === 'manual_reference' ? 'your manual reference' : 'the current portfolio estimate';
@@ -475,13 +518,22 @@ $('replacement-form').addEventListener('submit', async event => {
 
 function showReplacementScreen(result) {
   const {candidates, policy, universe_id} = result.screen;
-  const eligible = candidates.filter(row => row.status === 'meets_target').length;
-  $('replacement-screen-summary').textContent = `${eligible} of ${candidates.length} candidates meet the target using the ${universe_id} list and ${policy} price evidence.`;
-  $('replacement-candidates').replaceChildren(...candidates.map(candidate => {
+  const stable = candidates.filter(row => row.decision === 'stable').length;
+  const eligible = candidates.filter(row => row.decision !== 'excluded').length;
+  const role = $('replacement-role').selectedOptions[0].textContent;
+  const {max_position, min_dollar_volume, max_fund_fee} = result.screen.filters;
+  const limits = [max_position == null ? null : `Position cap ${percent(max_position)}`,
+    min_dollar_volume == null ? null : `Median daily dollar-volume floor $${min_dollar_volume.toLocaleString('en-US')}`,
+    max_fund_fee == null ? null : `Fund fee cap ${percent(max_fund_fee)}`].filter(Boolean);
+  $('replacement-screen-summary').textContent = `${stable} stable within target. ${eligible} of ${candidates.length} passed the filters. Requested exposure ${role} · ${universe_id} roles dated ${result.screen.classification_date} · ${policy} price evidence.${limits.length ? ' ' + limits.join(' · ') + '.' : ''}`;
+  const order = {stable: 0, sensitive: 1, above: 2, incomplete: 3, excluded: 4};
+  const display = [...candidates].sort((left, right) => order[left.decision] - order[right.decision]);
+  $('replacement-candidates').replaceChildren(...display.map(candidate => {
     const row = element('tr'), name = element('td', candidate.symbol), action = element('td');
     name.append(element('span', candidate.research_role, 'secondary-text'));
-    const status = {meets_target: 'Within volatility target', above_target: 'Above target', unavailable: 'Incomplete matched history'};
-    if (candidate.status === 'meets_target') {
+    const status = {stable: 'Stable within target', above: 'Above target', sensitive: 'Window or estimator sensitive',
+      incomplete: 'Incomplete matched history', excluded: 'Excluded by filters'};
+    if (candidate.decision === 'stable') {
       const button = element('button', 'Compare', 'secondary-button');
       button.type = 'button';
       button.setAttribute('aria-label', `Compare ${candidate.symbol} replacement`);
@@ -506,9 +558,36 @@ function showReplacementScreen(result) {
       });
       action.append(button);
     }
-    row.append(name, element('td', percent(candidate.standalone_volatility)),
+    const details = element('td', undefined, 'candidate-evidence');
+    const estimates = candidate.window_scores.map(score => score.portfolio_volatility);
+    if (estimates.length) {
+      details.append(element('span', `${percent(Math.min(...estimates))}–${percent(Math.max(...estimates))}`));
+      const ranks = candidate.window_scores.map(score => score.rank).filter(Number.isFinite);
+      if (ranks.length) details.append(element('span', `Rank ${Math.min(...ranks)}–${Math.max(...ranks)}`, 'secondary-text'));
+      const windows = element('details');
+      windows.append(element('summary', 'See estimates'));
+      for (const score of candidate.window_scores) {
+        windows.append(element('span', `${score.window} ${score.estimator} · ${percent(score.portfolio_volatility)} / ${percent(score.target)} target`, 'secondary-text'));
+      }
+      if (candidate.paired_interval) {
+        windows.append(element('span', `Paired 95% interval ${candidate.paired_interval.map(x => percentagePointChange(0, x)).join(' to ')}`, 'secondary-text'));
+      }
+      details.append(windows);
+    }
+    for (const reason of candidate.exclusions) details.append(element('span', reason, 'secondary-text'));
+    if (candidate.dollar_volume) {
+      const {median_usd, start, end} = candidate.dollar_volume;
+      details.append(element('span', `Median volume $${(median_usd / 1e6).toFixed(1)}m · ${start} to ${end}`, 'secondary-text'));
+    }
+    if (candidate.fund_fee) {
+      const {annual_ratio, date, source} = candidate.fund_fee;
+      const fee = element('span', '', 'secondary-text');
+      fee.append(evidenceLink(source, `Annual fee ${(annual_ratio * 100).toFixed(4)}% · ${date}`));
+      details.append(fee);
+    }
+    row.append(name, element('td', percent(candidate.standalone_volatility ?? null)),
                element('td', candidate.correlation == null ? '—' : candidate.correlation.toFixed(2)),
-               element('td', percent(candidate.portfolio_volatility)), element('td', status[candidate.status]), action);
+               element('td', percent(candidate.portfolio_volatility ?? null)), element('td', status[candidate.decision]), details, action);
     return row;
   }));
   $('replacement-screen').hidden = false;
@@ -540,7 +619,7 @@ $('reweight-form').addEventListener('submit', async event => {
   $('preview-reweight').disabled = true;
   try {
     const constraints = allocationConstraints();
-    const result = await api('/api/reweight', {portfolio: requestPayload(false), constraints});
+    const result = await api('/api/reweight', {portfolio: requestPayload(false), constraints, rule: $('reweight-rule').value});
     if (request === reweightRequest) showReweight(result, constraints);
   } catch (error) {
     if (request === reweightRequest) {
@@ -592,7 +671,7 @@ async function initialize() {
     $('snapshot').textContent = `${catalog ? catalog.eligible_candidates.toLocaleString() + ' searchable U.S. stock/ETF candidates' : state.context.instruments.length + ' accepted instruments'} · saved analysis cutoff ${shortDate(state.context.latest_common_close)} · USD`;
     if (state.context.data_mode === 'synthetic') {
       $('snapshot').textContent = 'Synthetic demo · three fictional instruments · generated weekday observations';
-      for (const id of ['screen-replacement', 'screen-help', 'historical-stress', 'study-link']) $(id).hidden = true;
+      for (const id of ['screen-replacement', 'screen-help', 'screen-filters', 'historical-stress', 'study-link']) $(id).hidden = true;
       $('catalog-help').textContent = 'Demo tickers available here: DEMOA, DEMOB, DEMOC.';
       $('privacy-source').textContent = 'The demo uses generated prices locally.';
       $('footer-source').textContent = 'Fictional tickers · long-only demo portfolios · generated data';

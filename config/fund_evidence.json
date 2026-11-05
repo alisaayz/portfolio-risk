@@ -1,0 +1,16 @@
+{
+  "fees": {
+    "SPY": {"annual_ratio": 0.000945, "date": "2026-01-26", "source": "https://www.sec.gov/Archives/edgar/data/884394/000119312526022316/d77353d485bpos.htm"},
+    "QQQ": {"annual_ratio": 0.0018, "date": "2025-12-22", "source": "https://www.sec.gov/Archives/edgar/data/1067839/000110465925123275/tm2529177d5_497k.htm"},
+    "IWM": {"annual_ratio": 0.0019, "date": "2026-07-31", "source": "https://www.sec.gov/Archives/edgar/data/1100663/000119312526327900/d25568d497k.htm"},
+    "EFA": {"annual_ratio": 0.0032, "date": "2025-11-28", "source": "https://www.sec.gov/Archives/edgar/data/1100663/000119312525302111/d14317d497k.htm"},
+    "IEF": {"annual_ratio": 0.0015, "date": "2026-06-29", "source": "https://www.sec.gov/Archives/edgar/data/1100663/000119312526287945/d127751d497k.htm"}
+  },
+  "composition": {
+    "BND": {
+      "date": "2025-06-30",
+      "source": "https://institutional.vanguard.com/assets/corp/fund_communications/pdf_publish/us-products/fact-sheet/F0928.pdf",
+      "selected_fund_weights": {"Treasury/Agency": 0.487, "Government Mortgage-Backed": 0.196}
+    }
+  }
+}

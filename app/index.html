@@ -78,6 +78,10 @@
                 <thead><tr><th scope="col">Holding</th><th scope="col">Min (%)</th><th scope="col">Max (%)</th><th scope="col">Keep weight</th></tr></thead>
                 <tbody id="reweight-constraints"></tbody>
               </table></div>
+              <label class="reweight-limit">Adjustment method
+                <select id="reweight-rule"><option value="simple">Simple shift</option><option value="optimizer">Constrained optimizer</option></select>
+              </label>
+              <p class="field-help">The simple shift is the default based on the matched development replay.</p>
               <button class="secondary-button" id="preview-reweight" type="submit">Preview new weights</button>
             </form>
             <p class="notice error" id="reweight-error" role="alert" hidden></p>
@@ -98,10 +102,19 @@
                   <label>Holding to reduce <select id="replace-symbol" required></select></label>
                   <label>Portfolio value to replace (%) <input id="replace-weight" type="number" min="0" max="100" step="any" placeholder="e.g. 10" required></label>
                 </div>
+                <details id="screen-filters">
+                  <summary>Set replacement purpose and limits</summary>
+                  <div class="paired">
+                    <label>Intended exposure<select id="replacement-role"><option value="">Any listed role</option><option value="equity_etf">Equity ETF</option><option value="bond_etf">Bond ETF</option><option value="stock">Individual stock</option><option value="gold_trust">Gold trust</option></select></label>
+                    <label>Largest resulting position (%)<input id="replacement-cap" type="number" min="0" max="100" step="any" placeholder="Optional"></label>
+                    <label>Minimum median daily dollar volume (USD)<input id="replacement-volume" type="number" min="0" max="1000000000000" step="any" placeholder="Optional"></label>
+                    <label>Maximum annual fund fee (%)<input id="replacement-fee" type="number" min="0" max="100" step="any" placeholder="Optional"></label>
+                  </div>
+                </details>
                 <button class="secondary-button" id="show-replacement" type="submit">Show replacement criteria</button>
                 <button class="secondary-button" id="screen-replacement" type="submit">Screen audited candidates</button>
               </form>
-              <p class="field-help" id="screen-help">The screen checks the 16-instrument research list and skips holdings already in your portfolio.</p>
+              <p class="field-help" id="screen-help">The screen checks the 16-instrument research list and skips holdings already in your portfolio. It compares sample and shrinkage estimates over 63, 126, and 252 sessions.</p>
               <p id="replacement-error" class="notice error" role="alert" hidden></p>
               <div id="replacement-result" hidden>
                 <p id="replacement-summary" class="notice" role="status"></p>
@@ -114,16 +127,27 @@
               <div id="replacement-screen" hidden>
                 <p class="notice" id="replacement-screen-summary" role="status"></p>
                 <div class="table-scroll"><table class="data-table">
-                  <thead><tr><th scope="col">Candidate</th><th scope="col">Volatility</th><th scope="col">Correlation</th><th scope="col">Portfolio volatility</th><th scope="col">Target</th><th scope="col"><span class="sr-only">Compare</span></th></tr></thead>
+                  <thead><tr><th scope="col">Candidate</th><th scope="col">Candidate volatility</th><th scope="col">Correlation</th><th scope="col">Selected-window portfolio volatility</th><th scope="col">Decision</th><th scope="col">Sensitivity and evidence</th><th scope="col"><span class="sr-only">Compare</span></th></tr></thead>
                   <tbody id="replacement-candidates"></tbody>
                 </table></div>
-                <p class="field-help">The screen ranks historical volatility on matched dates. Verify exposure, liquidity, and costs before using a scenario for an investment decision.</p>
+                <p class="field-help">Stable means all six historical estimates met their matching target. The paired interval uses matched historical days and describes uncertainty in the selected-window volatility change. Direct categories and dollar volume are limited proxies for exposure and liquidity.</p>
               </div>
             </details>
           </details>
           <section class="card preference-card" id="preference-card" hidden><h3>Your risk preferences</h3><p class="quiet" id="preference-progress"></p><div id="preference-summary"></div><p class="field-help">The comparisons describe this saved history. Future losses may be larger or persist; no recommended allocation or numerical volatility target is inferred.</p></section>
           <section class="card chart-card"><div class="section-top"><div><h3>Historical replay</h3><p class="quiet">Fixed weights rebalanced daily · no costs or taxes</p></div><div class="chart-tabs" role="group" aria-label="Chart metric"><button type="button" id="wealth-tab" class="selected" aria-pressed="true">Wealth</button><button type="button" id="drawdown-tab" aria-pressed="false">Drawdown</button></div></div><div id="chart" class="chart" role="img" aria-label="Comparison of historical portfolio wealth"></div><div class="chart-footer"><span id="chart-start"></span><div id="chart-legend" class="legend"></div><span id="chart-end"></span></div><p id="chart-description" class="field-help"></p></section>
           <section class="card"><div class="section-top"><div><h3>Where risk comes from</h3><p class="quiet">Capital allocation can differ from contribution to volatility.</p></div></div><div class="table-scroll"><table class="data-table"><thead id="risk-heading"></thead><tbody id="risk-rows"></tbody></table></div><p class="field-help">Risk shares use historical sample covariance. Negative shares indicate a diversifying contribution; they are preserved.</p></section>
+          <section class="card" id="risk-evidence">
+            <h3>Downside and trading-cost scenarios</h3>
+            <p class="quiet">Historical returns on matched dates</p>
+            <div id="risk-evidence-details"></div>
+            <p class="field-help">Downside deviation measures returns below zero across the selected risk window. The dated loss is the worst observed session in the full replay.</p>
+            <details class="risk-guide">
+              <summary>Compare daily and monthly rebalancing costs</summary>
+              <p class="field-help">Charge 5 or 25 basis points per buy or sell dollar. The 25 basis point scenario assumes wider spreads. Initial holdings are already in place. Taxes, fixed fees, market impact, and liquidation are excluded.</p>
+              <div class="table-scroll"><table class="data-table"><thead><tr><th scope="col">Portfolio</th><th scope="col">Schedule</th><th scope="col">Cost (bp)</th><th scope="col">Terminal return</th><th scope="col">Fees per $100 initial</th><th scope="col">Trades</th></tr></thead><tbody id="cost-rows"></tbody></table></div>
+            </details>
+          </section>
           <section class="card" id="historical-stress"><div class="section-top"><div><h3>Historical stress windows</h3><p class="quiet">How these weights would have behaved, rather than your actual past returns.</p></div></div><div class="table-scroll"><table class="data-table"><thead id="stress-heading"></thead><tbody id="stress-rows"></tbody></table></div><p class="field-help">Replay starts at the named starting close. Drawdown is measured within that window. Incomplete windows remain unavailable.</p></section>
           <details class="card details"><summary>Methods, source status &amp; correlations</summary><div id="method-notes" class="method-notes"></div><div class="table-scroll"><table class="data-table correlation-table" id="correlation-table"></table></div></details>
         </div>

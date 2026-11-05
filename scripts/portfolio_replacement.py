@@ -11,6 +11,7 @@ import numpy as np
 from scripts.audit_market_data import ROOT, load_universe
 
 from scripts.portfolio_baseline import analyze
+from scripts.replacement_evidence import add_replacement_evidence
 from scripts.portfolio_reweight import WEIGHT_TOLERANCE, bounds_for_holdings, fraction
 
 
@@ -30,7 +31,7 @@ def volatility_band(remaining_risk, swap, target, correlation):
     return {'minimum': lower / swap, 'maximum': max(lower, upper) / swap}
 
 
-def replacement_criteria(connection, config, constraints, replacement, target, universe=None):
+def replacement_criteria(connection, config, constraints, replacement, target, universe=None, options=None, database=None):
     if len(config['portfolios']) != 1 or config['portfolios'][0]['input_type'] != 'weights':
         raise ValueError('Replacement criteria require one current portfolio entered as weights')
     if not isinstance(replacement, dict) or set(replacement) != {'symbol', 'weight'}:
@@ -74,6 +75,8 @@ def replacement_criteria(connection, config, constraints, replacement, target, u
 
     if universe is not None:
         result['screen'] = screen_candidates(connection, report, remainder, result, universe)
+        if options is not None:
+            add_replacement_evidence(connection, database, report, weights, remainder, result, universe, options)
     return result
 
 
@@ -92,6 +95,7 @@ def accepted_screen_universe(database):
         raise ValueError('Candidate screening requires the audited DS-002 research universe')
     return {
         'policy': policy['policy_id'], 'dataset_id': dataset_id, 'universe_id': registry['universe_id'],
+        'classification_date': registry['selected_on'],
         'instruments': [row for row in registry['instruments'] if row['symbol'] in accepted],
     }
 

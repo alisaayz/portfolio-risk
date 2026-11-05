@@ -33,6 +33,8 @@ The cases, rubric, and 30-path scripted baseline are complete. The scripted find
 
 ## 3. Make the risk and replacement evidence harder to misuse
 
+**Technical checkpoint complete November 5, 2026.** The dashboard shows historical downside, cost scenarios, bounded exposure evidence, and filtered window sensitivity. The 432-case development replay selected the simple shift as default. Complete underlying issuer overlap remains unknown. [Results and verification](V2_RISK_EVIDENCE.md)
+
 **Weeks 5–6.** Expand the report and show where comparisons depend on assumptions.
 
 | Critique | Version 2 work | Verification |
