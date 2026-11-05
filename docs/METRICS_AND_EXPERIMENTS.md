@@ -1,6 +1,6 @@
 # Measurement and experimentation plan
 
-Updated November 4, 2026. This document distinguishes implemented analytical metrics from proposed user-outcome measurement and statistical inference. No user experiment, telemetry collection, or statistical-significance result is claimed.
+Updated November 4, 2026. This document distinguishes analytical metrics, the implemented UX-P01 pilot workflow, and planned confirmatory inference. Participant outcomes are pending.
 
 ## The decisions measurement should support
 
@@ -18,21 +18,21 @@ These questions require different evidence. Portfolio volatility describes a por
 | Forecast accuracy: primary | Mean absolute annualized-volatility error, first within instruments and then equally across instruments | Implemented on chronological development folds |
 | Forecast accuracy: secondary | Variance QLIKE on identical forecast origins; prediction-floor counts | Implemented; development results and tradeoffs published |
 | Model improvement | Absolute and relative error change versus the frozen selected benchmark | Development comparison available; confirmatory uncertainty/significance not established |
-| User outcome: proposed primary | Percentage of assigned participants answering all three predefined risk questions correctly after using their assigned report | Not collected; requires real participants and predefined answer keys |
-| User outcome: diagnostic | Task completion time, individual-question accuracy, and explanation clarity | Not collected; completion time must be considered with accuracy and abandonment |
-| Product guardrails | Task abandonment; critical misunderstandings; failed analyses; unavailable histories; response latency | Error/loading states implemented; a systematic measurement dataset is not yet implemented |
+| User outcome: primary | Percentage of assigned participants answering all three predefined risk questions correctly with the report available | Defined and scored by UX-P01; participant outcomes pending |
+| User outcome: diagnostic | Completion time and individual-question accuracy | Timing and answer scores can be recorded with consent; clarification feedback requires facilitation |
+| Product guardrails | Early exits and unfinished tasks; critical misunderstandings; failed analyses; unavailable histories; response latency | UX-P01 summarizes study exits and critical misunderstandings. Operational error and loading states are implemented |
 | Coverage and source quality | Valid requested instruments successfully audited; missing-session counts; adjustment-review blocks; source freshness and verification tier | Structural audits and status evidence implemented; directory membership is not price availability |
 
 Do not substitute page views, button clicks, or time spent for successful risk understanding. A shorter session can reflect either efficiency or abandonment. Metric denominators, timing rules, missingness, and exclusions must be documented before comparison.
 
-## Proposed user experiment: does the presentation improve understanding?
+## Does a chart improve understanding?
 
-**Question:** Does the interactive dashboard help a person interpret the same risk information more accurately than a basic numerical report?
+**Question:** Does adding a switchable chart help a person interpret the same risk information more accurately than a numerical report alone?
 
 - **Control:** a plain report containing the same underlying numerical facts and assumptions.
-- **Treatment:** the interactive dashboard presenting those facts with its charts and explanations.
+- **Treatment:** the same numerical report with a chart that can display capital weights or volatility contributions.
 - **Randomization unit:** participant. Assign each participant to one version for the primary comparison; repeated questions are not independent participants.
-- **Task materials:** fixed demonstration portfolios, not personal holdings. Use the same task difficulty and answer keys in both groups.
+- **Task materials:** one fixed demonstration portfolio with the same assumptions, questions, and answer keys in both groups.
 - **Primary outcome:** participant answers all three predefined risk questions correctly. Example tasks identify the largest volatility contributor, determine whether the reported volatility exceeds a stated reference, and distinguish volatility from a guaranteed maximum loss. Final wording and scoring must be frozen after a separate usability pilot.
 - **Null hypothesis:** treatment does not improve the population success rate relative to control. The directional alternative is an improvement. Fix the direction before collecting the confirmatory sample.
 - **Guardrails:** abandonment and critical misunderstandings must not worsen beyond predefined acceptable margins. Time-to-completion is secondary; do not exclude failed participants to make the interface appear faster.
@@ -53,24 +53,14 @@ Ticker rows share market shocks and adjacent periods can remain dependent. A nai
 
 The 2025 model and EWMA settings were selected using that year's scores. Its apparent improvement is development evidence and does not provide an unbiased confirmatory test of the selected winner. Existing grid-phase and omission diagnostics are not independent trials. Freeze the complete model, comparator, metric, inference procedure, and evaluation sample before opening final 2026 outcomes. The currently available final-test grid has only ten completed market windows per instrument; adding tickers does not create independent market periods. Forward-recorded forecasts can later extend evidence.
 
-## Proposed data collection and SQL composition
+## Local pilot and SQL composition
 
-```mermaid
-flowchart LR
-    A[Prespecified hypothesis and metric definitions] --> B[Consenting real participants]
-    B --> C[Participant-level randomized assignment]
-    C --> D[Fixed demo tasks and keyed outcomes]
-    D --> E[Versioned SQL experiment tables]
-    E --> F[Effect size, uncertainty, guardrails]
-    F --> G[Decision and documented limitations]
-```
+The [UX-P01 study guide](COMPREHENSION_PILOT.md) documents both runnable modes. Practice lets the reader select a format and discards responses after scoring. Recording requires explicit launch configuration and participant consent. SQLite stores frozen definitions in `experiment_definitions`, anonymous format assignments and completion state in `assignments`, and scored responses in `task_answers`. A read-only SQL query groups records per assignment before computing descriptive metrics by format.
 
-Planned tables: `experiment_definitions` for frozen hypotheses/metrics; `assignments` for anonymous participant ID and assigned variant; `task_events` for versioned task outcomes/timings; and `experiment_results` for sample counts, exclusions, effects, intervals, and test settings. Do not collect names, contact details, personal holdings, or portfolio values for the fixed-demo experiment. Participation and measurement should be explicit; no hidden tracking is added by this plan.
-
-The next measurement milestone is a working protocol and task prototype followed by real usability observations. Recruitment and a powered confirmatory study remain future work. Do not create simulated users or invented significance results to fill the report.
+The next measurement step is a facilitated pilot with real participants. Review task wording, scoring, and timing before freezing a confirmatory protocol. Use the pilot to identify usability issues and estimate design inputs.
 
 Method references: [Microsoft's pre-experiment guidance](https://www.microsoft.com/en-us/research/articles/patterns-of-trustworthy-experimentation-pre-experiment-stage/), [properties of useful experimentation metrics](https://www.microsoft.com/en-us/research/articles/stedii-properties-of-a-good-metric/), and [Diebold and Mariano's forecast-accuracy comparison paper](https://www.nber.org/system/files/working_papers/t0169/t0169.pdf). These references motivate the proposed design; no external company's practices or project-specific causal results are inferred from them.
 
 ## Personal questionnaire versus user-study outcomes
 
-RQ-001 is an implemented, optional preference-reflection guide; it is not the proposed objective comprehension quiz. Preference answers are not graded as right or wrong and are not logged as research telemetry. The application defaults to one portfolio and offers an optional alternative comparison. Before a study, keep underlying facts and preference elicitation consistent across variants if the aim is to isolate presentation; if testing the guide itself, define that intervention explicitly. Its existence does not establish psychometric validity or user benefit. See [the guide methodology](RISK_PREFERENCES.md).
+RQ-001 captures preferences for personal reflection. UX-P01 scores interpretation of a separate fixed report. RQ-001 answers stay in the application workflow and are excluded from study records. The application defaults to one portfolio and offers an optional alternative comparison. Before a study, keep underlying facts and preference elicitation consistent across variants if the aim is to isolate presentation; if testing the guide itself, define that intervention explicitly. Its existence does not establish psychometric validity or user benefit. See [the guide methodology](RISK_PREFERENCES.md).

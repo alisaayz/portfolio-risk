@@ -1,0 +1,42 @@
+{
+  "study_id": "UX-P01",
+  "report": {
+    "source_report_id": "8441f9038beee32efb0361d9e9afdc20855041815c28ea3d30e9a4dfbe36374c",
+    "dataset_id": "80b5d80b266b0255f7c8de0310569de02f63a5ee0ff2a54e707ddfa2cd114166",
+    "as_of": "2026-11-03",
+    "risk_sessions": 252,
+    "volatility_pct": 11.293913104619734,
+    "reference_pct": 10,
+    "drawdown_pct": 26.942245253226094,
+    "drawdown_start": "2020-01-02",
+    "holdings": [
+      {"symbol": "AAPL", "weight_pct": 30, "risk_share_pct": 52.91071507721823},
+      {"symbol": "BND", "weight_pct": 20, "risk_share_pct": 2.72177233024287},
+      {"symbol": "SPY", "weight_pct": 50, "risk_share_pct": 44.36751259253891}
+    ]
+  },
+  "questions": [
+    {
+      "id": "largest_contributor",
+      "prompt": "Which holding contributed the largest share of the portfolio’s estimated volatility?",
+      "choices": {"AAPL": "AAPL", "BND": "BND", "SPY": "SPY", "unsure": "I'm not sure"},
+      "correct": "AAPL",
+      "explanation": "AAPL accounts for 52.91% of estimated volatility, the largest risk share in the report."
+    },
+    {
+      "id": "reference_comparison",
+      "prompt": "How does the reported annualized volatility compare with the example reference?",
+      "choices": {"above": "Above the reference", "equal": "Equal to the reference", "below": "Below the reference", "unsure": "I'm not sure"},
+      "correct": "above",
+      "explanation": "The reported 11.29% volatility exceeds the example 10% reference."
+    },
+    {
+      "id": "volatility_meaning",
+      "prompt": "What does the reported annualized historical volatility describe?",
+      "choices": {"guaranteed_limit": "The maximum amount this portfolio could lose", "average_gain": "The average yearly investment gain", "variation": "How much historical returns varied, expressed on an annual scale", "unsure": "I'm not sure"},
+      "correct": "variation",
+      "critical_choice": "guaranteed_limit",
+      "explanation": "Annualized historical volatility describes variation in past returns. Maximum historical drawdown describes the largest observed peak-to-trough decline."
+    }
+  ]
+}

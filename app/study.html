@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Portfolio report study</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/study.css">
+  <script src="/study.js" defer></script>
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="/">Portfolio<span>Risk</span></a><span class="local-label">Report study</span></header>
+  <main class="study">
+    <h1>Can you read this risk report?</h1>
+    <p class="lede">Review a demonstration portfolio and answer three questions. Use the report as you work.</p>
+    <p id="study-error" role="alert" class="notice error" hidden></p>
+    <section class="card" id="study-start" hidden>
+      <h2 id="study-mode"></h2>
+      <p id="study-privacy"></p>
+      <form id="start-form">
+        <label id="format-label" hidden>Report format
+          <select id="practice-format"><option value="plain">Numerical report</option><option value="visual">Report with charts</option></select>
+        </label>
+        <label class="compare-toggle"><input id="consent" type="checkbox" required><span id="consent-text"></span></label>
+        <button class="primary-button" id="start-button" type="submit">Start</button>
+      </form>
+    </section>
+    <div class="study-task" id="study-task" hidden>
+      <section class="card" aria-labelledby="report-title">
+        <h2 id="report-title">Demonstration portfolio</h2>
+        <p id="report-dates" class="quiet"></p>
+        <dl id="study-facts" class="study-facts"></dl>
+        <div id="study-chart" hidden>
+          <label>Chart measure <select id="chart-measure"><option value="risk_share_pct">Share of volatility</option><option value="weight_pct">Capital weight</option></select></label>
+          <svg id="chart-bars" viewBox="0 0 350 130" role="img" aria-label="Holding percentages"></svg>
+        </div>
+        <table class="data-table">
+          <thead><tr><th scope="col">Holding</th><th scope="col">Capital weight</th><th scope="col">Share of volatility</th></tr></thead>
+          <tbody id="study-holdings"></tbody>
+        </table>
+        <p class="field-help">Volatility describes how much past returns varied, expressed on an annual scale. Drawdown measures the largest observed peak-to-trough decline. The replay uses fixed weights rebalanced daily and excludes trading costs and taxes.</p>
+      </section>
+      <section class="card" aria-labelledby="questions-title">
+        <h2 id="questions-title">Three questions</h2>
+        <form id="answer-form">
+          <div id="study-questions"></div>
+          <button id="submit-answers" class="primary-button" type="submit">Submit answers</button>
+          <button id="end-study" class="text-button study-end" type="button">End without submitting</button>
+        </form>
+      </section>
+    </div>
+    <section class="card" id="study-done" aria-live="polite" hidden>
+      <h2 id="done-title"></h2>
+      <p id="done-detail"></p>
+      <ol id="study-feedback"></ol>
+      <a href="/study" id="practice-again" hidden>Try another practice report</a>
+    </section>
+  </main>
+</body>
+</html>

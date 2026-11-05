@@ -1,11 +1,11 @@
 # Personal Portfolio Risk Platform
 
-**Status:** Personal portfolio analysis, optional risk-preference guidance, U.S. symbol search, and model development implemented; user experiments and final model testing remain planned.
+**Status:** Personal portfolio analysis, risk-preference guidance, model development, and a local comprehension pilot workflow are implemented. Participant evaluation and final model testing remain planned.
 **Last updated:** November 4, 2026.
 
 ## 1. Executive summary
 
-The Personal Portfolio Risk Platform is a financial analytics project for evaluating existing investments and comparing hypothetical portfolios. Its local application starts with one portfolio, explains historical risk, and offers an optional alternative comparison. A short preference guide separates self-reported comfort with fluctuations from cash-access needs and puts historical drawdowns in context. U.S. symbol discovery and on-demand application histories are separate from the fixed research dataset. A later suggestion layer will propose weight changes or replacement criteria relative to user-defined risk preferences, with optional candidate screening.
+The Personal Portfolio Risk Platform is a financial analytics project for evaluating existing investments and comparing hypothetical portfolios. Its local application starts with one portfolio, explains historical risk, and offers an optional alternative comparison. A short preference guide separates self-reported comfort with fluctuations from cash-access needs and puts historical drawdowns in context. U.S. symbol discovery and on-demand application histories are separate from the fixed research dataset. A local study workflow prepares an evaluation of whether a chart helps readers interpret a portfolio risk report. A later suggestion layer will propose weight changes or replacement criteria relative to user-defined risk preferences, with optional candidate screening.
 
 The central research question is whether a trained model can forecast volatility over the next 20 trading days more accurately than historical estimates. The implemented foundation downloads and audits real market history, preserves evidence, and loads versioned observations into DuckDB and Parquet. SQL views enforce source-selection rules and calculate calendar-aligned returns and historical volatility inputs. A separate versioned modeling layer builds causal features and pre-2026 targets under the chronological evaluation contract. The baseline report compares dated portfolios using historical covariance, volatility, drawdown, and holding risk contributions. Historical benchmarks and pooled gradient-boosted models are evaluated on development years; a local application now provides historical portfolio analysis with optional comparison; final model testing remains reserved.
 
@@ -35,11 +35,13 @@ A [local portfolio comparison application](docs/APPLICATION.md) now starts with 
 
 The [U.S. market expansion](docs/US_MARKET_EXPANSION.md) adds local ticker/company search over **11,806 stock/ETF candidates** from **13,237 active, non-test Nasdaq directory listings**. Listing records are not audited price histories. Additional histories are loaded through a queue, validated under separate **AP-001** controls, cached with hashes, and combined in memory for historical analysis. META, VOO, and BRK.B each pass structural/provider checks on 1,719 sessions; no independent price cross-check is claimed for those additions. The original research database remains unchanged.
 
-The dashboard now displays verified **development MAE and QLIKE**, separately from portfolio risk. A [measurement and experimentation plan](docs/METRICS_AND_EXPERIMENTS.md) defines proposed user-task success, completion-time and misunderstanding guardrails, a participant-randomized report comparison, and dependence-aware forecast inference. No user study or statistically significant improvement is claimed. Software checks establish implementation behavior rather than user benefit.
+The dashboard displays verified **development MAE and QLIKE** separately from portfolio risk. The [measurement plan](docs/METRICS_AND_EXPERIMENTS.md) specifies separate metrics for model accuracy, application reliability, and reader comprehension.
 
 The [personal workflow and RQ-001 guide](docs/RISK_PREFERENCES.md) let users assess one portfolio without supplying a second allocation or choosing a volatility target. Five optional questions cover horizon, unexpected-expense flexibility, stability/growth preference, reaction to a decline, and explicit loss comfort. Uncertain answers remain unspecified. The report separates willingness and access needs and compares an explicitly stated decline comfort with historical drawdown. It produces no validated risk score, inferred volatility target, or allocation recommendation. Comparison starts from copied current weights and stays optional.
 
-**146 regression tests pass locally**, covering data integrity, source acceptance, policy scope, rollback, exports, portfolio calculations, numerical reconciliation, and chronological boundaries. The [Python application workflow](.github/workflows/python-app.yml) runs fixture-based checks on pushes and pull requests. Final model testing and portfolio-forecast integration remain subsequent milestones; development results do not establish final-test or live performance. A [future adjustment roadmap](docs/PORTFOLIO_ADJUSTMENT_ROADMAP.md) records requested reweighting, replacement criteria, and optional candidate suggestions; none is implemented.
+The [UX-P01 study workflow](docs/COMPREHENSION_PILOT.md) uses three scored questions and a fixed demonstration report calculated from accepted market data. The numerical and chart formats contain the same facts. Practice discards answers after scoring. Optional pilot mode requires consent, randomly assigns a format, and stores local anonymous records for a descriptive SQL summary. Verification covers practice and test fixtures. Participant evaluation is pending.
+
+**149 regression tests pass locally**, covering data integrity, portfolio calculations, chronological boundaries, and study consent, scoring, and record integrity. The [Python application workflow](.github/workflows/python-app.yml) runs fixture-based checks on pushes and pull requests. Final model testing and portfolio-forecast integration remain subsequent milestones; development results do not establish final-test or live performance. A [future adjustment roadmap](docs/PORTFOLIO_ADJUSTMENT_ROADMAP.md) records requested reweighting, replacement criteria, and optional candidate suggestions; none is implemented.
 
 ## 3. Project composition and methodology
 
@@ -64,7 +66,7 @@ The [personal workflow and RQ-001 guide](docs/RISK_PREFERENCES.md) let users ass
 | Forecast benchmarks | Trailing variance and three EWMA candidates, matched primary/daily samples, per-instrument/group metrics, and versioned experiments | Implemented on development years; [results](docs/BASELINE_FORECAST_REPORT.md) |
 | Machine learning | Pooled positive-variance gradient boosting, purged chronological folds, fixed candidate grid, and independent score verification | Implemented on development years; [results](docs/MODEL_DEVELOPMENT_REPORT.md); final refit/test reserved |
 | Application | Assess one portfolio, optionally compare an alternative, reflect risk preferences, search U.S. candidates, and inspect historical/development metrics | Implemented for historical risk; [guide](docs/APPLICATION.md); portfolio forecasts/suggestions planned |
-| User measurement | Task-success, time/error guardrails, randomized report comparison, and prespecified inference | [Design documented](docs/METRICS_AND_EXPERIMENTS.md); participants, outcome collection, and significance testing not yet executed |
+| User measurement | Identical numerical facts, optional chart, three scored tasks, and consented random assignment | [Practice and descriptive pilot implemented](docs/COMPREHENSION_PILOT.md); participant evidence and confirmatory inference planned |
 
 ### Local application
 
@@ -91,7 +93,21 @@ The optional alternative starts with copied current weights and can be edited in
 
 The three starting holdings are a demonstration. Search can discover the broader U.S. directory; an additional instrument enters analysis only after its provider identity, currency/type/timezone, sessions, and adjustments pass AP-001 checks. Source-tier notices distinguish this evidence from the research sample's limited independent checks. Up to 100 positions per portfolio are supported, subject to usable common history. The current saved analysis cutoff remains November 3, 2026; this is not a live feed. New listings, unavailable histories, unsupported types, and review failures stay visible.
 
-The [metrics plan](docs/METRICS_AND_EXPERIMENTS.md) separates portfolio description, model accuracy, product reliability, and user understanding. A proposed randomized comparison uses the same risk facts in a plain report and the dashboard, with participant task success as the primary user outcome. Effect sizes, uncertainty, power, exclusions, stopping rules, and guardrails must be specified before confirmatory collection. Existing development scores and software tests do not establish statistical significance or user benefit.
+### Report comprehension study
+
+The [local practice page](http://127.0.0.1:8765/study) lets readers try both report formats using the same demonstration holdings, risk figures, and three questions. One format adds a chart that switches between capital weight and share of volatility.
+
+```mermaid
+flowchart LR
+    A[Fixed real-data demonstration] --> B[Default practice]
+    A --> C[Explicit pilot mode]
+    B --> D[Choose a format and receive feedback]
+    C --> E[Consent and random assignment]
+    E --> F[Local SQLite records]
+    F --> G[Descriptive metrics by format]
+```
+
+The primary pilot metric is the share of assigned participants who answer all three questions correctly. The summary also tracks completion, early exit, critical misunderstandings, and median completion time. A separate confirmatory study would require a frozen protocol and a justified sample size. See the [study guide](docs/COMPREHENSION_PILOT.md) and [measurement plan](docs/METRICS_AND_EXPERIMENTS.md).
 
 ### Data quality findings
 

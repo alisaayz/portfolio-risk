@@ -1,0 +1,18 @@
+.study { max-width: 1150px; }
+.study-task { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+.study h2 { margin-bottom: 12px; }
+.study p, .study li { font-size: 13px; line-height: 1.6; }
+.study-facts { margin: 20px 0; }
+.study-facts div { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.study-facts dt { font-size: 12px; }
+.study-facts dd { margin: 0; font-size: 14px; font-weight: 650; }
+.study fieldset { border: 0; border-bottom: 1px solid var(--line); margin: 0; padding: 12px 0 14px; }
+.study legend { font-size: 13px; font-weight: 650; padding: 14px 0 0; }
+.study fieldset label { display: flex; gap: 8px; align-items: flex-start; margin: 9px 0; line-height: 1.4; }
+.study input[type=radio] { width: auto; margin: 1px 0 0; accent-color: var(--green); }
+.study-end { margin-top: 15px; }
+#study-chart { margin-bottom: 12px; }
+#chart-bars { width: 100%; margin-top: 8px; }
+#chart-bars rect { fill: var(--blue); }
+#chart-bars text { font: 12px system-ui, sans-serif; fill: #1b3044; }
+@media (max-width: 780px) { .study-task { grid-template-columns: minmax(0, 1fr); } }

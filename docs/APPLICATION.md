@@ -76,3 +76,7 @@ The proposed [user-measurement study](METRICS_AND_EXPERIMENTS.md) is documented 
 ## Single-portfolio and preference-guide update
 
 The default view submits and renders one portfolio, with one risk card/series and three-column holding/stress tables. Comparison is opt-in; copied alternative weights can be edited independently and are excluded while hidden. Ten new tests and browser checks cover the personal workflow and RQ-001 interpretation. Hidden invalid alternative totals do not block a single-portfolio report. The guide remains optional, accepts partial/uncertain answers, and generates no volatility target or investment recommendation. Inputs remain in memory. Read [RISK_PREFERENCES.md](RISK_PREFERENCES.md) for original question definitions, deterministic rules, source principles, limits, and privacy behavior.
+
+## Report comprehension study
+
+The report study link opens a separate demonstration at `/study`. It uses fixed holdings and opens in practice mode by default. See the [study guide](COMPREHENSION_PILOT.md) for the comparison, consented recording option, and descriptive summary.

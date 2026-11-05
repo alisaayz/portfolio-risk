@@ -13,6 +13,7 @@ import json
 import math
 from pathlib import Path
 import re
+import sqlite3
 import threading
 from urllib.parse import urlsplit, parse_qs
 import uuid
@@ -24,10 +25,14 @@ from scripts.audit_market_data import ROOT, sha256
 from scripts.portfolio_baseline import analyze, drawdown_summary, serializable, validate_configuration
 from scripts import market_catalog, application_market_data
 from scripts import risk_preferences
+from scripts.study_pilot import PILOT_DATABASE, StudyPilot
 
 ASSETS = {'/': ('index.html', 'text/html; charset=utf-8'),
           '/app.js': ('app.js', 'text/javascript; charset=utf-8'),
-          '/styles.css': ('styles.css', 'text/css; charset=utf-8')}
+          '/styles.css': ('styles.css', 'text/css; charset=utf-8'),
+          '/study': ('study.html', 'text/html; charset=utf-8'),
+          '/study.js': ('study.js', 'text/javascript; charset=utf-8'),
+          '/study.css': ('study.css', 'text/css; charset=utf-8')}
 MAX_BODY_BYTES = 65536
 
 
@@ -177,7 +182,8 @@ def allowed_request(host, origin, port, require_origin=False):
     return (not require_origin and origin is None) or origin == f'http://{host}'
 
 
-def handler_class(database):
+def handler_class(database, study=None):
+    study = study if study is not None else StudyPilot()
     executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix='price-audit')
     jobs, lock = {}, threading.Lock()
 
@@ -231,6 +237,9 @@ def handler_class(database):
                 self.send_bytes(200, (ROOT / 'app' / name).read_bytes(), content_type)
                 return
             route = urlsplit(self.path)
+            if route.path == '/api/study':
+                self.send_json(200, study.public_definition())
+                return
             if route.path == '/api/symbols':
                 try:
                     query = parse_qs(route.query).get('q', [''])[0]
@@ -270,7 +279,7 @@ def handler_class(database):
             if not self.request_allowed(require_origin=True):
                 self.send_json(403, {'error': 'Analysis requests must come from this local application'})
                 return
-            if self.path not in {'/api/analyze', '/api/instruments/load'}:
+            if self.path not in {'/api/analyze', '/api/instruments/load', '/api/study/start', '/api/study/finish'}:
                 self.send_json(404, {'error': 'Not found'})
                 return
             try:
@@ -280,6 +289,12 @@ def handler_class(database):
                 if not 0 < length <= MAX_BODY_BYTES:
                     raise ValueError('Request is empty or too large')
                 payload = strict_json(self.rfile.read(length))
+                if self.path == '/api/study/start':
+                    self.send_json(200, study.start(payload))
+                    return
+                if self.path == '/api/study/finish':
+                    self.send_json(200, study.finish(payload))
+                    return
                 if self.path == '/api/instruments/load':
                     if not isinstance(payload, dict) or set(payload) != {'symbol'}:
                         raise ValueError('Provide one directory symbol to load')
@@ -310,6 +325,8 @@ def handler_class(database):
                 self.send_json(200, value)
             except (ValueError, KeyError, TypeError, AttributeError, FileNotFoundError) as error:
                 self.send_json(422, {'error': str(error) or 'Invalid portfolio inputs'})
+            except sqlite3.Error:
+                self.send_json(503, {'error': 'The local study database is unavailable'})
             except (duckdb.Error, AssertionError):
                 self.send_json(503, {'error': 'Analysis could not complete its data and numerical checks'})
     return Handler
@@ -319,10 +336,12 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--database', type=Path, default=ROOT / 'data/warehouse/portfolio-risk.duckdb')
     parser.add_argument('--port', type=int, default=8765)
+    parser.add_argument('--record-pilot', action='store_true', help='Save consented study sessions in the private local pilot database')
     args = parser.parse_args()
     if not args.database.is_file():
         parser.error('Build the local market warehouse first')
-    server = ThreadingHTTPServer(('127.0.0.1', args.port), handler_class(args.database))
+    study = StudyPilot(PILOT_DATABASE if args.record_pilot else None)
+    server = ThreadingHTTPServer(('127.0.0.1', args.port), handler_class(args.database, study))
     print(f'Portfolio Risk is available at http://127.0.0.1:{server.server_port}', flush=True)
     print('Analysis uses the saved warehouse. Inputs remain in memory; stop with Ctrl+C.', flush=True)
     try:
