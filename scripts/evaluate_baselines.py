@@ -122,11 +122,15 @@ def evaluation_origins(membership, year, mode, config):
 
 
 def score_common_origins(predictions, origins, targets, methods, floor):
+    if (origins.origin_date>=pd.Timestamp("2026-01-01")).any() or (origins.target_end_date>=pd.Timestamp("2026-01-01")).any():
+        raise ValueError("Final-test scores are reserved")
+    return score_matched_variances(predictions, origins, targets, methods, floor)
+
+
+def score_matched_variances(predictions, origins, targets, methods, floor):
     if predictions.duplicated(["method",*KEYS]).any() or targets.duplicated(KEYS).any() or origins.duplicated(KEYS).any():
         raise ValueError("Duplicate evaluation keys")
     if set(predictions.method)!=set(methods):raise ValueError("Forecast method inventory differs")
-    if (origins.origin_date>=pd.Timestamp("2026-01-01")).any() or (origins.target_end_date>=pd.Timestamp("2026-01-01")).any():
-        raise ValueError("Final-test scores are reserved")
     truth=origins.merge(targets[KEYS+["target_variance"]],on=KEYS,how="left",validate="one_to_one")
     if not np.isfinite(truth.target_variance).all() or (truth.target_variance<0).any():
         raise ValueError("Every evaluation origin needs a valid realized target")
