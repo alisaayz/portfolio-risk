@@ -1,6 +1,6 @@
 # Version 1 baseline readout
 
-Status as of November 5, 2026. The protocol, task cards, scoring rubric, and verified numerical answer key are ready. Real participant observations are pending. The case rehearsal verifies the application and expected results. [Facilitator protocol](V1_DECISION_PILOT.md)
+Status as of November 5, 2026. The protocol, task cards, scoring rubric, and verified numerical answer key are ready. Real participant observations are pending. A separate 30-path rehearsal verifies application behavior under the case settings and deliberate input changes. The technical results do not populate participant measures. [Scripted rehearsal](V1_SCRIPTED_REHEARSAL.md) [Facilitator protocol](V1_DECISION_PILOT.md)
 
 | Measure | Case A | Case B |
 | --- | --- | --- |
