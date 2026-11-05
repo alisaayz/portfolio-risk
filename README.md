@@ -1,10 +1,10 @@
-# Personal Portfolio Risk Platform
+# riskitnot
 
 **Status:** Portfolio release complete as of November 5, 2026. The local dashboard, historical evaluation, and technical documentation are available. The usability pilot is ready for facilitation.
 
 ## 1. Executive summary
 
-The platform helps a self-directed investor understand what drives portfolio risk and compare hypothetical changes. The local dashboard measures volatility, drawdown, and holding-level risk contributions from audited historical data. It can suggest reweighting within user constraints, describe what a substitute would need to contribute, and screen an audited list on the same dates. The user can load a scenario into the comparison without changing the current portfolio.
+riskitnot helps a self-directed investor understand what drives portfolio risk and compare hypothetical changes. The local dashboard measures volatility, drawdown, and holding-level risk contributions from audited historical data. It can suggest reweighting within user constraints, describe what a substitute would need to contribute, and screen an audited list on the same dates. The user can load a scenario into the comparison without changing the current portfolio.
 
 The research track asks whether machine learning improves next-20-session volatility estimates. In a retrospective 2026 holdout, the trained model had the lowest average error. The portfolio uncertainty intervals crossed zero, so the project kept forecast output in research under its predeclared decision rule. The dashboard uses historical estimates. [2026 holdout report](docs/FINAL_EVALUATION_REPORT.md)
 

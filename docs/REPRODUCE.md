@@ -1,4 +1,4 @@
-# Reproduce the local dashboard
+# Reproduce riskitnot locally
 
 Verified November 5, 2026, on macOS with Python 3.13.7. A fresh checkout and fresh virtual environment passed 159 tests. Using the saved source evidence, the checkout rebuilt the accepted DS-002 dataset, verified the SQL outputs, rebuilt the symbol directory, and served the assessment, reweighting, candidate screen, and practice study locally.
 

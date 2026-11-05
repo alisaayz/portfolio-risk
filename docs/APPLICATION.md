@@ -1,12 +1,12 @@
-# Local portfolio comparison application
+# riskitnot dashboard
 
 Updated November 4, 2026. The local application connects the accepted SQL warehouse to the independently reconciled historical risk engine. It supports side-by-side portfolio analysis while keeping weights and portfolio amounts local. Requested new symbols are sent to the market-data provider for their history. It offers a constrained historical reweighting preview for existing holdings.
 
-![Local application showing one demonstration portfolio, optional comparison, and unanswered risk-preference questions](assets/application-preview.png)
+![riskitnot dashboard walkthrough with demonstration holdings](assets/dashboard-demo.gif)
 
 ## Run the application
 
-Build the accepted market warehouse using the README instructions, then run from the repository root:
+Build the accepted market warehouse using the [reproduction guide](REPRODUCE.md), then run from the repository root.
 
 ```bash
 .venv/bin/python -m scripts.market_catalog
