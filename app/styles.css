@@ -17,3 +17,7 @@ main{max-width:1450px;margin:auto;padding:42px 5% 24px}.intro{max-width:800px;ma
 .reweight-constraints input[type=checkbox] { width: auto; margin: 0 8px; }
 #preview-reweight, #use-reweight { margin-top: 12px; }
 #reweight-summary { background: #eef5f5; color: #31515f; }
+
+.replacement-guide { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
+#replacement-form { margin-top: 12px; }
+#replacement-summary { background: #eef5f5; color: #31515f; }

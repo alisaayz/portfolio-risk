@@ -236,3 +236,7 @@ EV-002 freezes the model, forecasts, metrics, and decision rule before scoring t
 ## Implemented reweighting preview — November 5, 2026
 
 RW-001 proposes a constrained historical-risk alternative using only existing holdings. The interface compares before and after risk and concentration and lets the user load the result as an alternative. A matched development replay measures 20-session realized volatility over 36 dates. A direct volatility-based shift matches the solver at the 252-session setting in both demonstrations. [Method and evidence](PORTFOLIO_REWEIGHTING.md)
+
+## Implemented replacement criteria — November 5, 2026
+
+RP-001 solves for a hypothetical substitute’s standalone volatility range at five assumed correlations with the remaining holdings. It preserves the move budget and protected holding weights. The criterion matched 39 direct historical risk calculations. Screening named candidates remains planned. [Method and evidence](PORTFOLIO_REPLACEMENT_CRITERIA.md)

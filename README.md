@@ -1,11 +1,11 @@
 # Personal Portfolio Risk Platform
 
-**Status:** Historical portfolio analysis, constrained reweighting, risk-preference guidance, report experiment tooling, and the retrospective 2026 volatility holdout are implemented. Participant evaluation remains planned.
+**Status:** Historical portfolio analysis, constrained reweighting, replacement criteria, risk-preference guidance, report experiment tooling, and the retrospective 2026 volatility holdout are implemented. Participant evaluation remains planned.
 **Last updated:** November 5, 2026.
 
 ## 1. Executive summary
 
-The Personal Portfolio Risk Platform is a financial analytics project for evaluating existing investments and comparing hypothetical portfolios. Its local application starts with one portfolio, explains historical risk, and offers an optional alternative comparison. A short preference guide separates self-reported comfort with fluctuations from cash-access needs and puts historical drawdowns in context. U.S. symbol discovery and on-demand application histories are separate from the fixed research dataset. A local study workflow supports a product decision about whether a chart should appear by default in the portfolio risk report. The dashboard can propose a hypothetical reweighting of current holdings within user-defined limits. Replacement criteria and candidate screening are planned.
+The Personal Portfolio Risk Platform is a financial analytics project for evaluating existing investments and comparing hypothetical portfolios. Its local application starts with one portfolio, explains historical risk, and offers an optional alternative comparison. A short preference guide separates self-reported comfort with fluctuations from cash-access needs and puts historical drawdowns in context. U.S. symbol discovery and on-demand application histories are separate from the fixed research dataset. A local study workflow supports a product decision about whether a chart should appear by default in the portfolio risk report. The dashboard can propose a hypothetical reweighting of current holdings within user-defined limits. The replacement guide explains what volatility and correlation a substitute would need to meet a historical risk target. Candidate screening remains planned.
 
 The central research question is whether a trained model can forecast volatility over the next 20 trading days more accurately than historical estimates. The implemented foundation downloads and audits real market history, preserves evidence, and loads versioned observations into DuckDB and Parquet. SQL views enforce source-selection rules and calculate calendar-aligned returns and historical volatility inputs. A separate versioned modeling layer builds causal features and pre-2026 targets under the chronological evaluation contract. The baseline report compares dated portfolios using historical covariance, volatility, drawdown, and holding risk contributions. Development evaluation compares historical benchmarks and a gradient boosting model on both individual instruments and two complete portfolios. The local application provides historical risk analysis. The retrospective 2026 holdout completed the model comparison on ten shared market dates.
 
@@ -49,7 +49,9 @@ The [report experiment brief](docs/REPORT_EXPERIMENT.md) defines the user need, 
 
 The dashboard can preview weight changes while respecting a move budget, holding limits, and locked weights. In the equity-heavy demo, moving ten percentage points from AAPL to BND lowers estimated historical volatility from **11.29% to 9.58%**. A 36-date development replay compares future realized volatility with unchanged weights and simpler rules. A direct risk-based shift matches the optimizer’s mean at the 252-session setting for both demos. [Reweighting method and replay](docs/PORTFOLIO_REWEIGHTING.md)
 
-**156 regression tests pass locally**, covering data integrity, portfolio calculations, chronological boundaries, and study consent, scoring, and record integrity. The [Python application workflow](.github/workflows/python-app.yml) runs fixture-based checks on pushes and pull requests. A forward-recorded forecast evaluation remains a future research milestone. The adjustment roadmap records future replacement criteria and candidate screening. [Adjustment roadmap](docs/PORTFOLIO_ADJUSTMENT_ROADMAP.md)
+The replacement guide shows feasible volatility ranges for a single hypothetical swap. It accounts for correlation with the remaining holdings and respects the move budget, holding minimums, and locks. Its result matched direct portfolio calculations in **39 historical comparisons**. [Replacement method and verification](docs/PORTFOLIO_REPLACEMENT_CRITERIA.md)
+
+**158 regression tests pass locally**, covering data integrity, portfolio calculations, chronological boundaries, and study consent, scoring, and record integrity. The [Python application workflow](.github/workflows/python-app.yml) runs fixture-based checks on pushes and pull requests. A forward-recorded forecast evaluation remains a future research milestone. The adjustment roadmap records the planned candidate screening stage. [Adjustment roadmap](docs/PORTFOLIO_ADJUSTMENT_ROADMAP.md)
 
 ## 3. Project composition and methodology
 
@@ -76,6 +78,7 @@ The dashboard can preview weight changes while respecting a move budget, holding
 | Portfolio forecast development | Combine forecast holding variances with a shared 60-session co-movement matrix and evaluate two demos on a matched grid | [Development comparison](docs/PORTFOLIO_FORECAST_DEVELOPMENT.md) with paired error intervals |
 | Application | Assess one portfolio, optionally compare an alternative, reflect risk preferences, search U.S. candidates, and inspect historical/development metrics | Implemented for historical risk; [guide](docs/APPLICATION.md); portfolio forecasts/suggestions planned |
 | Reweighting | Minimize estimated historical variance within holding and move limits, then compare on the same data | [Implemented for existing holdings](docs/PORTFOLIO_REWEIGHTING.md) |
+| Replacement criteria | Solve for the substitute’s volatility range at selected correlations with retained holdings | [Implemented for a user-defined swap](docs/PORTFOLIO_REPLACEMENT_CRITERIA.md) |
 | User measurement | Identical numerical facts, optional chart, three scored tasks, and consented random assignment | [Pilot and confirmatory analysis implemented](docs/REPORT_EXPERIMENT.md); participant evidence pending |
 
 ### Local application
@@ -294,15 +297,19 @@ flowchart LR
     B[Move budget, holding limits, locks, and optional target] --> C
     C --> D[Compare risk, concentration, and weights]
     D --> E[User can load the scenario as an alternative]
+    A --> F[Choose a holding and swap size]
+    F --> G[Show feasible substitute volatility by correlation]
 ```
 
-Open **Explore lower-risk weights** after assessing a portfolio. Review the suggested weights, estimated volatility, historical drawdown, largest weight, and risk shares. The preview reports whether an entered target is achievable under the given limits. An explicit action loads the proposed weights for comparison and stress replay. Replacement criteria and candidate screening are future extensions. [Reweighting method and replay](docs/PORTFOLIO_REWEIGHTING.md) · [Adjustment roadmap](docs/PORTFOLIO_ADJUSTMENT_ROADMAP.md)
+Open **Explore lower-risk weights** after assessing a portfolio. Review the suggested weights, estimated volatility, historical drawdown, largest weight, and risk shares. The preview reports whether an entered target is achievable under the given limits. An explicit action loads the proposed weights for comparison and stress replay. [Reweighting method and replay](docs/PORTFOLIO_REWEIGHTING.md)
+
+Open **What to look for in a replacement** to choose an existing holding and the share of the portfolio to swap. The guide uses the manual target if supplied, or the current estimate as the ceiling. It shows the candidate volatility ranges that fit at different correlations with the remaining portfolio. [Replacement criteria](docs/PORTFOLIO_REPLACEMENT_CRITERIA.md) · [Adjustment roadmap](docs/PORTFOLIO_ADJUSTMENT_ROADMAP.md)
 
 ### Documentation and next milestone
 
 - [Reference universe](docs/REFERENCE_UNIVERSE.md), [expanded audit](docs/UNIVERSE_AUDIT.md), and [source validation](docs/UNIVERSE_VALIDATION.md): selection, evidence, and acceptance limits.
 - [Expanded SQL walkthrough](docs/05_EXPANDED_SQL_WALKTHROUGH.md): policy gates, archived failures, numerical checks, and capture differences.
-- [Portfolio adjustment roadmap](docs/PORTFOLIO_ADJUSTMENT_ROADMAP.md): implemented reweighting and planned replacement criteria and candidate screening.
+- [Portfolio adjustment roadmap](docs/PORTFOLIO_ADJUSTMENT_ROADMAP.md): implemented reweighting and replacement criteria, with candidate screening planned.
 - [Forecast benchmark report](docs/BASELINE_FORECAST_REPORT.md) and [walkthrough](docs/07_FORECAST_BASELINES_WALKTHROUGH.md): measured development errors, method tradeoffs, and experiment records.
 - [Modeling dataset](docs/MODELING_DATASET.md) and [walkthrough/dictionary](docs/06_MODELING_DATASET_WALKTHROUGH.md): features, development outcomes, timing checks, and reproducible artifacts.
 - [News feasibility](docs/NEWS_FEASIBILITY.md): observed archive metadata, timing limitations, candidate sources, and proposed implementation sequence.

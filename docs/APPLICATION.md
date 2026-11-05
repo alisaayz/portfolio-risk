@@ -84,3 +84,7 @@ The report study link opens a separate demonstration at `/study`. It uses fixed 
 ## Reweight existing holdings
 
 Assess a portfolio, then open **Explore lower-risk weights**. The preview uses the current date and covariance window and accepts a move budget, per-holding limits, locked weights, and the optional manual volatility reference. **Use as alternative** loads the weights into the comparison dashboard. [Method and verified replay](PORTFOLIO_REWEIGHTING.md)
+
+## Define replacement criteria
+
+After assessing a portfolio, open **Explore lower-risk weights**, then **What to look for in a replacement**. Choose the holding and the percentage of total portfolio value to move. The guide shows standalone volatility ranges at several assumed correlations with the retained positions. A manual volatility reference becomes the target. A blank reference uses the current estimate as the ceiling. [Method and verified demo](PORTFOLIO_REPLACEMENT_CRITERIA.md)

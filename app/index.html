@@ -63,6 +63,26 @@
               <p class="field-help">These estimates use saved historical returns and exclude trading costs and taxes.</p>
               <button class="secondary-button" type="button" id="use-reweight">Use as alternative</button>
             </div>
+            <details class="replacement-guide" id="replacement-guide">
+              <summary>What to look for in a replacement</summary>
+              <p class="field-help">Describe a partial or full swap into one new holding. The same move budget, minimum weights, and locks apply. Other positions keep their weights.</p>
+              <form id="replacement-form">
+                <div class="paired">
+                  <label>Holding to reduce <select id="replace-symbol" required></select></label>
+                  <label>Portfolio value to replace (%) <input id="replace-weight" type="number" min="0" max="100" step="any" placeholder="e.g. 10" required></label>
+                </div>
+                <button class="secondary-button" id="show-replacement" type="submit">Show replacement criteria</button>
+              </form>
+              <p id="replacement-error" class="notice error" role="alert" hidden></p>
+              <div id="replacement-result" hidden>
+                <p id="replacement-summary" class="notice" role="status"></p>
+                <div class="table-scroll"><table class="data-table">
+                  <thead><tr><th scope="col">Assumed correlation with remaining holdings</th><th scope="col">Standalone volatility that meets target</th></tr></thead>
+                  <tbody id="replacement-bands"></tbody>
+                </table></div>
+                <p class="field-help">Use the same historical dates to measure a candidate’s volatility and correlation with what remains. Check that its exposure, liquidity, and fees fit the role you need.</p>
+              </div>
+            </details>
           </details>
           <section class="card preference-card" id="preference-card" hidden><h3>Your risk preferences</h3><p class="quiet" id="preference-progress"></p><div id="preference-summary"></div><p class="field-help">The comparisons describe this saved history. Future losses may be larger or persist; no recommended allocation or numerical volatility target is inferred.</p></section>
           <section class="card chart-card"><div class="section-top"><div><h3>Historical replay</h3><p class="quiet">Fixed weights rebalanced daily · no costs or taxes</p></div><div class="chart-tabs" role="group" aria-label="Chart metric"><button type="button" id="wealth-tab" class="selected" aria-pressed="true">Wealth</button><button type="button" id="drawdown-tab" aria-pressed="false">Drawdown</button></div></div><div id="chart" class="chart" role="img" aria-label="Comparison of historical portfolio wealth"></div><div class="chart-footer"><span id="chart-start"></span><div id="chart-legend" class="legend"></div><span id="chart-end"></span></div><p id="chart-description" class="field-help"></p></section>

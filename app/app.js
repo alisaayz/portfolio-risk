@@ -323,6 +323,7 @@ function clearReweightPreview() {
   reweightScenario = null;
   $('reweight-preview').hidden = true;
   $('reweight-error').hidden = true;
+  clearReplacementCriteria();
 }
 
 function renderReweightControls(value) {
@@ -347,7 +348,14 @@ function renderReweightControls(value) {
     return [row];
   });
   $('reweight-constraints').replaceChildren(...rows);
-  $('reweight-card').hidden = rows.length < 2;
+  $('reweight-card').hidden = rows.length === 0;
+  $('preview-reweight').hidden = rows.length < 2;
+  $('replace-symbol').replaceChildren(...rows.map(row => {
+    const option = element('option', row.dataset.symbol);
+    option.value = row.dataset.symbol;
+    return option;
+  }));
+  $('replace-weight').value = '';
 }
 
 function showReweight(value) {
@@ -372,6 +380,63 @@ function showReweight(value) {
   reweightScenario = value;
 }
 
+function allocationConstraints() {
+  const holdings = Object.fromEntries(Array.from($('reweight-constraints').rows, row => [
+    row.dataset.symbol, {
+      minimum: Number(row.querySelector('[name=minimum]').value) / 100,
+      maximum: Number(row.querySelector('[name=maximum]').value) / 100,
+      locked: row.querySelector('[name=lock]').checked,
+    },
+  ]));
+  return {turnover_limit: Number($('turnover-limit').value) / 100, holdings};
+}
+
+let replacementRequest = 0;
+
+function clearReplacementCriteria() {
+  replacementRequest += 1;
+  $('replacement-result').hidden = true;
+  $('replacement-error').hidden = true;
+}
+
+$('replacement-form').addEventListener('input', clearReplacementCriteria);
+$('replacement-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  clearReplacementCriteria();
+  const request = replacementRequest;
+  $('show-replacement').disabled = true;
+  try {
+    const reweightForm = $('reweight-form');
+    if (!reweightForm.reportValidity()) return;
+    const result = await api('/api/replacement-criteria', {
+      portfolio: requestPayload(false),
+      constraints: allocationConstraints(),
+      replacement: {symbol: $('replace-symbol').value, weight: Number($('replace-weight').value) / 100},
+    });
+    if (request !== replacementRequest) return;
+    const basis = result.target_source === 'manual_reference' ? 'your manual reference' : 'the current portfolio estimate';
+    $('replacement-summary').textContent = `Replace ${percent(result.replacement_weight)} of portfolio value from ${result.symbol}. The historical volatility target is ${percent(result.target)}, based on ${basis}. Compare candidates over the same ${result.risk_window_sessions} sessions ending ${shortDate(result.risk_window_end)}.`;
+    $('replacement-bands').replaceChildren(...result.bands.map(({correlation, volatility}) => {
+      const row = element('tr');
+      let range = 'No feasible range';
+      if (volatility) range = volatility.minimum > 0
+        ? `${percent(volatility.minimum)} to ${percent(volatility.maximum)}`
+        : `Up to ${percent(volatility.maximum)}`;
+      row.append(element('td', correlation === null ? 'Remaining holdings have zero measured volatility' : correlation.toFixed(2)),
+                 element('td', range));
+      return row;
+    }));
+    $('replacement-result').hidden = false;
+  } catch (error) {
+    if (request === replacementRequest) {
+      $('replacement-error').textContent = error.message;
+      $('replacement-error').hidden = false;
+    }
+  } finally {
+    $('show-replacement').disabled = false;
+  }
+});
+
 $('reweight-form').addEventListener('input', clearReweightPreview);
 $('reweight-form').addEventListener('submit', async event => {
   event.preventDefault();
@@ -379,16 +444,7 @@ $('reweight-form').addEventListener('submit', async event => {
   const request = reweightRequest;
   $('preview-reweight').disabled = true;
   try {
-    const holdings = Object.fromEntries(Array.from($('reweight-constraints').rows, row => [
-      row.dataset.symbol, {
-        minimum: Number(row.querySelector('[name=minimum]').value) / 100,
-        maximum: Number(row.querySelector('[name=maximum]').value) / 100,
-        locked: row.querySelector('[name=lock]').checked,
-      },
-    ]));
-    const result = await api('/api/reweight', {portfolio: requestPayload(false), constraints: {
-      turnover_limit: Number($('turnover-limit').value) / 100, holdings,
-    }});
+    const result = await api('/api/reweight', {portfolio: requestPayload(false), constraints: allocationConstraints()});
     if (request === reweightRequest) showReweight(result);
   } catch (error) {
     if (request === reweightRequest) {
