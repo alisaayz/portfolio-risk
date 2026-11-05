@@ -26,18 +26,54 @@ PROTOCOL = ROOT / 'config/prospective_forecast.json'
 FEATURE_SQL = ROOT / 'sql/modeling_features.sql'
 
 
-def timing(now, spec):
+def schedule(spec):
     calendar = xcals.get_calendar(spec['calendar'], start=spec['first_origin'], end='2034-12-31')
     stride = spec['stride_sessions']
-    slots = calendar.sessions[:spec['enrollment_slots'] * stride:stride]
-    for origin in slots:
-        position = calendar.sessions.get_loc(origin)
-        close = calendar.session_close(origin)
-        deadline = calendar.session_open(calendar.sessions[position + 1])
-        if close <= now < deadline:
-            target = calendar.sessions[position + spec['horizon_sessions']]
-            return origin, target, deadline
+    for index in range(0, spec['enrollment_slots'] * stride, stride):
+        origin = calendar.sessions[index]
+        yield (origin, calendar.sessions[index + spec['horizon_sessions']],
+               calendar.session_close(origin), calendar.session_open(calendar.sessions[index + 1]))
+
+
+def open_window(now, spec):
+    for slot in schedule(spec):
+        if slot[2] <= now < slot[3]:
+            return slot
     raise ValueError('No scheduled forecast window is open. PF-002 cannot backfill a past origin.')
+
+
+def timing(now, spec):
+    origin, target, _, deadline = open_window(now, spec)
+    return origin, target, deadline
+
+
+def accepted_prices(database):
+    expected = load_universe(ROOT / 'config/reference_universe.json')
+    universe = accepted_screen_universe(database)
+    with duckdb.connect(str(database), read_only=True) as connection:
+        evaluation = json.loads((ROOT / 'config/evaluation_protocol.json').read_text())
+        dataset, manifest, prices, _ = read_market_inputs(connection, evaluation)
+    if dataset != universe['dataset_id'] or set(prices.instrument_id) != {row['symbol'] for row in expected['instruments']}:
+        raise ValueError('The active dataset must contain the complete audited reference universe')
+    return dataset, manifest, prices
+
+
+def preflight(database, training, now):
+    spec = json.loads(PROTOCOL.read_text())
+    upcoming = next((slot for slot in schedule(spec) if now < slot[3]), None)
+    dataset, manifest, prices = accepted_prices(database)
+    latest = prices.groupby('instrument_id').session_date.max()
+    report = {'protocol': spec['protocol'], 'dataset_id': dataset, 'latest_common_close': str(latest.min().date()),
+              'instrument_count': len(latest), 'training_digest_matches': sha256(training) == spec['training_sample_sha256']}
+    if upcoming is None:
+        return {**report, 'state': 'schedule_ended'}
+    origin, target, close, deadline = upcoming
+    first, last = capture_times(manifest)
+    return {**report, 'state': 'window_open' if now >= close else 'before_window',
+            'origin': str(origin.date()), 'target_end': str(target.date()),
+            'close_utc': close.isoformat(), 'deadline_utc': deadline.isoformat(),
+            'snapshot_matches_origin': bool(latest.eq(origin).all()),
+            'capture_in_window': bool(close <= first <= last <= now < deadline)}
 
 
 def read_training(path, spec):
@@ -95,19 +131,25 @@ def write_once(path, record):
         os.link(staging.name, path)
 
 
+def capture_times(manifest):
+    first = pd.Timestamp(manifest['retrieved_at_utc'])
+    completions = [pd.Timestamp(row['retrieved_at_utc']) for row in manifest['instruments'].values()]
+    if (not completions or pd.isna(first) or first.tzinfo is None
+            or any(pd.isna(time) or time.tzinfo is None or time < first for time in completions)):
+        raise ValueError('Require offset-aware and ordered capture times in the audited manifest')
+    return first, max(completions)
+
+
 def record(database, training, ledger):
     spec = json.loads(PROTOCOL.read_text())
-    origin, target, deadline = timing(datetime.now(timezone.utc), spec)
-    expected = load_universe(ROOT / 'config/reference_universe.json')
-    universe = accepted_screen_universe(database)
+    origin, target, close, deadline = open_window(datetime.now(timezone.utc), spec)
     before = sha256(database)
-    with duckdb.connect(str(database), read_only=True) as connection:
-        evaluation = json.loads((ROOT / 'config/evaluation_protocol.json').read_text())
-        dataset, _, prices, _ = read_market_inputs(connection, evaluation)
-    if dataset != universe['dataset_id'] or set(prices.instrument_id) != {row['symbol'] for row in expected['instruments']}:
-        raise ValueError('The active dataset must contain the complete audited reference universe')
+    dataset, manifest, prices = accepted_prices(database)
     if not prices.groupby('instrument_id').session_date.max().eq(origin).all():
         raise ValueError('The accepted market snapshot does not reach the scheduled origin')
+    first, last = capture_times(manifest)
+    if not close <= first <= last <= datetime.now(timezone.utc):
+        raise ValueError('The selected capture must start after the scheduled close and finish before recording')
     baseline_path = ROOT / 'config/final_evaluation.json'
     training_config_path = ROOT / 'config/model_training.json'
     predictions = predict(prices, read_training(training, spec), origin, spec,
@@ -123,6 +165,8 @@ def record(database, training, ledger):
                       'runtime': {'python': platform.python_version(),
                                   **{name: version(name) for name in ('numpy', 'pandas', 'scikit-learn', 'duckdb', 'exchange-calendars')}},
                       'origin': str(origin.date()), 'target_end': str(target.date()),
+                      'capture_started_at_utc': first.tz_convert('UTC').isoformat(),
+                      'capture_finished_at_utc': last.tz_convert('UTC').isoformat(),
                       'recorded_at_utc': now.isoformat(), 'deadline_utc': deadline.isoformat(),
                       'timestamp_basis': 'local_system_clock', 'annualized_variance': predictions})
     return {'record': str(path), 'sha256': sha256(path), 'origin': str(origin.date())}
@@ -133,9 +177,12 @@ def main():
     parser.add_argument('--database', type=Path, required=True)
     parser.add_argument('--training', type=Path, required=True)
     parser.add_argument('--ledger', type=Path, default=ROOT / 'private/prospective')
+    parser.add_argument('--preflight', action='store_true', help='Inspect the next eligible window and local inputs')
     args = parser.parse_args()
     try:
-        print(json.dumps(record(args.database, args.training, args.ledger), indent=2))
+        report = (preflight(args.database, args.training, datetime.now(timezone.utc)) if args.preflight
+                  else record(args.database, args.training, args.ledger))
+        print(json.dumps(report, indent=2))
     except (ValueError, FileExistsError) as error:
         parser.exit(2, f'{error}\n')
 
