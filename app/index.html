@@ -72,7 +72,9 @@
                   <label>Portfolio value to replace (%) <input id="replace-weight" type="number" min="0" max="100" step="any" placeholder="e.g. 10" required></label>
                 </div>
                 <button class="secondary-button" id="show-replacement" type="submit">Show replacement criteria</button>
+                <button class="secondary-button" id="screen-replacement" type="submit">Screen audited candidates</button>
               </form>
+              <p class="field-help">The screen checks the 16-instrument research list and skips holdings already in your portfolio.</p>
               <p id="replacement-error" class="notice error" role="alert" hidden></p>
               <div id="replacement-result" hidden>
                 <p id="replacement-summary" class="notice" role="status"></p>
@@ -81,6 +83,14 @@
                   <tbody id="replacement-bands"></tbody>
                 </table></div>
                 <p class="field-help">Use the same historical dates to measure a candidate’s volatility and correlation with what remains. Check that its exposure, liquidity, and fees fit the role you need.</p>
+              </div>
+              <div id="replacement-screen" hidden>
+                <p class="notice" id="replacement-screen-summary" role="status"></p>
+                <div class="table-scroll"><table class="data-table">
+                  <thead><tr><th scope="col">Candidate</th><th scope="col">Volatility</th><th scope="col">Correlation</th><th scope="col">Portfolio volatility</th><th scope="col">Target</th><th scope="col"><span class="sr-only">Compare</span></th></tr></thead>
+                  <tbody id="replacement-candidates"></tbody>
+                </table></div>
+                <p class="field-help">The screen ranks historical volatility on matched dates. Verify exposure, liquidity, and costs before using a scenario for an investment decision.</p>
               </div>
             </details>
           </details>

@@ -26,7 +26,7 @@ from scripts.portfolio_baseline import analyze, drawdown_summary, serializable, 
 from scripts import market_catalog, application_market_data
 from scripts import risk_preferences
 from scripts.portfolio_reweight import assess_reweight
-from scripts.portfolio_replacement import replacement_criteria
+from scripts.portfolio_replacement import accepted_screen_universe, replacement_criteria
 from scripts.study_pilot import DEFINITION, PILOT_DATABASE, StudyPilot
 
 ASSETS = {'/': ('index.html', 'text/html; charset=utf-8'),
@@ -281,7 +281,7 @@ def handler_class(database, study=None):
             if not self.request_allowed(require_origin=True):
                 self.send_json(403, {'error': 'Analysis requests must come from this local application'})
                 return
-            if self.path not in {'/api/analyze', '/api/reweight', '/api/replacement-criteria', '/api/instruments/load', '/api/study/start', '/api/study/finish'}:
+            if self.path not in {'/api/analyze', '/api/reweight', '/api/replacement-criteria', '/api/replacement-screen', '/api/instruments/load', '/api/study/start', '/api/study/finish'}:
                 self.send_json(404, {'error': 'Not found'})
                 return
             try:
@@ -318,7 +318,8 @@ def handler_class(database, study=None):
                             executor.submit(load_job, job_id, symbol, end)
                     self.send_json(202, value)
                     return
-                replacement = self.path == '/api/replacement-criteria'
+                screen = self.path == '/api/replacement-screen'
+                replacement = self.path == '/api/replacement-criteria' or screen
                 reweight = self.path == '/api/reweight'
                 if replacement or reweight:
                     fields = {'portfolio', 'constraints', 'replacement'} if replacement else {'portfolio', 'constraints'}
@@ -331,8 +332,9 @@ def handler_class(database, study=None):
                 connection, sources = application_market_data.application_connection(database, symbols)
                 with connection:
                     if replacement:
+                        universe = accepted_screen_universe(database) if screen else None
                         value = serializable(replacement_criteria(
-                            connection, config, payload['constraints'], payload['replacement'], reference))
+                            connection, config, payload['constraints'], payload['replacement'], reference, universe))
                     elif reweight:
                         value = serializable(assess_reweight(connection, config, payload['constraints'], reference))
                     else:

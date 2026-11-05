@@ -396,6 +396,7 @@ let replacementRequest = 0;
 function clearReplacementCriteria() {
   replacementRequest += 1;
   $('replacement-result').hidden = true;
+  $('replacement-screen').hidden = true;
   $('replacement-error').hidden = true;
 }
 
@@ -404,11 +405,13 @@ $('replacement-form').addEventListener('submit', async event => {
   event.preventDefault();
   clearReplacementCriteria();
   const request = replacementRequest;
+  const screen = event.submitter?.id === 'screen-replacement';
   $('show-replacement').disabled = true;
+  $('screen-replacement').disabled = true;
   try {
     const reweightForm = $('reweight-form');
     if (!reweightForm.reportValidity()) return;
-    const result = await api('/api/replacement-criteria', {
+    const result = await api(screen ? '/api/replacement-screen' : '/api/replacement-criteria', {
       portfolio: requestPayload(false),
       constraints: allocationConstraints(),
       replacement: {symbol: $('replace-symbol').value, weight: Number($('replace-weight').value) / 100},
@@ -427,6 +430,7 @@ $('replacement-form').addEventListener('submit', async event => {
       return row;
     }));
     $('replacement-result').hidden = false;
+    if (result.screen) showReplacementScreen(result);
   } catch (error) {
     if (request === replacementRequest) {
       $('replacement-error').textContent = error.message;
@@ -434,8 +438,50 @@ $('replacement-form').addEventListener('submit', async event => {
     }
   } finally {
     $('show-replacement').disabled = false;
+    $('screen-replacement').disabled = false;
   }
 });
+
+function showReplacementScreen(result) {
+  const {candidates, policy, universe_id} = result.screen;
+  const eligible = candidates.filter(row => row.status === 'meets_target').length;
+  $('replacement-screen-summary').textContent = `${eligible} of ${candidates.length} candidates meet the target using the ${universe_id} list and ${policy} price evidence.`;
+  $('replacement-candidates').replaceChildren(...candidates.map(candidate => {
+    const row = element('tr'), name = element('td', candidate.symbol), action = element('td');
+    name.append(element('span', candidate.research_role, 'secondary-text'));
+    const status = {meets_target: 'Meets target', above_target: 'Above target', unavailable: 'Incomplete matched history'};
+    if (candidate.status === 'meets_target') {
+      const button = element('button', 'Compare', 'secondary-button');
+      button.type = 'button';
+      button.setAttribute('aria-label', `Compare ${candidate.symbol} replacement`);
+      button.addEventListener('click', () => {
+        const source = state.positions.find(position => position.symbol === result.symbol);
+        const remainder = Math.max(0, (source.a / 100 - result.replacement_weight) * 100);
+        const count = state.positions.filter(position => position.a > 0 && position !== source).length + 1;
+        if (count + Number(remainder > 0) > 100) {
+          $('replacement-error').textContent = 'The alternative would exceed 100 positions. Choose a full replacement or reduce the holding count.';
+          $('replacement-error').hidden = false;
+          return;
+        }
+        copyCurrentWeights();
+        source.b = remainder;
+        let destination = state.positions.find(position => position.symbol === candidate.symbol);
+        if (!destination) {
+          destination = {symbol: candidate.symbol, a: 0, b: 0};
+          state.positions.push(destination);
+        }
+        destination.b = result.replacement_weight * 100;
+        openAlternative(`Replacement scenario · ${candidate.symbol}`);
+      });
+      action.append(button);
+    }
+    row.append(name, element('td', percent(candidate.standalone_volatility)),
+               element('td', candidate.correlation == null ? '—' : candidate.correlation.toFixed(2)),
+               element('td', percent(candidate.portfolio_volatility)), element('td', status[candidate.status]), action);
+    return row;
+  }));
+  $('replacement-screen').hidden = false;
+}
 
 $('reweight-form').addEventListener('input', clearReweightPreview);
 $('reweight-form').addEventListener('submit', async event => {
@@ -459,13 +505,17 @@ $('use-reweight').addEventListener('click', () => {
   if (!reweightScenario) return;
   const weights = new Map(reweightScenario.holdings.map(row => [row.symbol, row.alternative_weight * 100]));
   state.positions.forEach(position => {position.b = weights.get(position.symbol) ?? 0;});
-  $('name-b').value = 'Reweighted scenario';
+  openAlternative('Reweighted scenario');
+});
+
+function openAlternative(name) {
+  $('name-b').value = name;
   state.compare = true;
   state.alternativeInitialized = true;
   renderPositions();
   dirty();
   runAnalysis();
-});
+}
 
 $('portfolio-form').addEventListener('submit', runAnalysis);
 $('compare-mode').addEventListener('change', () => {
