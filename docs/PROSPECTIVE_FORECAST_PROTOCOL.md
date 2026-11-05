@@ -49,4 +49,37 @@ curl --fail --silent --show-error --max-time 15 \
 
 Here, `forecast_file` is the path printed by the recorder, `receipt_dir` is the new local directory for this attempt, and `trust_dir` contains the two downloaded certificate files. Preserve the verifier output with the forecast, request, receipt, and certificates. The signed time verifies that these forecast bytes existed by that time. The warehouse audit and capture records provide separate evidence about the source vintage.
 
-On November 5, 2026, preflight verified the locked training digest and all 16 instrument histories. The available data ended November 3. The first scheduled forecast requires data through November 6, with a recording window from **Friday at 1:00 p.m. Pacific to Monday at 6:30 a.m. Pacific**. The independent service signed a generated test digest, and verification rejected a changed file. The forecast ledger awaits an eligible vintage. Outcome scoring remains a separate step after the evidence window closes.
+On November 5, 2026, preflight verified the locked training digest and all 16 instrument histories. The available data ended November 3. The first scheduled forecast requires data through November 6, with a recording window from **Friday at 1:00 p.m. Pacific to Monday at 6:30 a.m. Pacific**. The independent service signed a generated test digest, and verification rejected a changed file. The forecast ledger awaits an eligible vintage.
+
+## Prepare the evidence and score
+
+Retain the authorized outcome warehouse for each enrolled origin and pin its SHA-256 checksum. The outcome warehouse must end exactly at that origin's target close for all reference instruments. Its capture must begin at or after the target close. Archive later revisions separately.
+
+The private scoring manifest lists every scheduled origin once. Include a reason for each skipped origin and the original record, request, receipt, certificate directory, and pinned outcome warehouse for each candidate. Paths are relative to the manifest directory or absolute. These example entries illustrate both forms.
+
+```json
+{
+  "protocol": "PF-002",
+  "slots": [
+    {"origin": "2026-11-06", "missing_reason": "No eligible after-close price capture"},
+    {
+      "origin": "2026-12-07",
+      "forecast": "2026-12-07.json",
+      "request": "receipts/2026-12-07/request.tsq",
+      "receipt": "receipts/2026-12-07/response.tsr",
+      "trust_dir": "receipts/trust",
+      "outcome_database": "outcomes/2027-01-06.duckdb",
+      "outcome_sha256": "<sha256 of the retained outcome warehouse>"
+    }
+  ]
+}
+```
+
+After the final scheduled outcome closes, run:
+
+```bash
+.venv/bin/python -m scripts.score_prospective_forecasts \
+  --evidence /path/to/private/evidence.json
+```
+
+The scorer rechecks the timestamp evidence and the recorded model recipe before opening outcomes. It reports insufficient evidence if fewer than 60 slots have valid receipts. With adequate evidence, it requires each listed outcome to pass the exact date and vintage checks before calculating any aggregate result. It keeps gaps in the 72-slot calendar during paired resampling. Signed error is forecast minus realized volatility. The downside subset uses the highest fifth of observed downside windows for each portfolio, rounded up with ties ordered by earlier origin. The report defaults to `private/prospective/PF-002-results.json` and refuses to replace an existing report. Forecast accuracy and advancement remain pending live study data.
